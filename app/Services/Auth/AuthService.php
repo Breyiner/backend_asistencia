@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserStatus;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -34,6 +35,8 @@ class AuthService
             ]);
 
             DB::commit();
+
+            event(new Registered($user));
 
             return [
                 'error' => false,

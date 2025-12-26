@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('password');
             $table->unsignedBigInteger('status_id')->default(2);
             $table->foreign('status_id')->references('id')->on('user_statuses');
+            $table->timestamp('email_verified_at')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
