@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('email')->unique();
             $table->string('password');
-            $table->rememberToken();
+            $table->unsignedBigInteger('status_id')->default(2);
+            $table->foreign('status_id')->references('id')->on('user_statuses');
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -42,5 +44,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('sessions');
     }
 };
