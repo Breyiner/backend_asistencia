@@ -21,9 +21,11 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var list<string>
      */
     protected $fillable = [
+        'document_number',
         'email',
         'password',
-        'status_id'
+        'document_type_id',
+        'status_id',
     ];
 
     /**
@@ -45,5 +47,15 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'password' => 'hashed',
         ];
+    }
+
+    public function documentType()
+    {
+        return $this->belongsTo(DocumentType::class);
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(UserStatus::class, 'status_id');
     }
 }

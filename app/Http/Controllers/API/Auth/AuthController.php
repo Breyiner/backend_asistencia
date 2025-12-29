@@ -8,6 +8,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -51,6 +52,50 @@ class AuthController extends Controller
             $result['code'],
             array_diff_key($result['data'], array_flip(['cookieToken', 'cookieRefreshToken',]))
         )->cookie($cookieToken)
-         ->cookie($cookieRefresh);
+            ->cookie($cookieRefresh);
+    }
+
+    public function refreshToken(Request $request)
+    {
+        $user = Auth::user();
+
+        $currentRefreshToken = $request->bearerToken();
+
+        $result = $this->authService->refreshToken($currentRefreshToken, $user);
+
+        if ($result['error'])
+            return ResponseFormatter::error($result['message'], $result['code'], $result['errors'] ?? [], $result['errorKey'] ?? null);
+
+        $cookieToken = $result['data']['cookieToken'];
+        $cookieRefresh = $result['data']['cookieRefreshToken'];
+
+        $accessToken = $result['data']['accessToken'];
+        $refreshToken = $result['data']['refreshToken'];
+
+        return ResponseFormatter::success(
+            $result['message'],
+            $result['code'],
+            [
+                'token' => $accessToken,
+                'refreshToken' => $refreshToken
+            ]
+        )->cookie($cookieToken)
+            ->cookie($cookieRefresh);
+    }
+
+    public function logOut(Request $request)
+    {
+        $user = Auth::user();
+
+        $expiredCookies = $this->authService->createExpiredCookies();
+
+        $result = $this->authService->logOut($user);
+
+        return ResponseFormatter::success(
+            $result['message'],
+            $result['code'],
+            $result['data']
+        )->cookie($expiredCookies['expiredAccessToken'])
+            ->cookie($expiredCookies['expiredRefreshToken']);
     }
 }

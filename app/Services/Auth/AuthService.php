@@ -27,11 +27,15 @@ class AuthService
             [
                 'email' => $email,
                 'password' => $password,
+                'document_number' => $documentNumber,
+                'document_type_id' => $documentTypeId,
             ] = $dataUser;
 
             $user = User::create([
                 'email' => $email,
                 'password' => Hash::make($password),
+                'document_number' => $documentNumber,
+                'document_type_id' => $documentTypeId,
             ]);
 
             DB::commit();
@@ -196,8 +200,10 @@ class AuthService
         return [
             "error" => false,
             "code" => 200,
-            "message" => "Logueo exitoso",
+            "message" => "Token renovado con éxito",
             "data" => [
+                'accessToken' => $accessToken,
+                'refreshToken' => $refreshToken,
                 'cookieToken' => $cookieToken,
                 'cookieRefreshToken' => $cookieRefreshToken,
             ]
