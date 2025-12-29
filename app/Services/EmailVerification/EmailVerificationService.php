@@ -31,15 +31,23 @@ class EmailVerificationService
         return ['error' => false, 'code' => 200, 'message' => 'Email verificado.'];
     }
 
-    public function resend(MustVerifyEmail $user): array
+    public function resend(array $data): array
     {
+        ['email' => $email] = $data;
+
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return ['error' => false, 'code' => 200, 'message' => 'Si el correo existe, se enviará un enlace de verificación.'];
+        }
+
         if ($user->hasVerifiedEmail()) {
-            return ['error' => true, 'code' => 409, 'message' => 'El email ya está verificado.'];
+            return ['error' => false, 'code' => 200, 'message' => 'Si el correo existe, se enviará un enlace de verificación.'];
         }
 
         try {
             $user->sendEmailVerificationNotification();
-            return ['error' => false, 'code' => 200, 'message' => 'Correo reenviado.'];
+            return ['error' => false, 'code' => 200, 'message' => 'Si el correo existe, se enviará un enlace de verificación.'];
         } catch (Throwable $e) {
             report($e);
             return ['error' => true, 'code' => 503, 'message' => 'No se pudo enviar el correo.'];

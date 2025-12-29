@@ -71,12 +71,22 @@ class AuthService
             ];
         }
 
+        if (!$user->hasVerifiedEmail()) {
+            return [
+                "error" => true,
+                "code" => 403,
+                "message" => "El correo no ha sido verificado",
+                "errorKey" => "email_not_verified",
+            ];
+        }
+
         switch ($user->status_id) {
             case 2:
                 return [
                     "error" => true,
                     "code" => 403,
                     "message" => "El usuario está inactivo",
+                    "errorKey" => "user_inactive",
                 ];
         }
 

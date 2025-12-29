@@ -22,7 +22,7 @@ Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 've
   ->name('verification.verify');
 
 Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
-  ->middleware(['auth:sanctum', 'throttle:6,1'])
+  ->middleware(['throttle:6,1'])
   ->name('verification.send');
 
 

@@ -40,7 +40,7 @@ class AuthController extends Controller
         $result = $this->authService->login($credentials);
 
         if ($result['error'])
-            return ResponseFormatter::error($result['message'], $result['code']);
+            return ResponseFormatter::error($result['message'], $result['code'], $result['errors'] ?? [], $result['errorKey'] ?? null);
 
 
         $cookieToken = $result['data']['cookieToken'];

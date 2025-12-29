@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\EmailVerification;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ResendVerification\ResendVerificationRequest;
 use App\Services\EmailVerification\EmailVerificationService;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
@@ -19,20 +20,23 @@ class EmailVerificationController extends Controller
 
     public function verify(Request $request, string $id, string $hash)
     {
-        $res = $this->service->verify($id, $hash);
+        $response = $this->service->verify($id, $hash);
 
-        if ($res['error']) return ResponseFormatter::error($res['message'], $res['code']);
+        if ($response['error']) return ResponseFormatter::error($response['message'], $response['code']);
 
-        return ResponseFormatter::success($res['message'], $res['code'], $res['data'] ?? null);
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? null);
     }
-    
-    public function resend(Request $request)
+
+    public function resend(ResendVerificationRequest $request)
     {
-        $res = $this->service->resend($request->user());
 
-        if ($res['error']) return ResponseFormatter::error($res['message'], $res['code']);
+        $data = $request->validated();
 
-        return ResponseFormatter::success($res['message'], $res['code'], $res['data'] ?? null);
+        $response = $this->service->resend($data);
+
+        if ($response['error']) return ResponseFormatter::error($response['message'], $response['code']);
+
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? null);
     }
 }
 
