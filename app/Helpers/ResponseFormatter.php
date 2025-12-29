@@ -18,13 +18,14 @@ class ResponseFormatter
 
     }
 
-    public static function error($message, $status, $errors = []) {
+    public static function error($message, $status, $errors = [], $errorKey = null) {
 
       return response()->json([
         "success"=> false,
         "code" => $status,
         "message"=> $message,
-        "errors" => $errors
+        "errors" => $errors,
+        "errorKey" => $errorKey
       ], $status);
 
     }
