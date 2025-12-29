@@ -15,7 +15,7 @@ class EmailVerificationController extends Controller
 
     public function notice()
     {
-        return ResponseFormatter::error('Debes verificar tu correo.', 403);
+        return ResponseFormatter::error('Debes verificar tu correo.', 403, [], 'email_not_verified');
     }
 
     public function verify(Request $request, string $id, string $hash)
