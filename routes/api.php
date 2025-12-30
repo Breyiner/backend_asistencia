@@ -4,6 +4,7 @@ use App\Enums\TokenAbility;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
+use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\UserStatus\UserStatusController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,18 @@ Route::middleware('throttle:api')->group(function () {
       Route::put('/{document_type_id}', [DocumentTypeController::class, 'update']);
       Route::patch('/{document_type_id}', [DocumentTypeController::class, 'partialUpdate']);
       Route::delete('/{document_type_id}', [DocumentTypeController::class, 'destroy']);
+    });
+
+
+    //Rutas para usuarios
+    Route::prefix('users')->group(function () {
+      Route::get('/', [UserController::class, 'index']);
+      Route::get('/me', [UserController::class, 'showOwn']);
+      Route::get('/{user_id}', [UserController::class, 'show']);
+      Route::post('/', [UserController::class, 'store']);
+      Route::patch('/{user_id}', [UserController::class, 'partialUpdate']);
+      Route::patch('/me/password', [UserController::class, 'updateOwnPassword']);
+      Route::delete('/{id}', [UserController::class, 'destroy']);
     });
   });
 });
