@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
 use App\Http\Controllers\API\User\UserController;
+use App\Http\Controllers\API\UserProfile\UserProfileController;
 use App\Http\Controllers\API\UserStatus\UserStatusController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -72,6 +73,15 @@ Route::middleware('throttle:api')->group(function () {
       Route::patch('/{user_id}', [UserController::class, 'partialUpdate']);
       Route::patch('/me/password', [UserController::class, 'updateOwnPassword']);
       Route::delete('/{id}', [UserController::class, 'destroy']);
+    });
+
+    Route::prefix('profiles/users')->group(function () {
+      Route::get('/', [UserProfileController::class, 'index']);
+      Route::get('/me', [UserProfileController::class, 'showOwn']);
+      Route::get('/profile/{profile_id}', [UserProfileController::class, 'show']);
+      Route::get('/user/{user_id}', [UserProfileController::class, 'showByUser']);
+      Route::patch('/me', [UserProfileController::class, 'updateOwn']);
+      Route::patch('/user/{user_id}', [UserProfileController::class, 'update']);
     });
   });
 });
