@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Rules\AlphaSpaces;
 use App\Rules\StrongPassword;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -23,6 +24,9 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'first_name' => ['required', 'string', new AlphaSpaces()],
+            'last_name' => ['required', 'string', new AlphaSpaces()],
+            'telephone_number' => ['required', 'string', 'size:10', 'regex:/^\d+$/'],
             'document_type_id' => ['required', 'integer', 'exists:document_types,id'],
             'document_number' => ['required', 'string', 'min:6', 'max:20', 'unique:users,document_number'],
             'email' => ['required', 'email', 'unique:users'],
@@ -39,6 +43,17 @@ class RegisterRequest extends FormRequest
     public function messages()
     {
         return [
+            'first_name.required' => 'El :attribute es obligatorio.',
+            'first_name.string' => 'El :attribute debe ser texto.',
+
+            'last_name.required' => 'El :attribute es obligatorio.',
+            'last_name.string' => 'El :attribute debe ser texto.',
+
+            'telephone_number.required' => 'El :attribute es obligatorio.',
+            'telephone_number.string' => 'El :attribute debe ser texto.',
+            'telephone_number.size' => 'El :attribute debe tener exactamente :size dígitos.',
+            'telephone_number.regex' => 'El :attribute solo puede contener números.',
+
             'document_type_id.required' => 'El :attribute es obligatorio',
             'document_type_id.integer' => 'El :attribute debe ser un número entero',
             'document_type_id.exists' => 'El :attribute no existe',
@@ -68,6 +83,9 @@ class RegisterRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'first_name' => 'nombre',
+            'last_name' => 'apellido',
+            'telephone_number' => 'teléfono',
             'email' => 'correo',
             'password' => 'contraseña',
             'document_type_id' => 'tipo de documento',

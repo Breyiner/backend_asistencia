@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Enums\TokenAbility;
 use App\Models\User;
+use App\Models\UserProfile;
 use App\Models\UserStatus;
 use Carbon\Carbon;
 use Exception;
@@ -25,6 +26,9 @@ class AuthService
             DB::beginTransaction();
 
             [
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'telephone_number' => $telephoneNumber,
                 'email' => $email,
                 'password' => $password,
                 'document_number' => $documentNumber,
@@ -38,6 +42,13 @@ class AuthService
                 'document_type_id' => $documentTypeId,
             ]);
 
+            $profile = UserProfile::create([
+                'user_id' => $user->id,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'telephone_number' => $telephoneNumber
+            ]);
+
             DB::commit();
 
             event(new Registered($user));
@@ -48,6 +59,7 @@ class AuthService
                 'data' => [
                     'user' => $user,
                     'password' => $password,
+                    'profile' => $profile
                 ],
                 'message' => 'Usuario registrado con éxito',
             ];
