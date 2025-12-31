@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreUserRequest extends FormRequest
 {
-   /**
+    /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
@@ -28,7 +28,9 @@ class StoreUserRequest extends FormRequest
             'telephone_number' => ['required', 'string', 'size:10', 'regex:/^\d+$/'],
             'document_type_id' => ['required', 'integer', 'exists:document_types,id'],
             'document_number' => ['required', 'string', 'min:6', 'max:20', 'unique:users,document_number'],
-            'email' => ['required', 'email', 'unique:users']
+            'email' => ['required', 'email', 'unique:users'],
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => ['integer', 'distinct', 'exists:roles,id'],
         ];
     }
 
@@ -66,6 +68,14 @@ class StoreUserRequest extends FormRequest
             'email.email' => 'El :attribute debe tener formato válido',
             'email.unique' => 'Este :attribute ya está registrado en el sistema',
 
+            'roles.required' => 'Los :attribute son obligatorios.',
+            'roles.array' => 'Los :attribute deben enviarse en formato de lista.',
+            'roles.min' => 'Debes seleccionar al menos :min rol.',
+
+            'roles.*.integer' => 'Cada :attribute seleccionado debe ser un identificador numérico.',
+            'roles.*.distinct' => 'No puedes repetir roles en la selección.',
+            'roles.*.exists' => 'Uno de los roles seleccionados no existe.',
+
         ];
     }
 
@@ -83,6 +93,8 @@ class StoreUserRequest extends FormRequest
             'email' => 'correo',
             'document_type_id' => 'tipo de documento',
             'document_number' => 'número de documento',
+            'roles' => 'roles',
+            'roles.*' => 'rol',
         ];
     }
 }

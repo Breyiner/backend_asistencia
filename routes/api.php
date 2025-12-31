@@ -81,7 +81,8 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/me', [UserController::class, 'showOwn']);
       Route::get('/{user_id}', [UserController::class, 'show']);
       Route::post('/', [UserController::class, 'store']);
-      Route::patch('/{user_id}', [UserController::class, 'partialUpdate']);
+      Route::patch('/{user_id}', [UserController::class, 'update']);
+      Route::patch('/{user_id}/roles', [UserController::class, 'updateRoles']);
       Route::patch('/me/password', [UserController::class, 'updateOwnPassword']);
       Route::delete('/{id}', [UserController::class, 'destroy']);
     });

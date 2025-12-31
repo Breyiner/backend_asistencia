@@ -3,6 +3,7 @@
 namespace App\Services\User;
 
 use App\Events\UserCreated;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Models\UserStatus;
@@ -84,6 +85,12 @@ class UserService
                 'telephone_number' => $telephoneNumber
             ]);
 
+            if (array_key_exists('roles', $data)) {
+                $this->syncUserRoles($user, $data['roles']);
+            } else {
+                $user->assignRole('Pendiente');
+            }
+
             DB::commit();
 
             event(new UserCreated([
@@ -120,11 +127,11 @@ class UserService
             $user = User::find($id);
 
             if (!$user)
-            return [
-                "error" => true,
-                "code" => 404,
-                "message" => "Este usuario no existe",
-            ];
+                return [
+                    "error" => true,
+                    "code" => 404,
+                    "message" => "Este usuario no existe",
+                ];
 
             $userData = [];
 
@@ -185,6 +192,26 @@ class UserService
         }
     }
 
+    public function updateRoles(array $roleIds, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user)
+            return [
+                "error" => true,
+                "code" => 404,
+                "message" => "Este usuario no existe",
+            ];
+
+        $this->syncUserRoles($user, $roleIds);
+
+        return [
+            "error" => false,
+            "code" => 200,
+            "message" => "Roles del usuario actualizados con éxito",
+        ];
+    }
+
     public function updatePassword(array $data, $id)
     {
 
@@ -237,5 +264,11 @@ class UserService
             "code" => 200,
             "message" => "Usuario eliminado con éxito",
         ];
+    }
+
+    private function syncUserRoles(User $user, array $roleIds): void
+    {
+        $roles = Role::whereIn('id', $roleIds)->get();
+        $user->syncRoles($roles);
     }
 }

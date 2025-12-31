@@ -6,6 +6,7 @@ use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateOwnUserPasswordRequest;
+use App\Http\Requests\User\UpdateRolesUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Services\User\UserService;
 use Illuminate\Http\Request;
@@ -75,6 +76,19 @@ class UserController extends Controller
         $data = $request->validated();
 
         $response = $this->userService->update($data, $id);
+
+        if ($response['error'])
+            return ResponseFormatter::error($response['message'], $response['code']);
+
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+    }
+
+    public function updateRoles(UpdateRolesUserRequest $request, string $id)
+    {
+
+        $data = $request->validated();
+
+        $response = $this->userService->updateRoles($data, $id);
 
         if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
