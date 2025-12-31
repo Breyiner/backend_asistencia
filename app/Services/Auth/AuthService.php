@@ -49,6 +49,8 @@ class AuthService
                 'telephone_number' => $telephoneNumber
             ]);
 
+            $user->assignRole('Pendiente');
+
             DB::commit();
 
             event(new Registered($user));

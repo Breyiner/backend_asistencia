@@ -4,6 +4,7 @@ use App\Enums\TokenAbility;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
+use App\Http\Controllers\API\Role\RoleController;
 use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\UserProfile\UserProfileController;
 use App\Http\Controllers\API\UserStatus\UserStatusController;
@@ -42,6 +43,16 @@ Route::middleware('throttle:api')->group(function () {
 
   // Rutas casuales del sistema
   Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    // Rutas para Roles
+    Route::prefix('roles')->group(function () {
+      Route::get('/', [RoleController::class, 'index']);
+      Route::get('/{role_id}', [RoleController::class, 'show']);
+      Route::post('/', [RoleController::class, 'store']);
+      Route::put('/{role_id}', [RoleController::class, 'update']);
+      Route::delete('/{role_id}', [RoleController::class, 'destroy']);
+    });
+
+    
     // Rutas para User Status
     Route::prefix('user_statuses')->group(function () {
       Route::get('/', [UserStatusController::class, 'index']);
