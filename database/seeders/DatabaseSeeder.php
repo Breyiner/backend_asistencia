@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             UserStatusSeeder::class,
             DocumentTypeSeeder::class,
+            AreaSeeder::class,
         ]);
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TokenAbility;
+use App\Http\Controllers\API\Area\AreaController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
@@ -94,6 +95,16 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/user/{user_id}', [UserProfileController::class, 'showByUser']);
       Route::patch('/me', [UserProfileController::class, 'updateOwn']);
       Route::patch('/user/{user_id}', [UserProfileController::class, 'update']);
+    });
+
+
+    //Rutas para areas
+    Route::prefix('areas')->group(function () {
+      Route::get('/', [AreaController::class, 'index']);
+      Route::get('/{area_id}', [AreaController::class, 'show']);
+      Route::post('/', [AreaController::class, 'store']);
+      Route::put('/{area_id}', [AreaController::class, 'update']);
+      Route::delete('/{area_id}', [AreaController::class, 'destroy']);
     });
   });
 });
