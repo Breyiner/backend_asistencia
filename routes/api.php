@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Area\AreaController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
+use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\Role\RoleController;
 use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\UserProfile\UserProfileController;
@@ -105,6 +106,16 @@ Route::middleware('throttle:api')->group(function () {
       Route::post('/', [AreaController::class, 'store']);
       Route::put('/{area_id}', [AreaController::class, 'update']);
       Route::delete('/{area_id}', [AreaController::class, 'destroy']);
+    });
+
+
+    //Rutas para niveles de formación
+    Route::prefix('qualification_levels')->group(function () {
+      Route::get('/', [QualificationLevelController::class, 'index']);
+      Route::get('/{qualification_level_id}', [QualificationLevelController::class, 'show']);
+      Route::post('/', [QualificationLevelController::class, 'store']);
+      Route::put('/{qualification_level_id}', [QualificationLevelController::class, 'update']);
+      Route::delete('/{qualification_level_id}', [QualificationLevelController::class, 'destroy']);
     });
   });
 });

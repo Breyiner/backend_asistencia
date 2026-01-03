@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             UserStatusSeeder::class,
             DocumentTypeSeeder::class,
             AreaSeeder::class,
+            QualificationLevelSeeder::class,
         ]);
     }
 }
