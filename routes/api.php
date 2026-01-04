@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Area\AreaController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
+use App\Http\Controllers\API\Ficha\FichaController;
 use App\Http\Controllers\API\FichaStatus\FichaStatusController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\Role\RoleController;
@@ -139,6 +140,16 @@ Route::middleware('throttle:api')->group(function () {
       Route::post('/', [FichaStatusController::class, 'store']);
       Route::patch('/{status_id}', [FichaStatusController::class, 'update']);
       Route::delete('/{status_id}', [FichaStatusController::class, 'destroy']);
+    });
+
+
+    // Rutas para fichas
+    Route::prefix('fichas')->group(function () {
+      Route::get('/', [FichaController::class, 'index']);
+      Route::get('/{ficha_id}', [FichaController::class, 'show']);
+      Route::post('/', [FichaController::class, 'store']);
+      Route::patch('/{ficha_id}', [FichaController::class, 'update']);
+      Route::delete('/{ficha_id}', [FichaController::class, 'destroy']);
     });
   });
 });

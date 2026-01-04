@@ -10,4 +10,9 @@ class FichaStatus extends Model
         'name',
         'description',
     ];
+
+    public function fichas()
+    {
+        return $this->hasMany(Ficha::class, 'status_id');
+    }
 }

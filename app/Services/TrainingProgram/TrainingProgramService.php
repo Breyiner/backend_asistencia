@@ -125,6 +125,14 @@ class TrainingProgramService
             ];
         }
 
+        if ($program->fichas()->exists()) {
+            return [
+                "error" => true,
+                "code" => 400,
+                "message" => "No se puede eliminar el programa de formación porque tiene fichas asociadas",
+            ];
+        }
+
         $program->delete();
 
         return [

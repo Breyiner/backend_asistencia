@@ -23,4 +23,9 @@ class TrainingProgram extends Model
     {
         return $this->belongsTo(Area::class);
     }
+
+    public function fichas()
+    {
+        return $this->hasMany(Ficha::class);
+    }
 }

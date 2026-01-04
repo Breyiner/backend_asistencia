@@ -114,6 +114,14 @@ class FichaStatusService
                 "message" => "Este estado no existe",
             ];
 
+        if ($status->fichas()->exists())
+            return [
+                "error" => true,
+                "code" => 400,
+                "message" => "No se puede eliminar el estado porque tiene fichas asociadas",
+            ];
+        
+
         $status->delete();
 
         return [

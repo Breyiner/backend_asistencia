@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Database\Seeders\UserStatusSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -20,10 +18,12 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             UserStatusSeeder::class,
             DocumentTypeSeeder::class,
+            UserSeeder::class,
             AreaSeeder::class,
             QualificationLevelSeeder::class,
             TrainingProgramSeeder::class,
             FichaStatusSeeder::class,
+            FichaSeeder::class,
         ]);
     }
 }
