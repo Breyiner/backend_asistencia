@@ -106,6 +106,14 @@ class AreaService
             ];
         }
 
+        if($area->trainingPrograms()->count() > 0){
+            return [
+                "error" => true,
+                "code" => 400,
+                "message" => "No se puede eliminar esta área porque tiene programas de formación asociados",
+            ];
+        }
+
         $area->delete();
 
         return [

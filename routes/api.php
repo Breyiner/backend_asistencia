@@ -7,6 +7,7 @@ use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\Role\RoleController;
+use App\Http\Controllers\API\TrainingProgram\TrainingProgramController;
 use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\UserProfile\UserProfileController;
 use App\Http\Controllers\API\UserStatus\UserStatusController;
@@ -89,6 +90,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::delete('/{id}', [UserController::class, 'destroy']);
     });
 
+    //Rutas para perfiles de usuario
     Route::prefix('profiles/users')->group(function () {
       Route::get('/', [UserProfileController::class, 'index']);
       Route::get('/me', [UserProfileController::class, 'showOwn']);
@@ -116,6 +118,16 @@ Route::middleware('throttle:api')->group(function () {
       Route::post('/', [QualificationLevelController::class, 'store']);
       Route::put('/{qualification_level_id}', [QualificationLevelController::class, 'update']);
       Route::delete('/{qualification_level_id}', [QualificationLevelController::class, 'destroy']);
+    });
+
+
+    //Rutas para programas de formación
+    Route::prefix('training_programs')->group(function () {
+      Route::get('/', [TrainingProgramController::class, 'index']);
+      Route::get('/{training_program_id}', [TrainingProgramController::class, 'show']);
+      Route::post('/', [TrainingProgramController::class, 'store']);
+      Route::put('/{training_program_id}', [TrainingProgramController::class, 'update']);
+      Route::delete('/{training_program_id}', [TrainingProgramController::class, 'destroy']);
     });
   });
 });

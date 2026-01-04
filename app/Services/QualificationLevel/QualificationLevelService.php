@@ -99,6 +99,14 @@ class QualificationLevelService
             ];
         }
 
+        if($item->trainingPrograms()->count() > 0){
+            return [
+                "error" => true,
+                "code" => 400,
+                "message" => "No se puede eliminar este nivel de formación porque tiene programas de formación asociados",
+            ];
+        }
+
         $item->delete();
 
         return [

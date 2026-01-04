@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             DocumentTypeSeeder::class,
             AreaSeeder::class,
             QualificationLevelSeeder::class,
+            TrainingProgramSeeder::class,
         ]);
     }
 }

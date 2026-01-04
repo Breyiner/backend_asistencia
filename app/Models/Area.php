@@ -10,4 +10,9 @@ class Area extends Model
         'name',
         'description',
     ];
+
+    public function trainingPrograms()
+    {
+        return $this->hasMany(TrainingProgram::class);
+    }
 }
