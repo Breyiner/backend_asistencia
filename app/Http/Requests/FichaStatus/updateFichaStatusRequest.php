@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Http\Requests\FichaStatus;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class updateFichaStatusRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'name' => ['sometimes', 'required', 'string', 'min:5', 'max:20'],
+            'description' => ['sometimes', 'required', 'string', 'min:10', 'max:50'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'El :attribute es obligatorio.',
+            'name.string' => 'El :attribute debe ser en formato de texto.',
+            'name.min' => 'El :attribute debe tener al menos :min caracteres.',
+            'name.max' => 'El :attribute no debe tener más de :max caracteres.',
+
+            'description.required' => 'La :attribute es obligatoria.',
+            'description.string' => 'La :attribute debe ser en formato de texto.',
+            'description.min' => 'La :attribute debe tener al menos :min caracteres.',
+            'description.max' => 'La :attribute no debe tener más de :max caracteres.',
+        ];
+    }
+
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => 'nombre',
+            'description' => 'descripción',
+        ];
+    }
+}

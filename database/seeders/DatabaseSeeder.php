@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             AreaSeeder::class,
             QualificationLevelSeeder::class,
             TrainingProgramSeeder::class,
+            FichaStatusSeeder::class,
         ]);
     }
 }

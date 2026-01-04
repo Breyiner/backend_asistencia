@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Area\AreaController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
+use App\Http\Controllers\API\FichaStatus\FichaStatusController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\Role\RoleController;
 use App\Http\Controllers\API\TrainingProgram\TrainingProgramController;
@@ -55,7 +56,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::delete('/{role_id}', [RoleController::class, 'destroy']);
     });
 
-    
+
     // Rutas para User Status
     Route::prefix('user_statuses')->group(function () {
       Route::get('/', [UserStatusController::class, 'index']);
@@ -106,7 +107,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [AreaController::class, 'index']);
       Route::get('/{area_id}', [AreaController::class, 'show']);
       Route::post('/', [AreaController::class, 'store']);
-      Route::put('/{area_id}', [AreaController::class, 'update']);
+      Route::patch('/{area_id}', [AreaController::class, 'update']);
       Route::delete('/{area_id}', [AreaController::class, 'destroy']);
     });
 
@@ -116,7 +117,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [QualificationLevelController::class, 'index']);
       Route::get('/{qualification_level_id}', [QualificationLevelController::class, 'show']);
       Route::post('/', [QualificationLevelController::class, 'store']);
-      Route::put('/{qualification_level_id}', [QualificationLevelController::class, 'update']);
+      Route::patch('/{qualification_level_id}', [QualificationLevelController::class, 'update']);
       Route::delete('/{qualification_level_id}', [QualificationLevelController::class, 'destroy']);
     });
 
@@ -126,8 +127,18 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [TrainingProgramController::class, 'index']);
       Route::get('/{training_program_id}', [TrainingProgramController::class, 'show']);
       Route::post('/', [TrainingProgramController::class, 'store']);
-      Route::put('/{training_program_id}', [TrainingProgramController::class, 'update']);
+      Route::patch('/{training_program_id}', [TrainingProgramController::class, 'update']);
       Route::delete('/{training_program_id}', [TrainingProgramController::class, 'destroy']);
+    });
+
+
+    //Rutas para estados de ficha
+    Route::prefix('ficha_statuses')->group(function () {
+      Route::get('/', [FichaStatusController::class, 'index']);
+      Route::get('/{status_id}', [FichaStatusController::class, 'show']);
+      Route::post('/', [FichaStatusController::class, 'store']);
+      Route::patch('/{status_id}', [FichaStatusController::class, 'update']);
+      Route::delete('/{status_id}', [FichaStatusController::class, 'destroy']);
     });
   });
 });
