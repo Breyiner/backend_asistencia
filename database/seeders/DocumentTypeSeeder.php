@@ -18,6 +18,7 @@ class DocumentTypeSeeder extends Seeder
             ['name' => 'Tarjeta de Identidad', 'acronym' => 'TI'],
             ['name' => 'Cédula de Extranjería', 'acronym' => 'CE'],
             ['name' => 'Pasaporte', 'acronym' => 'PA'],
+            ['name' => 'Permiso de Permanencia Temporal', 'acronym' => 'PPT'],
         ];
 
         foreach ($documentTypes as $type) {
