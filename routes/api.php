@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TokenAbility;
+use App\Http\Controllers\API\Apprentice\ApprenticeController;
 use App\Http\Controllers\API\Area\AreaController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
@@ -150,6 +151,17 @@ Route::middleware('throttle:api')->group(function () {
       Route::post('/', [FichaController::class, 'store']);
       Route::patch('/{ficha_id}', [FichaController::class, 'update']);
       Route::delete('/{ficha_id}', [FichaController::class, 'destroy']);
+    });
+
+
+    //Rutas para aprendices
+    Route::prefix('apprentices')->group(function () {
+      Route::get('/', [ApprenticeController::class, 'index']);
+      Route::get('/{apprentice_id}', [ApprenticeController::class, 'show']);
+      Route::post('/', [ApprenticeController::class, 'store']);
+      Route::patch('/{apprentice_id}', [ApprenticeController::class, 'update']);
+      Route::delete('/{apprentice_id}', [ApprenticeController::class, 'destroy']);
+      Route::post('/import', [ApprenticeController::class, 'import']);
     });
   });
 });
