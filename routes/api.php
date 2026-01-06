@@ -4,6 +4,7 @@ use App\Enums\TokenAbility;
 use App\Http\Controllers\API\Apprentice\ApprenticeController;
 use App\Http\Controllers\API\Area\AreaController;
 use App\Http\Controllers\API\Auth\AuthController;
+use App\Http\Controllers\API\Day\DayController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
 use App\Http\Controllers\API\Ficha\FichaController;
@@ -207,6 +208,16 @@ Route::middleware('throttle:api')->group(function () {
       Route::post('/', [ScheduleController::class, 'store']);
       Route::put('/{schedule_id}', [ScheduleController::class, 'update']);
       Route::delete('/{schedule_id}', [ScheduleController::class, 'destroy']);
+    });
+
+
+    //Rutas para los días
+    Route::prefix('days')->group(function () {
+      Route::get('/', [DayController::class, 'index']);
+      Route::get('/{id}', [DayController::class, 'show']);
+      Route::post('/', [DayController::class, 'store']);
+      Route::put('/{id}', [DayController::class, 'update']);
+      Route::delete('/{id}', [DayController::class, 'destroy']);
     });
   });
 });

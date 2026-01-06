@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             FichaSeeder::class,
             TermSeeder::class,
             PhaseSeeder::class,
+            DaySeeder::class,
         ]);
     }
 }
