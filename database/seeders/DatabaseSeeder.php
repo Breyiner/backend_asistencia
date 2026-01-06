@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             TrainingProgramSeeder::class,
             FichaStatusSeeder::class,
             FichaSeeder::class,
+            TermSeeder::class,
         ]);
     }
 }

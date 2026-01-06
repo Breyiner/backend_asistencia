@@ -10,6 +10,7 @@ use App\Http\Controllers\API\Ficha\FichaController;
 use App\Http\Controllers\API\FichaStatus\FichaStatusController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\Role\RoleController;
+use App\Http\Controllers\API\Term\TermController;
 use App\Http\Controllers\API\TrainingProgram\TrainingProgramController;
 use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\UserProfile\UserProfileController;
@@ -162,6 +163,16 @@ Route::middleware('throttle:api')->group(function () {
       Route::patch('/{apprentice_id}', [ApprenticeController::class, 'update']);
       Route::delete('/{apprentice_id}', [ApprenticeController::class, 'destroy']);
       Route::post('/import', [ApprenticeController::class, 'import']);
+    });
+
+
+    // Rutas para trimestres
+    Route::prefix('terms')->group(function () {
+      Route::get('/', [TermController::class, 'index']);
+      Route::get('/{term_id}', [TermController::class, 'show']);
+      Route::post('/', [TermController::class, 'store']);
+      Route::patch('/{term_id}', [TermController::class, 'update']);
+      Route::delete('/{term_id}', [TermController::class, 'destroy']);
     });
   });
 });
