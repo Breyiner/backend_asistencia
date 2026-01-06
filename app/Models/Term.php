@@ -9,4 +9,9 @@ class Term extends Model
     protected $fillable = [
         'name',
     ];
+
+    public function fichaTerm()
+    {
+        return $this->hasMany(FichaTerm::class, 'term_id');
+    }
 }

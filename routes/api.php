@@ -8,7 +8,8 @@ use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
 use App\Http\Controllers\API\Ficha\FichaController;
 use App\Http\Controllers\API\FichaStatus\FichaStatusController;
-use App\Http\Controllers\API\Phase\PhaseController; 
+use App\Http\Controllers\API\FichaTerm\FichaTermController;
+use App\Http\Controllers\API\Phase\PhaseController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\Role\RoleController;
 use App\Http\Controllers\API\Term\TermController;
@@ -175,8 +176,8 @@ Route::middleware('throttle:api')->group(function () {
       Route::patch('/{term_id}', [TermController::class, 'update']);
       Route::delete('/{term_id}', [TermController::class, 'destroy']);
     });
-    
-    
+
+
     //Rutas para fases de formación
     Route::prefix('phases')->group(function () {
       Route::get('/', [PhaseController::class, 'index']);
@@ -184,6 +185,17 @@ Route::middleware('throttle:api')->group(function () {
       Route::post('/', [PhaseController::class, 'store']);
       Route::patch('/{phase_id}', [PhaseController::class, 'update']);
       Route::delete('/{phase_id}', [PhaseController::class, 'destroy']);
+    });
+
+
+    // Rutas para trimestres de las fichas
+    Route::prefix('ficha_terms')->group(function () {
+      Route::get('/', [FichaTermController::class, 'index']);
+      Route::get('/{ficha_term_id}', [FichaTermController::class, 'show']);
+      Route::post('/', [FichaTermController::class, 'store']);
+      Route::patch('/{ficha_term_id}', [FichaTermController::class, 'update']);
+      Route::patch('/{ficha_term_id}/set_current', [FichaTermController::class, 'setCurrent']);
+      Route::delete('/{ficha_term_id}', [FichaTermController::class, 'destroy']);
     });
   });
 });

@@ -10,4 +10,9 @@ class Phase extends Model
         'name',
         'description'
     ];
+
+    public function fichaTerm()
+    {
+        return $this->hasMany(FichaTerm::class, 'term_id');
+    }
 }

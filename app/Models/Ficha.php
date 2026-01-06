@@ -29,4 +29,9 @@ class Ficha extends Model
     {
         return $this->belongsTo(FichaStatus::class, 'status_id');
     }
+
+    public function fichaTerm()
+    {
+        return $this->hasMany(FichaTerm::class, 'term_id');
+    }
 }
