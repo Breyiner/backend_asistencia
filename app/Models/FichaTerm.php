@@ -40,4 +40,9 @@ class FichaTerm extends Model
     {
         return $this->belongsTo(Phase::class, 'phase_id');
     }
+
+    public function schedule()
+    {
+        return $this->hasOne(Schedule::class, 'ficha_term_id');
+    }
 }

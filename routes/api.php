@@ -12,6 +12,7 @@ use App\Http\Controllers\API\FichaTerm\FichaTermController;
 use App\Http\Controllers\API\Phase\PhaseController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\Role\RoleController;
+use App\Http\Controllers\API\Schedule\ScheduleController;
 use App\Http\Controllers\API\Term\TermController;
 use App\Http\Controllers\API\TrainingProgram\TrainingProgramController;
 use App\Http\Controllers\API\User\UserController;
@@ -196,6 +197,16 @@ Route::middleware('throttle:api')->group(function () {
       Route::patch('/{ficha_term_id}', [FichaTermController::class, 'update']);
       Route::patch('/{ficha_term_id}/set_current', [FichaTermController::class, 'setCurrent']);
       Route::delete('/{ficha_term_id}', [FichaTermController::class, 'destroy']);
+    });
+
+
+    // Rutas para bloques de horarios
+    Route::prefix('schedules')->group(function () {
+      Route::get('/', [ScheduleController::class, 'index']);
+      Route::get('/{schedule_id}', [ScheduleController::class, 'show']);
+      Route::post('/', [ScheduleController::class, 'store']);
+      Route::put('/{schedule_id}', [ScheduleController::class, 'update']);
+      Route::delete('/{schedule_id}', [ScheduleController::class, 'destroy']);
     });
   });
 });
