@@ -4,15 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Day extends Model
+class Classroom extends Model
 {
     protected $fillable = [
         'name',
-        'day_number'
-    ];
-
-    protected $casts = [
-        'day_number' => 'integer',
+        'description',
     ];
 
     public function scheduleSessions()

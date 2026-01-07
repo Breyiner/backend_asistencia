@@ -24,6 +24,10 @@ class UpdateFichaTermRequest extends FormRequest
                 'exists:terms,id',
                 "unique:ficha_terms,ficha_id,{$fichaId},term_id,{$fichaTermId}"
             ],
+            'phase_id' => [
+                'required',
+                'exists:phases,id'
+            ],
             'start_date' => ['sometimes', 'required', 'date', 'before:end_date'],
             'end_date' => ['sometimes', 'required', 'date', 'after:start_date'],
             'is_active' => ['sometimes', 'boolean'],
@@ -39,7 +43,10 @@ class UpdateFichaTermRequest extends FormRequest
             'term_id.required' => 'El :attribute es obligatorio.',
             'term_id.exists' => 'El :attribute seleccionado no existe.',
             'term_id.unique' => 'Esta ficha ya tiene asignado este :attribute.',
-            
+
+            'phase_id.required' => 'El :attribute es obligatorio.',
+            'phase_id.exists' => 'El :attribute seleccionado no existe.',
+
             'start_date.required' => 'El :attribute es obligatorio.',
             'start_date.date' => 'El :attribute debe ser una fecha válida.',
             'start_date.before' => 'El :attribute debe ser anterior a la fecha fin.',
@@ -57,6 +64,7 @@ class UpdateFichaTermRequest extends FormRequest
         return [
             'ficha_id' => 'ficha',
             'term_id' => 'trimestre',
+            'phase_id' => 'fase',
             'start_date' => 'fecha de inicio',
             'end_date' => 'fecha fin',
             'is_active' => 'activo',

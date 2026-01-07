@@ -4,6 +4,7 @@ use App\Enums\TokenAbility;
 use App\Http\Controllers\API\Apprentice\ApprenticeController;
 use App\Http\Controllers\API\Area\AreaController;
 use App\Http\Controllers\API\Auth\AuthController;
+use App\Http\Controllers\API\Classroom\ClassroomController;
 use App\Http\Controllers\API\Day\DayController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\API\Phase\PhaseController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\Role\RoleController;
 use App\Http\Controllers\API\Schedule\ScheduleController;
+use App\Http\Controllers\API\ScheduleSession\ScheduleSessionController;
 use App\Http\Controllers\API\Shift\ShiftController;
 use App\Http\Controllers\API\Term\TermController;
 use App\Http\Controllers\API\TrainingProgram\TrainingProgramController;
@@ -229,6 +231,26 @@ Route::middleware('throttle:api')->group(function () {
       Route::post('/', [ShiftController::class, 'store']);
       Route::put('/{shift_id}', [ShiftController::class, 'update']);
       Route::delete('/{shift_id}', [ShiftController::class, 'destroy']);
+    });
+
+
+    //Rutas para ambientes de formacion
+    Route::prefix('classrooms')->group(function () {
+      Route::get('/', [ClassroomController::class, 'index']);
+      Route::get('/{classroom_id}', [ClassroomController::class, 'show']);
+      Route::post('/', [ClassroomController::class, 'store']);
+      Route::put('/{classroom_id}', [ClassroomController::class, 'update']);
+      Route::delete('/{classroom_id}', [ClassroomController::class, 'destroy']);
+    });
+
+
+    //Rutas de sesiones de horario
+    Route::prefix('schedule_sessions')->group(function () {
+      Route::get('/', [ScheduleSessionController::class, 'index']);
+      Route::get('/{schedule_session_id}', [ScheduleSessionController::class, 'show']);
+      Route::post('/', [ScheduleSessionController::class, 'store']);
+      Route::put('/{schedule_session_id}', [ScheduleSessionController::class, 'update']);
+      Route::delete('/{schedule_session_id}', [ScheduleSessionController::class, 'destroy']);
     });
   });
 });

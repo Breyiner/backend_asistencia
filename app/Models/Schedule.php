@@ -18,4 +18,9 @@ class Schedule extends Model
     {
         return $this->belongsTo(FichaTerm::class, 'ficha_term_id')->with(['ficha', 'term']);
     }
+
+    public function scheduleSessions()
+    {
+        return $this->hasMany(ScheduleSession::class);
+    }
 }

@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             PhaseSeeder::class,
             DaySeeder::class,
             ShiftSeeder::class,
+            ClassroomSeeder::class,
         ]);
     }
 }
