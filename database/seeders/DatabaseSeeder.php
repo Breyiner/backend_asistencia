@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             TermSeeder::class,
             PhaseSeeder::class,
             DaySeeder::class,
+            ShiftSeeder::class,
         ]);
     }
 }

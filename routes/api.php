@@ -14,6 +14,7 @@ use App\Http\Controllers\API\Phase\PhaseController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\Role\RoleController;
 use App\Http\Controllers\API\Schedule\ScheduleController;
+use App\Http\Controllers\API\Shift\ShiftController;
 use App\Http\Controllers\API\Term\TermController;
 use App\Http\Controllers\API\TrainingProgram\TrainingProgramController;
 use App\Http\Controllers\API\User\UserController;
@@ -214,10 +215,20 @@ Route::middleware('throttle:api')->group(function () {
     //Rutas para los días
     Route::prefix('days')->group(function () {
       Route::get('/', [DayController::class, 'index']);
-      Route::get('/{id}', [DayController::class, 'show']);
+      Route::get('/{day_id}', [DayController::class, 'show']);
       Route::post('/', [DayController::class, 'store']);
-      Route::put('/{id}', [DayController::class, 'update']);
-      Route::delete('/{id}', [DayController::class, 'destroy']);
+      Route::put('/{day_id}', [DayController::class, 'update']);
+      Route::delete('/{day_id}', [DayController::class, 'destroy']);
+    });
+
+
+    //Rutas para las jornadas
+    Route::prefix('shifts')->group(function () {
+      Route::get('/', [ShiftController::class, 'index']);
+      Route::get('/{shift_id}', [ShiftController::class, 'show']);
+      Route::post('/', [ShiftController::class, 'store']);
+      Route::put('/{shift_id}', [ShiftController::class, 'update']);
+      Route::delete('/{shift_id}', [ShiftController::class, 'destroy']);
     });
   });
 });
