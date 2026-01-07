@@ -21,7 +21,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(false);
             $table->unique(['ficha_id', 'term_id'], 'unique_ficha_term');
             $table->foreign('term_id')->references('id')->on('terms');
-            $table->foreign('ficha')->references('id')->on('fichas');
+            $table->foreign('ficha_id')->references('id')->on('fichas');
             $table->foreign('phase_id')->references('id')->on('phases');
             $table->timestamps();
         });
