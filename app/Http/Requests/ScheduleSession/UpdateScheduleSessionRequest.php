@@ -96,7 +96,7 @@ class UpdateScheduleSessionRequest extends FormRequest
                 return;
             }
 
-            $id = (int) $this->route('id');
+            $id = (int) $this->route('schedule_session_id');
             $session = ScheduleSession::find($id);
             if (!$session) return;
 

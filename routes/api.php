@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Apprentice\ApprenticeController;
 use App\Http\Controllers\API\Area\AreaController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Classroom\ClassroomController;
+use App\Http\Controllers\API\ClassType\ClassTypeController;
 use App\Http\Controllers\API\Day\DayController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
@@ -251,6 +252,16 @@ Route::middleware('throttle:api')->group(function () {
       Route::post('/', [ScheduleSessionController::class, 'store']);
       Route::put('/{schedule_session_id}', [ScheduleSessionController::class, 'update']);
       Route::delete('/{schedule_session_id}', [ScheduleSessionController::class, 'destroy']);
+    });
+
+
+    //Rutas de tipos de clase
+    Route::prefix('class_types')->group(function () {
+      Route::get('/', [ClassTypeController::class, 'index']);
+      Route::get('/{class_type_id}', [ClassTypeController::class, 'show']);
+      Route::post('/', [ClassTypeController::class, 'store']);
+      Route::put('/{class_type_id}', [ClassTypeController::class, 'update']);
+      Route::delete('/{class_type_id}', [ClassTypeController::class, 'destroy']);
     });
   });
 });
