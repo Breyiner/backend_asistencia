@@ -10,4 +10,9 @@ class ClassType extends Model
         'name',
         'description'
     ];
+
+    public function realClasses()
+    {
+        return $this->hasMany(RealClass::class, 'class_type_id');
+    }
 }

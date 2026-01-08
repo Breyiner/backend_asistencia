@@ -14,6 +14,7 @@ use App\Http\Controllers\API\FichaStatus\FichaStatusController;
 use App\Http\Controllers\API\FichaTerm\FichaTermController;
 use App\Http\Controllers\API\Phase\PhaseController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
+use App\Http\Controllers\API\RealClass\RealClassController;
 use App\Http\Controllers\API\Role\RoleController;
 use App\Http\Controllers\API\Schedule\ScheduleController;
 use App\Http\Controllers\API\ScheduleSession\ScheduleSessionController;
@@ -262,6 +263,15 @@ Route::middleware('throttle:api')->group(function () {
       Route::post('/', [ClassTypeController::class, 'store']);
       Route::put('/{class_type_id}', [ClassTypeController::class, 'update']);
       Route::delete('/{class_type_id}', [ClassTypeController::class, 'destroy']);
+    });
+
+
+    Route::prefix('real_classes')->group(function () {
+      Route::get('/', [RealClassController::class, 'index']);
+      Route::get('/{real_class_id}', [RealClassController::class, 'show']);
+      Route::post('/', [RealClassController::class, 'store']);
+      Route::put('/{real_class_id}', [RealClassController::class, 'update']);
+      Route::delete('/{real_class_id}', [RealClassController::class, 'destroy']);
     });
   });
 });

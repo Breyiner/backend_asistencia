@@ -16,4 +16,9 @@ class Shift extends Model
     {
         return $this->hasMany(ScheduleSession::class);
     }
+
+    public function realClasses()
+    {
+        return $this->hasMany(RealClass::class, 'shift_id');
+    }
 }

@@ -40,4 +40,9 @@ class ScheduleSession extends Model
     {
         return $this->belongsTo(Day::class);
     }
+
+    public function realClasses()
+    {
+        return $this->hasMany(RealClass::class, 'schedule_session_id');
+    }
 }

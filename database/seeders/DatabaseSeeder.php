@@ -26,9 +26,12 @@ class DatabaseSeeder extends Seeder
             FichaSeeder::class,
             TermSeeder::class,
             PhaseSeeder::class,
+            FichaTermSeeder::class,
+            ScheduleSeeder::class,
             DaySeeder::class,
             ShiftSeeder::class,
             ClassroomSeeder::class,
+            ScheduleSessionSeeder::class,
             ClassTypeSeeder::class,
         ]);
     }

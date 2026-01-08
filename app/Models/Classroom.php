@@ -15,4 +15,9 @@ class Classroom extends Model
     {
         return $this->hasMany(ScheduleSession::class);
     }
+
+    public function realClasses()
+    {
+        return $this->hasMany(RealClass::class, 'classroom_id');
+    }
 }
