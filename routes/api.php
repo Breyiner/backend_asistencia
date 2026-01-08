@@ -3,6 +3,7 @@
 use App\Enums\TokenAbility;
 use App\Http\Controllers\API\Apprentice\ApprenticeController;
 use App\Http\Controllers\API\Area\AreaController;
+use App\Http\Controllers\API\AttendanceStatus\AttendanceStatusController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Classroom\ClassroomController;
 use App\Http\Controllers\API\ClassType\ClassTypeController;
@@ -266,12 +267,23 @@ Route::middleware('throttle:api')->group(function () {
     });
 
 
+    // Rutas de clases Reales
     Route::prefix('real_classes')->group(function () {
       Route::get('/', [RealClassController::class, 'index']);
       Route::get('/{real_class_id}', [RealClassController::class, 'show']);
       Route::post('/', [RealClassController::class, 'store']);
       Route::put('/{real_class_id}', [RealClassController::class, 'update']);
       Route::delete('/{real_class_id}', [RealClassController::class, 'destroy']);
+    });
+
+
+    //Rutas de estados de asistencia
+    Route::prefix('attendance_statuses')->group(function () {
+      Route::get('/', [AttendanceStatusController::class, 'index']);
+      Route::get('/{attendance_status_id}', [AttendanceStatusController::class, 'show']);
+      Route::post('/', [AttendanceStatusController::class, 'store']);
+      Route::put('/{attendance_status_id}', [AttendanceStatusController::class, 'update']);
+      Route::delete('/{attendance_status_id}', [AttendanceStatusController::class, 'destroy']);
     });
   });
 });
