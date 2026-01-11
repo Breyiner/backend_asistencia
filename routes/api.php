@@ -14,6 +14,7 @@ use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
 use App\Http\Controllers\API\Ficha\FichaController;
 use App\Http\Controllers\API\FichaStatus\FichaStatusController;
 use App\Http\Controllers\API\FichaTerm\FichaTermController;
+use App\Http\Controllers\API\NotificationType\NotificationTypeController;
 use App\Http\Controllers\API\Phase\PhaseController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\RealClass\RealClassController;
@@ -297,6 +298,16 @@ Route::middleware('throttle:api')->group(function () {
       Route::delete('/{attendance_id}', [AttendanceController::class, 'destroy']);
 
       Route::get('/class/{real_class_id}', [AttendanceController::class, 'byClassRealId']);
+    });
+
+
+    //Rutas de tipos de notificación
+    Route::prefix('notification-types')->group(function () {
+      Route::get('/', [NotificationTypeController::class, 'index']);
+      Route::get('/{notification_type_id}', [NotificationTypeController::class, 'show']);
+      Route::post('/', [NotificationTypeController::class, 'store']);
+      Route::patch('/{notification_type_id}', [NotificationTypeController::class, 'update']);
+      Route::delete('/{notification_type_id}', [NotificationTypeController::class, 'destroy']);
     });
   });
 });
