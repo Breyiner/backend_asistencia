@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class ScheduleSession extends Model
@@ -44,5 +45,13 @@ class ScheduleSession extends Model
     public function realClasses()
     {
         return $this->hasMany(RealClass::class, 'schedule_session_id');
+    }
+
+    public function getDurationSessionAttribute()
+    {
+        $start = Carbon::parse($this->start_time);
+        $end = Carbon::parse($this->end_time);
+
+        return $start->diffInHours($end, false);
     }
 }

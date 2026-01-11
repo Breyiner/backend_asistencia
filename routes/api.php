@@ -3,6 +3,7 @@
 use App\Enums\TokenAbility;
 use App\Http\Controllers\API\Apprentice\ApprenticeController;
 use App\Http\Controllers\API\Area\AreaController;
+use App\Http\Controllers\API\Attendance\AttendanceController;
 use App\Http\Controllers\API\AttendanceStatus\AttendanceStatusController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Classroom\ClassroomController;
@@ -212,7 +213,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [ScheduleController::class, 'index']);
       Route::get('/{schedule_id}', [ScheduleController::class, 'show']);
       Route::post('/', [ScheduleController::class, 'store']);
-      Route::put('/{schedule_id}', [ScheduleController::class, 'update']);
+      Route::patch('/{schedule_id}', [ScheduleController::class, 'update']);
       Route::delete('/{schedule_id}', [ScheduleController::class, 'destroy']);
     });
 
@@ -222,7 +223,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [DayController::class, 'index']);
       Route::get('/{day_id}', [DayController::class, 'show']);
       Route::post('/', [DayController::class, 'store']);
-      Route::put('/{day_id}', [DayController::class, 'update']);
+      Route::patch('/{day_id}', [DayController::class, 'update']);
       Route::delete('/{day_id}', [DayController::class, 'destroy']);
     });
 
@@ -232,7 +233,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [ShiftController::class, 'index']);
       Route::get('/{shift_id}', [ShiftController::class, 'show']);
       Route::post('/', [ShiftController::class, 'store']);
-      Route::put('/{shift_id}', [ShiftController::class, 'update']);
+      Route::patch('/{shift_id}', [ShiftController::class, 'update']);
       Route::delete('/{shift_id}', [ShiftController::class, 'destroy']);
     });
 
@@ -242,7 +243,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [ClassroomController::class, 'index']);
       Route::get('/{classroom_id}', [ClassroomController::class, 'show']);
       Route::post('/', [ClassroomController::class, 'store']);
-      Route::put('/{classroom_id}', [ClassroomController::class, 'update']);
+      Route::patch('/{classroom_id}', [ClassroomController::class, 'update']);
       Route::delete('/{classroom_id}', [ClassroomController::class, 'destroy']);
     });
 
@@ -252,7 +253,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [ScheduleSessionController::class, 'index']);
       Route::get('/{schedule_session_id}', [ScheduleSessionController::class, 'show']);
       Route::post('/', [ScheduleSessionController::class, 'store']);
-      Route::put('/{schedule_session_id}', [ScheduleSessionController::class, 'update']);
+      Route::patch('/{schedule_session_id}', [ScheduleSessionController::class, 'update']);
       Route::delete('/{schedule_session_id}', [ScheduleSessionController::class, 'destroy']);
     });
 
@@ -262,7 +263,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [ClassTypeController::class, 'index']);
       Route::get('/{class_type_id}', [ClassTypeController::class, 'show']);
       Route::post('/', [ClassTypeController::class, 'store']);
-      Route::put('/{class_type_id}', [ClassTypeController::class, 'update']);
+      Route::patch('/{class_type_id}', [ClassTypeController::class, 'update']);
       Route::delete('/{class_type_id}', [ClassTypeController::class, 'destroy']);
     });
 
@@ -272,7 +273,7 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [RealClassController::class, 'index']);
       Route::get('/{real_class_id}', [RealClassController::class, 'show']);
       Route::post('/', [RealClassController::class, 'store']);
-      Route::put('/{real_class_id}', [RealClassController::class, 'update']);
+      Route::patch('/{real_class_id}', [RealClassController::class, 'update']);
       Route::delete('/{real_class_id}', [RealClassController::class, 'destroy']);
     });
 
@@ -282,8 +283,20 @@ Route::middleware('throttle:api')->group(function () {
       Route::get('/', [AttendanceStatusController::class, 'index']);
       Route::get('/{attendance_status_id}', [AttendanceStatusController::class, 'show']);
       Route::post('/', [AttendanceStatusController::class, 'store']);
-      Route::put('/{attendance_status_id}', [AttendanceStatusController::class, 'update']);
+      Route::patch('/{attendance_status_id}', [AttendanceStatusController::class, 'update']);
       Route::delete('/{attendance_status_id}', [AttendanceStatusController::class, 'destroy']);
+    });
+
+
+    //Rutas de asistencias
+    Route::prefix('attendances')->group(function () {
+      Route::get('/', [AttendanceController::class, 'index']);
+      Route::get('/{attendance_id}', [AttendanceController::class, 'show']);
+      Route::post('/', [AttendanceController::class, 'store']);
+      Route::patch('/{attendance_id}', [AttendanceController::class, 'update']);
+      Route::delete('/{attendance_id}', [AttendanceController::class, 'destroy']);
+
+      Route::get('/class/{real_class_id}', [AttendanceController::class, 'byClassRealId']);
     });
   });
 });
