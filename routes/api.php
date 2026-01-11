@@ -14,6 +14,7 @@ use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
 use App\Http\Controllers\API\Ficha\FichaController;
 use App\Http\Controllers\API\FichaStatus\FichaStatusController;
 use App\Http\Controllers\API\FichaTerm\FichaTermController;
+use App\Http\Controllers\API\Notification\NotificationController;
 use App\Http\Controllers\API\NotificationType\NotificationTypeController;
 use App\Http\Controllers\API\Phase\PhaseController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
@@ -308,6 +309,20 @@ Route::middleware('throttle:api')->group(function () {
       Route::post('/', [NotificationTypeController::class, 'store']);
       Route::patch('/{notification_type_id}', [NotificationTypeController::class, 'update']);
       Route::delete('/{notification_type_id}', [NotificationTypeController::class, 'destroy']);
+    });
+
+
+    //Rutas de notificaciones
+    Route::prefix('notifications')->group(function () {
+      Route::get('/all', [NotificationController::class, 'all']);
+
+      // Notificaciones del usuario autenticado (status=all|read|unread)
+      Route::get('/', [NotificationController::class, 'index']);
+      
+      Route::patch('/read-all', [NotificationController::class, 'markAllAsRead']);
+      Route::get('/{notification_id}', [NotificationController::class, 'show']);
+      Route::patch('/{notification_id}/read', [NotificationController::class, 'markAsRead']);
+      Route::delete('/{notification_id}', [NotificationController::class, 'destroy']);
     });
   });
 });

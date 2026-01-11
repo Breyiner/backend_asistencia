@@ -84,4 +84,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(RealClass::class, 'instructor_id');
     }
+
+    public function notifications()
+    {
+        return $this->belongsToMany(Notification::class, 'notification_user')
+            ->withPivot(['read_at'])
+            ->withTimestamps();
+    }
 }
