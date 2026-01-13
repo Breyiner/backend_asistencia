@@ -29,300 +29,268 @@ use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\UserProfile\UserProfileController;
 use App\Http\Controllers\API\UserStatus\UserStatusController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('throttle:api')->group(function () {
 
-  Route::get('/prueba', function (Request $request) {
-    return response()->json(['message' => 'La API está funcionando correctamente.'], 200);
-  });
-
-  // Rutas de autenticación
-  Route::middleware('throttle:auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/refresh_token', [AuthController::class, 'refreshToken'])
-      ->middleware(['auth:sanctum', 'verified', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value]);
-
-    Route::post('/logout', [AuthController::class, 'logOut'])
-      ->middleware(['auth:sanctum', 'verified']);
-  });
-
-  // Rutas de verificación de correo electrónico
-  Route::get('/email/verify', [EmailVerificationController::class, 'notice'])
-    ->name('verification.notice');
-
-  Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-    ->middleware('signed')
-    ->name('verification.verify');
-
-  Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
-    ->middleware('throttle:verification')
-    ->name('verification.send');
-
-
-  // Rutas casuales del sistema
-  Route::middleware(['auth:sanctum', 'verified'])->group(function () {
-    // Rutas para Roles
-    Route::prefix('roles')->group(function () {
-      Route::get('/', [RoleController::class, 'index']);
-      Route::get('/{role_id}', [RoleController::class, 'show']);
-      Route::post('/', [RoleController::class, 'store']);
-      Route::put('/{role_id}', [RoleController::class, 'update']);
-      Route::delete('/{role_id}', [RoleController::class, 'destroy']);
+    Route::get('/prueba', function (Request $request) {
+        return Response::json(['message' => 'La API está funcionando correctamente.'], 200);
     });
 
+    // Rutas de autenticación
+    Route::middleware('throttle:auth')->group(function () {
+        Route::post('/register', [AuthController::class, 'register']);
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/refresh_token', [AuthController::class, 'refreshToken'])
+            ->middleware(['auth:sanctum', 'verified', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value]);
 
-    // Rutas para User Status
-    Route::prefix('user_statuses')->group(function () {
-      Route::get('/', [UserStatusController::class, 'index']);
-      Route::get('/{status_id}', [UserStatusController::class, 'show']);
-      Route::post('/', [UserStatusController::class, 'store']);
-      Route::put('/{status_id}', [UserStatusController::class, 'update']);
-      Route::patch('/{status_id}', [UserStatusController::class, 'partialUpdate']);
-      Route::delete('/{status_id}', [UserStatusController::class, 'destroy']);
+        Route::post('/logout', [AuthController::class, 'logOut'])
+            ->middleware(['auth:sanctum', 'verified']);
     });
 
+    // Rutas de verificación de correo
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->middleware('throttle:verification')->name('verification.send');
 
-    //Rutas para tipos de documento
-    Route::prefix('document_types')->group(function () {
-      Route::get('/', [DocumentTypeController::class, 'index']);
-      Route::get('/{document_type_id}', [DocumentTypeController::class, 'show']);
-      Route::post('/', [DocumentTypeController::class, 'store']);
-      Route::put('/{document_type_id}', [DocumentTypeController::class, 'update']);
-      Route::patch('/{document_type_id}', [DocumentTypeController::class, 'partialUpdate']);
-      Route::delete('/{document_type_id}', [DocumentTypeController::class, 'destroy']);
+    // Rutas protegidas
+    Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+
+        // Roles
+        Route::prefix('roles')->group(function () {
+            Route::get('/', [RoleController::class, 'index'])->middleware('permission:roles.viewAny');
+            Route::get('/{role_id}', [RoleController::class, 'show'])->middleware('permission:roles.view');
+            Route::post('/', [RoleController::class, 'store'])->middleware('permission:roles.create');
+            Route::put('/{role_id}', [RoleController::class, 'update'])->middleware('permission:roles.update');
+            Route::delete('/{role_id}', [RoleController::class, 'destroy'])->middleware('permission:roles.delete');
+        });
+
+        // User Status
+        Route::prefix('user_statuses')->group(function () {
+            Route::get('/', [UserStatusController::class, 'index'])->middleware('permission:user_statuses.viewAny');
+            Route::get('/{status_id}', [UserStatusController::class, 'show'])->middleware('permission:user_statuses.view');
+            Route::post('/', [UserStatusController::class, 'store'])->middleware('permission:user_statuses.create');
+            Route::put('/{status_id}', [UserStatusController::class, 'update'])->middleware('permission:user_statuses.update');
+            Route::patch('/{status_id}', [UserStatusController::class, 'partialUpdate'])->middleware('permission:user_statuses.partialUpdate');
+            Route::delete('/{status_id}', [UserStatusController::class, 'destroy'])->middleware('permission:user_statuses.delete');
+        });
+
+        // Document Types
+        Route::prefix('document_types')->group(function () {
+            Route::get('/', [DocumentTypeController::class, 'index'])->middleware('permission:document_types.viewAny');
+            Route::get('/{document_type_id}', [DocumentTypeController::class, 'show'])->middleware('permission:document_types.view');
+            Route::post('/', [DocumentTypeController::class, 'store'])->middleware('permission:document_types.create');
+            Route::put('/{document_type_id}', [DocumentTypeController::class, 'update'])->middleware('permission:document_types.update');
+            Route::patch('/{document_type_id}', [DocumentTypeController::class, 'partialUpdate'])->middleware('permission:document_types.partialUpdate');
+            Route::delete('/{document_type_id}', [DocumentTypeController::class, 'destroy'])->middleware('permission:document_types.delete');
+        });
+
+        // Users
+        Route::prefix('users')->group(function () {
+            Route::get('/', [UserController::class, 'index'])->middleware('permission:users.viewAny');
+            Route::get('/me', [UserController::class, 'showOwn'])->middleware('permission:users.viewOwn');
+            Route::get('/{user_id}', [UserController::class, 'show'])->middleware('permission:users.view');
+            Route::post('/', [UserController::class, 'store'])->middleware('permission:users.create');
+            Route::patch('/{user_id}', [UserController::class, 'update'])->middleware('permission:users.update');
+            Route::patch('/{user_id}/roles', [UserController::class, 'updateRoles'])->middleware('permission:users.updateRoles');
+            Route::patch('/me/password', [UserController::class, 'updateOwnPassword'])->middleware('permission:users.updateOwnPassword');
+            Route::delete('/{id}', [UserController::class, 'destroy'])->middleware('permission:users.delete');
+        });
+
+        // Profiles
+        Route::prefix('profiles/users')->group(function () {
+            Route::get('/', [UserProfileController::class, 'index'])->middleware('permission:profiles_users.viewAny');
+            Route::get('/me', [UserProfileController::class, 'showOwn'])->middleware('permission:profiles_users.viewOwn');
+            Route::get('/profile/{profile_id}', [UserProfileController::class, 'show'])->middleware('permission:profiles_users.view');
+            Route::get('/user/{user_id}', [UserProfileController::class, 'showByUser'])->middleware('permission:profiles_users.viewByUser');
+            Route::patch('/me', [UserProfileController::class, 'updateOwn'])->middleware('permission:profiles_users.updateOwn');
+            Route::patch('/user/{user_id}', [UserProfileController::class, 'update'])->middleware('permission:profiles_users.update');
+        });
+
+        // Areas
+        Route::prefix('areas')->group(function () {
+            Route::get('/', [AreaController::class, 'index'])->middleware('permission:areas.viewAny');
+            Route::get('/{area_id}', [AreaController::class, 'show'])->middleware('permission:areas.view');
+            Route::post('/', [AreaController::class, 'store'])->middleware('permission:areas.create');
+            Route::patch('/{area_id}', [AreaController::class, 'update'])->middleware('permission:areas.update');
+            Route::delete('/{area_id}', [AreaController::class, 'destroy'])->middleware('permission:areas.delete');
+        });
+
+        // Qualification Levels
+        Route::prefix('qualification_levels')->group(function () {
+            Route::get('/', [QualificationLevelController::class, 'index'])->middleware('permission:qualification_levels.viewAny');
+            Route::get('/{qualification_level_id}', [QualificationLevelController::class, 'show'])->middleware('permission:qualification_levels.view');
+            Route::post('/', [QualificationLevelController::class, 'store'])->middleware('permission:qualification_levels.create');
+            Route::patch('/{qualification_level_id}', [QualificationLevelController::class, 'update'])->middleware('permission:qualification_levels.update');
+            Route::delete('/{qualification_level_id}', [QualificationLevelController::class, 'destroy'])->middleware('permission:qualification_levels.delete');
+        });
+
+        // Training Programs
+        Route::prefix('training_programs')->group(function () {
+            Route::get('/', [TrainingProgramController::class, 'index'])->middleware('permission:training_programs.viewAny');
+            Route::get('/{training_program_id}', [TrainingProgramController::class, 'show'])->middleware('permission:training_programs.view');
+            Route::post('/', [TrainingProgramController::class, 'store'])->middleware('permission:training_programs.create');
+            Route::patch('/{training_program_id}', [TrainingProgramController::class, 'update'])->middleware('permission:training_programs.update');
+            Route::delete('/{training_program_id}', [TrainingProgramController::class, 'destroy'])->middleware('permission:training_programs.delete');
+        });
+
+        // Ficha Statuses
+        Route::prefix('ficha_statuses')->group(function () {
+            Route::get('/', [FichaStatusController::class, 'index'])->middleware('permission:ficha_statuses.viewAny');
+            Route::get('/{status_id}', [FichaStatusController::class, 'show'])->middleware('permission:ficha_statuses.view');
+            Route::post('/', [FichaStatusController::class, 'store'])->middleware('permission:ficha_statuses.create');
+            Route::patch('/{status_id}', [FichaStatusController::class, 'update'])->middleware('permission:ficha_statuses.update');
+            Route::delete('/{status_id}', [FichaStatusController::class, 'destroy'])->middleware('permission:ficha_statuses.delete');
+        });
+
+        // Fichas
+        Route::prefix('fichas')->group(function () {
+            Route::get('/', [FichaController::class, 'index'])->middleware('permission:fichas.viewAny');
+            Route::get('/{ficha_id}', [FichaController::class, 'show'])->middleware('permission:fichas.view');
+            Route::post('/', [FichaController::class, 'store'])->middleware('permission:fichas.create');
+            Route::patch('/{ficha_id}', [FichaController::class, 'update'])->middleware('permission:fichas.update');
+            Route::delete('/{ficha_id}', [FichaController::class, 'destroy'])->middleware('permission:fichas.delete');
+        });
+
+        // Apprentices
+        Route::prefix('apprentices')->group(function () {
+            Route::get('/', [ApprenticeController::class, 'index'])->middleware('permission:apprentices.viewAny');
+            Route::get('/{apprentice_id}', [ApprenticeController::class, 'show'])->middleware('permission:apprentices.view');
+            Route::post('/', [ApprenticeController::class, 'store'])->middleware('permission:apprentices.create');
+            Route::patch('/{apprentice_id}', [ApprenticeController::class, 'update'])->middleware('permission:apprentices.update');
+            Route::delete('/{apprentice_id}', [ApprenticeController::class, 'destroy'])->middleware('permission:apprentices.delete');
+            Route::post('/import', [ApprenticeController::class, 'import'])->middleware('permission:apprentices.import');
+        });
+
+        // Terms
+        Route::prefix('terms')->group(function () {
+            Route::get('/', [TermController::class, 'index'])->middleware('permission:terms.viewAny');
+            Route::get('/{term_id}', [TermController::class, 'show'])->middleware('permission:terms.view');
+            Route::post('/', [TermController::class, 'store'])->middleware('permission:terms.create');
+            Route::patch('/{term_id}', [TermController::class, 'update'])->middleware('permission:terms.update');
+            Route::delete('/{term_id}', [TermController::class, 'destroy'])->middleware('permission:terms.delete');
+        });
+
+        // Phases
+        Route::prefix('phases')->group(function () {
+            Route::get('/', [PhaseController::class, 'index'])->middleware('permission:phases.viewAny');
+            Route::get('/{phase_id}', [PhaseController::class, 'show'])->middleware('permission:phases.view');
+            Route::post('/', [PhaseController::class, 'store'])->middleware('permission:phases.create');
+            Route::patch('/{phase_id}', [PhaseController::class, 'update'])->middleware('permission:phases.update');
+            Route::delete('/{phase_id}', [PhaseController::class, 'destroy'])->middleware('permission:phases.delete');
+        });
+
+        // Ficha Terms
+        Route::prefix('ficha_terms')->group(function () {
+            Route::get('/', [FichaTermController::class, 'index'])->middleware('permission:ficha_terms.viewAny');
+            Route::get('/{ficha_term_id}', [FichaTermController::class, 'show'])->middleware('permission:ficha_terms.view');
+            Route::post('/', [FichaTermController::class, 'store'])->middleware('permission:ficha_terms.create');
+            Route::patch('/{ficha_term_id}', [FichaTermController::class, 'update'])->middleware('permission:ficha_terms.update');
+            Route::patch('/{ficha_term_id}/set_current', [FichaTermController::class, 'setCurrent'])->middleware('permission:ficha_terms.setCurrent');
+            Route::delete('/{ficha_term_id}', [FichaTermController::class, 'destroy'])->middleware('permission:ficha_terms.delete');
+        });
+
+        // Schedules
+        Route::prefix('schedules')->group(function () {
+            Route::get('/', [ScheduleController::class, 'index'])->middleware('permission:schedules.viewAny');
+            Route::get('/{schedule_id}', [ScheduleController::class, 'show'])->middleware('permission:schedules.view');
+            Route::post('/', [ScheduleController::class, 'store'])->middleware('permission:schedules.create');
+            Route::patch('/{schedule_id}', [ScheduleController::class, 'update'])->middleware('permission:schedules.update');
+            Route::delete('/{schedule_id}', [ScheduleController::class, 'destroy'])->middleware('permission:schedules.delete');
+        });
+
+        // Days
+        Route::prefix('days')->group(function () {
+            Route::get('/', [DayController::class, 'index'])->middleware('permission:days.viewAny');
+            Route::get('/{day_id}', [DayController::class, 'show'])->middleware('permission:days.view');
+            Route::post('/', [DayController::class, 'store'])->middleware('permission:days.create');
+            Route::patch('/{day_id}', [DayController::class, 'update'])->middleware('permission:days.update');
+            Route::delete('/{day_id}', [DayController::class, 'destroy'])->middleware('permission:days.delete');
+        });
+
+        // Shifts
+        Route::prefix('shifts')->group(function () {
+            Route::get('/', [ShiftController::class, 'index'])->middleware('permission:shifts.viewAny');
+            Route::get('/{shift_id}', [ShiftController::class, 'show'])->middleware('permission:shifts.view');
+            Route::post('/', [ShiftController::class, 'store'])->middleware('permission:shifts.create');
+            Route::patch('/{shift_id}', [ShiftController::class, 'update'])->middleware('permission:shifts.update');
+            Route::delete('/{shift_id}', [ShiftController::class, 'destroy'])->middleware('permission:shifts.delete');
+        });
+
+        // Classrooms
+        Route::prefix('classrooms')->group(function () {
+            Route::get('/', [ClassroomController::class, 'index'])->middleware('permission:classrooms.viewAny');
+            Route::get('/{classroom_id}', [ClassroomController::class, 'show'])->middleware('permission:classrooms.view');
+            Route::post('/', [ClassroomController::class, 'store'])->middleware('permission:classrooms.create');
+            Route::patch('/{classroom_id}', [ClassroomController::class, 'update'])->middleware('permission:classrooms.update');
+            Route::delete('/{classroom_id}', [ClassroomController::class, 'destroy'])->middleware('permission:classrooms.delete');
+        });
+
+        // Schedule Sessions
+        Route::prefix('schedule_sessions')->group(function () {
+            Route::get('/', [ScheduleSessionController::class, 'index'])->middleware('permission:schedule_sessions.viewAny');
+            Route::get('/{schedule_session_id}', [ScheduleSessionController::class, 'show'])->middleware('permission:schedule_sessions.view');
+            Route::post('/', [ScheduleSessionController::class, 'store'])->middleware('permission:schedule_sessions.create');
+            Route::patch('/{schedule_session_id}', [ScheduleSessionController::class, 'update'])->middleware('permission:schedule_sessions.update');
+            Route::delete('/{schedule_session_id}', [ScheduleSessionController::class, 'destroy'])->middleware('permission:schedule_sessions.delete');
+        });
+
+        // Class Types
+        Route::prefix('class_types')->group(function () {
+            Route::get('/', [ClassTypeController::class, 'index'])->middleware('permission:class_types.viewAny');
+            Route::get('/{class_type_id}', [ClassTypeController::class, 'show'])->middleware('permission:class_types.view');
+            Route::post('/', [ClassTypeController::class, 'store'])->middleware('permission:class_types.create');
+            Route::patch('/{class_type_id}', [ClassTypeController::class, 'update'])->middleware('permission:class_types.update');
+            Route::delete('/{class_type_id}', [ClassTypeController::class, 'destroy'])->middleware('permission:class_types.delete');
+        });
+
+        // Real Classes
+        Route::prefix('real_classes')->group(function () {
+            Route::get('/', [RealClassController::class, 'index'])->middleware('permission:real_classes.viewAny');
+            Route::get('/{real_class_id}', [RealClassController::class, 'show'])->middleware('permission:real_classes.view');
+            Route::post('/', [RealClassController::class, 'store'])->middleware('permission:real_classes.create');
+            Route::patch('/{real_class_id}', [RealClassController::class, 'update'])->middleware('permission:real_classes.update');
+            Route::delete('/{real_class_id}', [RealClassController::class, 'destroy'])->middleware('permission:real_classes.delete');
+        });
+
+        // Attendance Statuses
+        Route::prefix('attendance_statuses')->group(function () {
+            Route::get('/', [AttendanceStatusController::class, 'index'])->middleware('permission:attendance_statuses.viewAny');
+            Route::get('/{attendance_status_id}', [AttendanceStatusController::class, 'show'])->middleware('permission:attendance_statuses.view');
+            Route::post('/', [AttendanceStatusController::class, 'store'])->middleware('permission:attendance_statuses.create');
+            Route::patch('/{attendance_status_id}', [AttendanceStatusController::class, 'update'])->middleware('permission:attendance_statuses.update');
+            Route::delete('/{attendance_status_id}', [AttendanceStatusController::class, 'destroy'])->middleware('permission:attendance_statuses.delete');
+        });
+
+        // Attendances
+        Route::prefix('attendances')->group(function () {
+            Route::get('/', [AttendanceController::class, 'index'])->middleware('permission:attendances.viewAny');
+            Route::get('/{attendance_id}', [AttendanceController::class, 'show'])->middleware('permission:attendances.view');
+            Route::post('/', [AttendanceController::class, 'store'])->middleware('permission:attendances.create');
+            Route::patch('/{attendance_id}', [AttendanceController::class, 'update'])->middleware('permission:attendances.update');
+            Route::delete('/{attendance_id}', [AttendanceController::class, 'destroy'])->middleware('permission:attendances.delete');
+            Route::get('/class/{real_class_id}', [AttendanceController::class, 'byClassRealId'])->middleware('permission:attendances.byClassRealId');
+        });
+
+        // Notification Types
+        Route::prefix('notification-types')->group(function () {
+            Route::get('/', [NotificationTypeController::class, 'index'])->middleware('permission:notification_types.viewAny');
+            Route::get('/{notification_type_id}', [NotificationTypeController::class, 'show'])->middleware('permission:notification_types.view');
+            Route::post('/', [NotificationTypeController::class, 'store'])->middleware('permission:notification_types.create');
+            Route::patch('/{notification_type_id}', [NotificationTypeController::class, 'update'])->middleware('permission:notification_types.update');
+            Route::delete('/{notification_type_id}', [NotificationTypeController::class, 'destroy'])->middleware('permission:notification_types.delete');
+        });
+
+        // Notifications
+        Route::prefix('notifications')->group(function () {
+            Route::get('/all', [NotificationController::class, 'all'])->middleware('permission:notifications.all');
+            Route::get('/', [NotificationController::class, 'index'])->middleware('permission:notifications.viewAny');
+            Route::patch('/read-all', [NotificationController::class, 'markAllAsRead'])->middleware('permission:notifications.markAllAsRead');
+            Route::get('/{notification_id}', [NotificationController::class, 'show'])->middleware('permission:notifications.view');
+            Route::patch('/{notification_id}/read', [NotificationController::class, 'markAsRead'])->middleware('permission:notifications.markAsRead');
+            Route::delete('/{notification_id}', [NotificationController::class, 'destroy'])->middleware('permission:notifications.delete');
+        });
+
     });
-
-
-    //Rutas para usuarios
-    Route::prefix('users')->group(function () {
-      Route::get('/', [UserController::class, 'index']);
-      Route::get('/me', [UserController::class, 'showOwn']);
-      Route::get('/{user_id}', [UserController::class, 'show']);
-      Route::post('/', [UserController::class, 'store']);
-      Route::patch('/{user_id}', [UserController::class, 'update']);
-      Route::patch('/{user_id}/roles', [UserController::class, 'updateRoles']);
-      Route::patch('/me/password', [UserController::class, 'updateOwnPassword']);
-      Route::delete('/{id}', [UserController::class, 'destroy']);
-    });
-
-    //Rutas para perfiles de usuario
-    Route::prefix('profiles/users')->group(function () {
-      Route::get('/', [UserProfileController::class, 'index']);
-      Route::get('/me', [UserProfileController::class, 'showOwn']);
-      Route::get('/profile/{profile_id}', [UserProfileController::class, 'show']);
-      Route::get('/user/{user_id}', [UserProfileController::class, 'showByUser']);
-      Route::patch('/me', [UserProfileController::class, 'updateOwn']);
-      Route::patch('/user/{user_id}', [UserProfileController::class, 'update']);
-    });
-
-
-    //Rutas para areas
-    Route::prefix('areas')->group(function () {
-      Route::get('/', [AreaController::class, 'index']);
-      Route::get('/{area_id}', [AreaController::class, 'show']);
-      Route::post('/', [AreaController::class, 'store']);
-      Route::patch('/{area_id}', [AreaController::class, 'update']);
-      Route::delete('/{area_id}', [AreaController::class, 'destroy']);
-    });
-
-
-    //Rutas para niveles de formación
-    Route::prefix('qualification_levels')->group(function () {
-      Route::get('/', [QualificationLevelController::class, 'index']);
-      Route::get('/{qualification_level_id}', [QualificationLevelController::class, 'show']);
-      Route::post('/', [QualificationLevelController::class, 'store']);
-      Route::patch('/{qualification_level_id}', [QualificationLevelController::class, 'update']);
-      Route::delete('/{qualification_level_id}', [QualificationLevelController::class, 'destroy']);
-    });
-
-
-    //Rutas para programas de formación
-    Route::prefix('training_programs')->group(function () {
-      Route::get('/', [TrainingProgramController::class, 'index']);
-      Route::get('/{training_program_id}', [TrainingProgramController::class, 'show']);
-      Route::post('/', [TrainingProgramController::class, 'store']);
-      Route::patch('/{training_program_id}', [TrainingProgramController::class, 'update']);
-      Route::delete('/{training_program_id}', [TrainingProgramController::class, 'destroy']);
-    });
-
-
-    //Rutas para estados de ficha
-    Route::prefix('ficha_statuses')->group(function () {
-      Route::get('/', [FichaStatusController::class, 'index']);
-      Route::get('/{status_id}', [FichaStatusController::class, 'show']);
-      Route::post('/', [FichaStatusController::class, 'store']);
-      Route::patch('/{status_id}', [FichaStatusController::class, 'update']);
-      Route::delete('/{status_id}', [FichaStatusController::class, 'destroy']);
-    });
-
-
-    // Rutas para fichas
-    Route::prefix('fichas')->group(function () {
-      Route::get('/', [FichaController::class, 'index']);
-      Route::get('/{ficha_id}', [FichaController::class, 'show']);
-      Route::post('/', [FichaController::class, 'store']);
-      Route::patch('/{ficha_id}', [FichaController::class, 'update']);
-      Route::delete('/{ficha_id}', [FichaController::class, 'destroy']);
-    });
-
-
-    //Rutas para aprendices
-    Route::prefix('apprentices')->group(function () {
-      Route::get('/', [ApprenticeController::class, 'index']);
-      Route::get('/{apprentice_id}', [ApprenticeController::class, 'show']);
-      Route::post('/', [ApprenticeController::class, 'store']);
-      Route::patch('/{apprentice_id}', [ApprenticeController::class, 'update']);
-      Route::delete('/{apprentice_id}', [ApprenticeController::class, 'destroy']);
-      Route::post('/import', [ApprenticeController::class, 'import']);
-    });
-
-
-    // Rutas para trimestres
-    Route::prefix('terms')->group(function () {
-      Route::get('/', [TermController::class, 'index']);
-      Route::get('/{term_id}', [TermController::class, 'show']);
-      Route::post('/', [TermController::class, 'store']);
-      Route::patch('/{term_id}', [TermController::class, 'update']);
-      Route::delete('/{term_id}', [TermController::class, 'destroy']);
-    });
-
-
-    //Rutas para fases de formación
-    Route::prefix('phases')->group(function () {
-      Route::get('/', [PhaseController::class, 'index']);
-      Route::get('/{phase_id}', [PhaseController::class, 'show']);
-      Route::post('/', [PhaseController::class, 'store']);
-      Route::patch('/{phase_id}', [PhaseController::class, 'update']);
-      Route::delete('/{phase_id}', [PhaseController::class, 'destroy']);
-    });
-
-
-    // Rutas para trimestres de las fichas
-    Route::prefix('ficha_terms')->group(function () {
-      Route::get('/', [FichaTermController::class, 'index']);
-      Route::get('/{ficha_term_id}', [FichaTermController::class, 'show']);
-      Route::post('/', [FichaTermController::class, 'store']);
-      Route::patch('/{ficha_term_id}', [FichaTermController::class, 'update']);
-      Route::patch('/{ficha_term_id}/set_current', [FichaTermController::class, 'setCurrent']);
-      Route::delete('/{ficha_term_id}', [FichaTermController::class, 'destroy']);
-    });
-
-
-    // Rutas para bloques de horarios
-    Route::prefix('schedules')->group(function () {
-      Route::get('/', [ScheduleController::class, 'index']);
-      Route::get('/{schedule_id}', [ScheduleController::class, 'show']);
-      Route::post('/', [ScheduleController::class, 'store']);
-      Route::patch('/{schedule_id}', [ScheduleController::class, 'update']);
-      Route::delete('/{schedule_id}', [ScheduleController::class, 'destroy']);
-    });
-
-
-    //Rutas para los días
-    Route::prefix('days')->group(function () {
-      Route::get('/', [DayController::class, 'index']);
-      Route::get('/{day_id}', [DayController::class, 'show']);
-      Route::post('/', [DayController::class, 'store']);
-      Route::patch('/{day_id}', [DayController::class, 'update']);
-      Route::delete('/{day_id}', [DayController::class, 'destroy']);
-    });
-
-
-    //Rutas para las jornadas
-    Route::prefix('shifts')->group(function () {
-      Route::get('/', [ShiftController::class, 'index']);
-      Route::get('/{shift_id}', [ShiftController::class, 'show']);
-      Route::post('/', [ShiftController::class, 'store']);
-      Route::patch('/{shift_id}', [ShiftController::class, 'update']);
-      Route::delete('/{shift_id}', [ShiftController::class, 'destroy']);
-    });
-
-
-    //Rutas para ambientes de formacion
-    Route::prefix('classrooms')->group(function () {
-      Route::get('/', [ClassroomController::class, 'index']);
-      Route::get('/{classroom_id}', [ClassroomController::class, 'show']);
-      Route::post('/', [ClassroomController::class, 'store']);
-      Route::patch('/{classroom_id}', [ClassroomController::class, 'update']);
-      Route::delete('/{classroom_id}', [ClassroomController::class, 'destroy']);
-    });
-
-
-    //Rutas de sesiones de horario
-    Route::prefix('schedule_sessions')->group(function () {
-      Route::get('/', [ScheduleSessionController::class, 'index']);
-      Route::get('/{schedule_session_id}', [ScheduleSessionController::class, 'show']);
-      Route::post('/', [ScheduleSessionController::class, 'store']);
-      Route::patch('/{schedule_session_id}', [ScheduleSessionController::class, 'update']);
-      Route::delete('/{schedule_session_id}', [ScheduleSessionController::class, 'destroy']);
-    });
-
-
-    //Rutas de tipos de clase
-    Route::prefix('class_types')->group(function () {
-      Route::get('/', [ClassTypeController::class, 'index']);
-      Route::get('/{class_type_id}', [ClassTypeController::class, 'show']);
-      Route::post('/', [ClassTypeController::class, 'store']);
-      Route::patch('/{class_type_id}', [ClassTypeController::class, 'update']);
-      Route::delete('/{class_type_id}', [ClassTypeController::class, 'destroy']);
-    });
-
-
-    // Rutas de clases Reales
-    Route::prefix('real_classes')->group(function () {
-      Route::get('/', [RealClassController::class, 'index']);
-      Route::get('/{real_class_id}', [RealClassController::class, 'show']);
-      Route::post('/', [RealClassController::class, 'store']);
-      Route::patch('/{real_class_id}', [RealClassController::class, 'update']);
-      Route::delete('/{real_class_id}', [RealClassController::class, 'destroy']);
-    });
-
-
-    //Rutas de estados de asistencia
-    Route::prefix('attendance_statuses')->group(function () {
-      Route::get('/', [AttendanceStatusController::class, 'index']);
-      Route::get('/{attendance_status_id}', [AttendanceStatusController::class, 'show']);
-      Route::post('/', [AttendanceStatusController::class, 'store']);
-      Route::patch('/{attendance_status_id}', [AttendanceStatusController::class, 'update']);
-      Route::delete('/{attendance_status_id}', [AttendanceStatusController::class, 'destroy']);
-    });
-
-
-    //Rutas de asistencias
-    Route::prefix('attendances')->group(function () {
-      Route::get('/', [AttendanceController::class, 'index']);
-      Route::get('/{attendance_id}', [AttendanceController::class, 'show']);
-      Route::post('/', [AttendanceController::class, 'store']);
-      Route::patch('/{attendance_id}', [AttendanceController::class, 'update']);
-      Route::delete('/{attendance_id}', [AttendanceController::class, 'destroy']);
-
-      Route::get('/class/{real_class_id}', [AttendanceController::class, 'byClassRealId']);
-    });
-
-
-    //Rutas de tipos de notificación
-    Route::prefix('notification-types')->group(function () {
-      Route::get('/', [NotificationTypeController::class, 'index']);
-      Route::get('/{notification_type_id}', [NotificationTypeController::class, 'show']);
-      Route::post('/', [NotificationTypeController::class, 'store']);
-      Route::patch('/{notification_type_id}', [NotificationTypeController::class, 'update']);
-      Route::delete('/{notification_type_id}', [NotificationTypeController::class, 'destroy']);
-    });
-
-
-    //Rutas de notificaciones
-    Route::prefix('notifications')->group(function () {
-      Route::get('/all', [NotificationController::class, 'all']);
-
-      // Notificaciones del usuario autenticado (status=all|read|unread)
-      Route::get('/', [NotificationController::class, 'index']);
-      
-      Route::patch('/read-all', [NotificationController::class, 'markAllAsRead']);
-      Route::get('/{notification_id}', [NotificationController::class, 'show']);
-      Route::patch('/{notification_id}/read', [NotificationController::class, 'markAsRead']);
-      Route::delete('/{notification_id}', [NotificationController::class, 'destroy']);
-    });
-  });
 });
