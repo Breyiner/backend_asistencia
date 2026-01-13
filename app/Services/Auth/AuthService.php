@@ -85,7 +85,7 @@ class AuthService
             return [
                 "error" => true,
                 "code" => 404,
-                "message" => "Usuario no encontrado",
+                "message" => "Credenciales incorrectas.",
             ];
         }
 

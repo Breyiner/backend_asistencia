@@ -22,7 +22,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email', 'exists:users,email'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ];
     }
@@ -38,7 +38,6 @@ class LoginRequest extends FormRequest
         return [
             'email.required' => 'El :attribute es obligatorio',
             'email.email' => 'El :attribute debe tener formato válido',
-            'email.exists' => 'Credenciales incorrectas',
 
             'password.required' => 'La :attribute es obligatoria',
 
