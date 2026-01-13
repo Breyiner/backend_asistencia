@@ -149,7 +149,7 @@ class AuthService
             "code" => 200,
             "message" => "Logueo exitoso",
             "data" => [
-                'id' => $user->id,
+                'user' => $user->auth_data,
                 'cookieToken' => $cookieToken,
                 'cookieRefreshToken' => $cookieRefreshToken,
                 'token' => $accessToken,

@@ -35,6 +35,8 @@ class DatabaseSeeder extends Seeder
             ClassTypeSeeder::class,
             AttendanceStatusSeeder::class,
             NotificationTypeSeeder::class,
+            PermissionSeeder::class,
+            RolePermissionSeeder::class,
         ]);
     }
 }

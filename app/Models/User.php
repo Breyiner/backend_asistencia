@@ -66,7 +66,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(UserStatus::class, 'status_id');
     }
 
-    public function profile() {
+    public function profile()
+    {
         return $this->hasOne(UserProfile::class);
     }
 
@@ -90,5 +91,20 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Notification::class, 'notification_user')
             ->withPivot(['read_at'])
             ->withTimestamps();
+    }
+
+    public function getAuthDataAttribute()
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->profile ? $this->profile->first_name . ' ' . $this->profile->last_name : '',
+            'roles' => $this->roles->map(function ($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'permissions' => $role->permissions->pluck('name')->toArray()
+                ];
+            })->toArray()
+        ];
     }
 }

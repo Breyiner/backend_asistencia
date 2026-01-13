@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
                 'telephone_number' => '3010000000',
                 'email' => 'admin@gmail.com',
                 'password' => Hash::make('Password.123'),
-                'role_id' => 1,
+                'roles' => [1,2,3],
                 'status_id' => 1,
                 'email_verified_at' => now()
             ],
@@ -36,7 +36,7 @@ class UserSeeder extends Seeder
                 'telephone_number' => '3010000001',
                 'email' => 'gestor@gmail.com',
                 'password' => Hash::make('Password.123'),
-                'role_id' => 2,
+                'roles' => [2],
                 'status_id' => 1,
                 'email_verified_at' => now()
             ],
@@ -48,7 +48,7 @@ class UserSeeder extends Seeder
                 'telephone_number' => '3010000002',
                 'email' => 'instructor@gmail.com',
                 'password' => Hash::make('Password.123'),
-                'role_id' => 3,
+                'roles' => [3],
                 'status_id' => 1,
                 'email_verified_at' => now()
             ],
@@ -70,7 +70,7 @@ class UserSeeder extends Seeder
                 'telephone_number' => $userData['telephone_number'],
             ]);
 
-            $user->roles()->attach($userData['role_id']);
+            $user->roles()->attach($userData['roles']);
         }
     }
 }
