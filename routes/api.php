@@ -47,7 +47,7 @@ Route::middleware('throttle:api')->group(function () {
             ->middleware(['auth:sanctum', 'verified', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value]);
 
         Route::post('/logout', [AuthController::class, 'logOut'])
-            ->middleware(['auth:sanctum', 'verified']);
+            ->middleware(['auth:sanctum', 'verified', 'auth:sanctum']);
     });
 
     // Rutas de verificación de correo

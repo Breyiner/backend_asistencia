@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -49,6 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'password' => 'hashed',
+            'created_at' => 'date:Y-m-d'
         ];
     }
 
@@ -98,6 +100,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'id' => $this->id,
             'name' => $this->profile ? $this->profile->first_name . ' ' . $this->profile->last_name : '',
+            'created_at' => Carbon::parse($this->created_at)->format('Y-m-d'),
             'roles' => $this->roles->map(function ($role) {
                 return [
                     'id' => $role->id,

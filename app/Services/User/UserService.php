@@ -17,27 +17,94 @@ use Illuminate\Support\Str;
 
 class UserService
 {
-    public function getAll()
+    public function getAll($perPage = 10)
     {
+        $query = User::select([
+            'id',
+            'email',
+            'document_number',
+            'status_id'
+        ])
+            ->with([
+                'profile:id,user_id,first_name,last_name',
+                'status:id,name',
+                'roles:id,name'
+            ]);
 
-        $users = User::all();
-
-        if (empty($users)) {
-
-            return [
-                "error" => false,
-                "code" => 200,
-                "message" => "Usuarios obtenidos con éxito"
-            ];
+        // Filtros (mantén todos)
+        if (request()->filled('email')) {
+            $query->where('email', 'like', "%" . request('email') . "%");
         }
+
+        if (request()->filled('document_number')) {
+            $query->where('document_number', 'like', "%" . request('document_number') . "%");
+        }
+
+        if (request()->filled('status_name')) {
+            $query->whereHas('status', function ($q) {
+                $q->where('name', 'like', request('status_name') . "%");
+            });
+        }
+
+        if (request()->filled('document_type_id')) {
+            $query->where('document_type_id', request('document_type_id'));
+        }
+
+        if (request()->filled('first_name')) {
+            $query->whereHas('profile', function ($q) {
+                $q->where('first_name', 'like', "%" . request('first_name') . "%");
+            });
+        }
+
+        if (request()->filled('last_name')) {
+            $query->whereHas('profile', function ($q) {
+                $q->where('last_name', 'like', "%" . request('last_name') . "%");
+            });
+        }
+
+        if (request()->filled('telephone_number')) {
+            $query->whereHas('profile', function ($q) {
+                $q->where('telephone_number', 'like', "%" . request('telephone_number') . "%");
+            });
+        }
+
+        if (request()->filled('role_name')) {
+            $query->whereHas('roles', function ($q) {
+                $q->where('name', 'like', "%" . request('role_name') . "%");
+            });
+        }
+
+        $users = $query->paginate($perPage);
+
+        // Transforma a formato plano para frontend
+        $items = $users->getCollection()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'first_name' => $user->profile?->first_name ?? '',
+                'last_name' => $user->profile?->last_name ?? '',
+                'email' => $user->email,
+                'roles' => $user->roles->pluck('name'),
+                'status' => $user->status?->name ?? 'Sin estado',
+                'document_number' => $user->document_number
+            ];
+        });
 
         return [
             "error" => false,
             "code" => 200,
-            "message" => "Estados obtenidos con éxito",
-            "data" => $users
+            "message" => "Usuarios obtenidos con éxito",
+            "data" => $items,
+            "paginate" => [
+                "current_page" => $users->currentPage(),
+                "per_page" => $users->perPage(),
+                "total" => $users->total(),
+                "last_page" => $users->lastPage(),
+                "from" => $users->firstItem(),
+                "to" => $users->lastItem(),
+            ]
         ];
     }
+
 
     public function getById($id)
     {
@@ -252,7 +319,7 @@ class UserService
 
 
         $user->update([
-            "password" => Hash::make($data['password'])
+            "password" => Hash::make($data['new_password'])
         ]);
 
         return [

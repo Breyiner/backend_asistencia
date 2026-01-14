@@ -24,7 +24,7 @@ class UpdateOwnUserPasswordRequest extends FormRequest
     {
         return [
             'current_password' => ['required', 'string'],
-            'password' => ['required', 'string', 'max:50', new StrongPassword(), 'confirmed']
+            'new_password' => ['required', 'string', 'max:50', new StrongPassword(), 'confirmed']
         ];
     }
 
@@ -34,10 +34,10 @@ class UpdateOwnUserPasswordRequest extends FormRequest
             'current_password.required' => 'Debes ingresar tu :attribute.',
             'current_password.string' => 'La :attribute debe ser texto',
 
-            'password.required' => 'La :attribute es obligatoria.',
-            'password.string' => 'La :attribute debe ser texto',
-            'password.max' => 'La :attribute no debe tener más de :max caracteres.',
-            'password.confirmed' => 'La confirmación de la :attribute no coincide.',
+            'new_password.required' => 'La :attribute es obligatoria.',
+            'new_password.string' => 'La :attribute debe ser texto',
+            'new_password.max' => 'La :attribute no debe tener más de :max caracteres.',
+            'new_password.confirmed' => 'La confirmación de la :attribute no coincide.',
         ];
     }
 
@@ -49,7 +49,7 @@ class UpdateOwnUserPasswordRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'password' => 'nueva contraseña',
+            'new_password' => 'nueva contraseña',
             'current_password' => 'contrasenña actual'
         ];
     }

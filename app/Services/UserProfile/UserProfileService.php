@@ -34,12 +34,12 @@ class UserProfileService
         ];
     }
 
-    public function getProfile($id)
+    public function getProfile($user_id)
     {
 
-        $profile = UserProfile::find($id);
+        $user = User::with('profile', 'roles')->find($user_id);
 
-        if (!$profile)
+        if (!$user)
             return [
                 "error" => true,
                 "code" => 404,
@@ -50,7 +50,7 @@ class UserProfileService
             "error" => false,
             "code" => 200,
             "message" => "Perfil obtenido con éxito",
-            "data" => $profile
+            "data" => $user
         ];
     }
 
