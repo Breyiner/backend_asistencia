@@ -2,7 +2,9 @@
 
 namespace App\Services\ClassType;
 
+use App\Events\ResourceChanged;
 use App\Models\ClassType;
+use Illuminate\Support\Facades\Auth;
 
 class ClassTypeService
 {
@@ -40,12 +42,21 @@ class ClassTypeService
 
     public function create($data)
     {
-        ClassType::create($data);
+        $classType = ClassType::create($data);
+
+        event(new ResourceChanged(
+            'crear',
+            ClassType::class,
+            $classType->id,
+            Auth::id(),
+            'Tipo de clase'
+        ));
 
         return [
             'error' => false,
             'code' => 201,
             'message' => 'Tipo de clase creado correctamente',
+            'data' => $classType,
         ];
     }
 
@@ -76,10 +87,19 @@ class ClassTypeService
 
         $classType->update($classTypeData);
 
+        event(new ResourceChanged(
+            'actualizar',
+            ClassType::class,
+            $classType->id,
+            Auth::id(),
+            'Tipo de clase'
+        ));
+
         return [
             'error' => false,
             'code' => 200,
             'message' => 'Tipo de clase actualizado correctamente',
+            'data' => $classType->fresh(),
         ];
     }
 
@@ -96,6 +116,14 @@ class ClassTypeService
         }
 
         $classType->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            ClassType::class,
+            $id,
+            Auth::id(),
+            'Tipo de clase'
+        ));
 
         return [
             'error' => false,

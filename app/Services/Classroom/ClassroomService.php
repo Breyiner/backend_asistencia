@@ -2,7 +2,9 @@
 
 namespace App\Services\Classroom;
 
+use App\Events\ResourceChanged;
 use App\Models\Classroom;
+use Illuminate\Support\Facades\Auth;
 
 class ClassroomService
 {
@@ -40,12 +42,21 @@ class ClassroomService
 
     public function create(array $data)
     {
-        Classroom::create($data);
+        $classroom = Classroom::create($data);
+
+        event(new ResourceChanged(
+            'crear',
+            Classroom::class,
+            $classroom->id,
+            Auth::id(),
+            'Ambiente'
+        ));
 
         return [
             'error' => false,
             'code' => 201,
             'message' => 'Ambiente creado correctamente',
+            'data' => $classroom,
         ];
     }
 
@@ -81,10 +92,19 @@ class ClassroomService
 
         $classroom->update($classroomData);
 
+        event(new ResourceChanged(
+            'actualizar',
+            Classroom::class,
+            $classroom->id,
+            Auth::id(),
+            'Ambiente'
+        ));
+
         return [
             'error' => false,
             'code' => 200,
             'message' => 'Ambiente actualizado correctamente',
+            'data' => $classroom->fresh(),
         ];
     }
 
@@ -101,6 +121,14 @@ class ClassroomService
         }
 
         $classroom->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            Classroom::class,
+            $id,
+            Auth::id(),
+            'Ambiente'
+        ));
 
         return [
             'error' => false,

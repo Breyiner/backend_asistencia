@@ -2,7 +2,9 @@
 
 namespace App\Services\Schedule;
 
+use App\Events\ResourceChanged;
 use App\Models\Schedule;
+use Illuminate\Support\Facades\Auth;
 
 class ScheduleService
 {
@@ -45,6 +47,14 @@ class ScheduleService
             'ficha_term_id' => $data['ficha_term_id'],
         ]);
 
+        event(new ResourceChanged(
+            'crear',
+            Schedule::class,
+            $schedule->id,
+            Auth::id(),
+            'Horario'
+        ));
+
         return [
             'error' => false,
             'code' => 201,
@@ -55,7 +65,6 @@ class ScheduleService
 
     public function update($data, $id)
     {
-
         $schedule = Schedule::find($id);
 
         if (!$schedule) {
@@ -72,14 +81,23 @@ class ScheduleService
             $scheduleData['description'] = $data['description'];
         }
 
-        if (empty($scheduleData))
+        if (empty($scheduleData)) {
             return [
                 "error" => true,
                 "code" => 400,
                 "message" => "No hay datos para actualizar",
             ];
+        }
 
         $schedule->update($scheduleData);
+
+        event(new ResourceChanged(
+            'actualizar',
+            Schedule::class,
+            $schedule->id,
+            Auth::id(),
+            'Horario'
+        ));
 
         return [
             "error" => false,
@@ -102,6 +120,14 @@ class ScheduleService
         }
 
         $schedule->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            Schedule::class,
+            $id,
+            Auth::id(),
+            'Horario'
+        ));
 
         return [
             'error' => false,

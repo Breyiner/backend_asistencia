@@ -2,6 +2,7 @@
 
 namespace App\Services\User;
 
+use App\Events\ResourceChanged;
 use App\Events\UserCreated;
 use App\Models\Role;
 use App\Models\User;
@@ -9,6 +10,7 @@ use App\Models\UserProfile;
 use App\Models\UserStatus;
 use Exception;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -102,6 +104,14 @@ class UserService
             ]));
 
             event(new Registered($user));
+
+            event(new ResourceChanged(
+                'crear',
+                User::class,
+                $user->id,
+                Auth::id(),
+                'Usuario',
+            ));
 
             return [
                 'error' => false,
@@ -205,6 +215,14 @@ class UserService
 
         $this->syncUserRoles($user, $roleIds);
 
+        event(new ResourceChanged(
+            'actualizar',
+            User::class,
+            $user->id,
+            Auth::id(),
+            'Usuario',
+        ));
+
         return [
             "error" => false,
             "code" => 200,
@@ -258,6 +276,14 @@ class UserService
         }
 
         $user->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            User::class,
+            $user->id,
+            Auth::id(),
+            'Usuario',
+        ));
 
         return [
             "error" => false,

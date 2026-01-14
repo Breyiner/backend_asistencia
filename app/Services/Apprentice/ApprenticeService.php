@@ -2,8 +2,10 @@
 
 namespace App\Services\Apprentice;
 
+use App\Events\ResourceChanged;
 use App\Models\Apprentice;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ApprenticeService
@@ -83,6 +85,14 @@ class ApprenticeService
             $apprentice->roles()->attach(4);
 
             DB::commit();
+
+            event(new ResourceChanged(
+                'crear',
+                Apprentice::class,
+                $apprentice->id,
+                Auth::id(),
+                'Aprendiz',
+            ));
 
             return [
 

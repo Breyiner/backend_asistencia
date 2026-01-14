@@ -14,6 +14,7 @@ use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
 use App\Http\Controllers\API\Ficha\FichaController;
 use App\Http\Controllers\API\FichaStatus\FichaStatusController;
 use App\Http\Controllers\API\FichaTerm\FichaTermController;
+use App\Http\Controllers\API\NoClassDay\NoClassDayController;
 use App\Http\Controllers\API\Notification\NotificationController;
 use App\Http\Controllers\API\NotificationType\NotificationTypeController;
 use App\Http\Controllers\API\Phase\PhaseController;
@@ -292,5 +293,15 @@ Route::middleware('throttle:api')->group(function () {
             Route::delete('/{notification_id}', [NotificationController::class, 'destroy'])->middleware('permission:notifications.delete');
         });
 
+
+        // Dias sin clase
+        Route::prefix('no_class_days')->group(function () {
+            Route::get('/', [NoClassDayController::class, 'index'])->middleware('permission:no_class_days.viewAny');
+            Route::get('/check', [NoClassDayController::class, 'check'])->middleware('permission:no_class_days.check'); // ?ficha_id=&date=
+            Route::get('/{no_class_day_id}', [NoClassDayController::class, 'show'])->middleware('permission:no_class_days.view');
+            Route::post('/', [NoClassDayController::class, 'store'])->middleware('permission:no_class_days.create');
+            Route::patch('/{no_class_day_id}', [NoClassDayController::class, 'update'])->middleware('permission:no_class_days.update');
+            Route::delete('/{no_class_day_id}', [NoClassDayController::class, 'destroy'])->middleware('permission:no_class_days.delete');
+        });
     });
 });

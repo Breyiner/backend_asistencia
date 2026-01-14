@@ -2,7 +2,9 @@
 
 namespace App\Services\Phase;
 
+use App\Events\ResourceChanged;
 use App\Models\Phase;
+use Illuminate\Support\Facades\Auth;
 
 class PhaseService
 {
@@ -49,14 +51,23 @@ class PhaseService
 
     public function create(array $data)
     {
-        Phase::create([
+        $phase = Phase::create([
             'name' => $data['name'],
         ]);
+
+        event(new ResourceChanged(
+            'crear',
+            Phase::class,
+            $phase->id,
+            Auth::id(),
+            'Fase'
+        ));
 
         return [
             "error" => false,
             "code" => 201,
             "message" => "Fase creada con éxito",
+            "data" => $phase,
         ];
     }
 
@@ -84,12 +95,21 @@ class PhaseService
 
         if (!empty($phaseData)) {
             $phase->update($phaseData);
+
+            event(new ResourceChanged(
+                'actualizar',
+                Phase::class,
+                $phase->id,
+                Auth::id(),
+                'Fase'
+            ));
         }
 
         return [
             "error" => false,
             "code" => 200,
             "message" => "Fase actualizada con éxito",
+            "data" => $phase->fresh(),
         ];
     }
 
@@ -106,6 +126,14 @@ class PhaseService
         }
 
         $phase->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            Phase::class,
+            $id,
+            Auth::id(),
+            'Fase'
+        ));
 
         return [
             "error" => false,

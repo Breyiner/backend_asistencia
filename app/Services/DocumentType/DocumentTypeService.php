@@ -2,7 +2,9 @@
 
 namespace App\Services\DocumentType;
 
+use App\Events\ResourceChanged;
 use App\Models\DocumentType;
+use Illuminate\Support\Facades\Auth;
 
 class DocumentTypeService
 {
@@ -10,7 +12,7 @@ class DocumentTypeService
     {
         $documentType = DocumentType::all();
 
-        if ($documentType->isEmpty()){
+        if ($documentType->isEmpty()) {
             return [
                 "error" => false,
                 "code" => 200,
@@ -31,7 +33,7 @@ class DocumentTypeService
     {
         $documentType = DocumentType::find($id);
 
-        if (!$documentType){
+        if (!$documentType) {
             return [
                 "error" => true,
                 "code" => 404,
@@ -51,6 +53,14 @@ class DocumentTypeService
     {
         $documentType = DocumentType::create($data);
 
+        event(new ResourceChanged(
+            'crear',
+            DocumentType::class,
+            $documentType->id,
+            Auth::id(),
+            'Tipo de documento'
+        ));
+
         return [
             "error" => false,
             "code" => 201,
@@ -63,7 +73,7 @@ class DocumentTypeService
     {
         $documentType = DocumentType::find($id);
 
-        if (!$documentType){
+        if (!$documentType) {
             return [
                 "error" => true,
                 "code" => 404,
@@ -72,20 +82,28 @@ class DocumentTypeService
         }
 
         $documentType->update($data);
+
+        event(new ResourceChanged(
+            'actualizar',
+            DocumentType::class,
+            $documentType->id,
+            Auth::id(),
+            'Tipo de documento'
+        ));
 
         return [
             "error" => false,
             "code" => 200,
             "message" => "Tipo de documento actualizado exitosamente",
-            "data" => $documentType,
+            "data" => $documentType->fresh(),
         ];
     }
 
-    public function partialUpdate(array $data,$id)
+    public function partialUpdate(array $data, $id)
     {
         $documentType = DocumentType::find($id);
 
-        if (!$documentType){
+        if (!$documentType) {
             return [
                 "error" => true,
                 "code" => 404,
@@ -95,11 +113,19 @@ class DocumentTypeService
 
         $documentType->update($data);
 
+        event(new ResourceChanged(
+            'actualizar',
+            DocumentType::class,
+            $documentType->id,
+            Auth::id(),
+            'Tipo de documento'
+        ));
+
         return [
             "error" => false,
             "code" => 200,
             "message" => "Tipo de documento actualizado parcialmente exitosamente",
-            "data" => $documentType,
+            "data" => $documentType->fresh(),
         ];
     }
 
@@ -107,13 +133,14 @@ class DocumentTypeService
     {
         $documentType = DocumentType::find($id);
 
-        if (!$documentType){
+        if (!$documentType) {
             return [
                 "error" => true,
                 "code" => 404,
                 "message" => "Tipo de documento no encontrado",
             ];
         }
+
         if ($documentType->users()->exists()) {
             return [
                 "error" => true,
@@ -123,6 +150,14 @@ class DocumentTypeService
         }
 
         $documentType->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            DocumentType::class,
+            $id,
+            Auth::id(),
+            'Tipo de documento'
+        ));
 
         return [
             "error" => false,

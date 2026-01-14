@@ -2,7 +2,9 @@
 
 namespace App\Services\Day;
 
+use App\Events\ResourceChanged;
 use App\Models\Day;
+use Illuminate\Support\Facades\Auth;
 
 class DayService
 {
@@ -40,13 +42,21 @@ class DayService
 
     public function create(array $data): array
     {
+        $day = Day::create($data);
 
-        Day::create($data);
+        event(new ResourceChanged(
+            'crear',
+            Day::class,
+            $day->id,
+            Auth::id(),
+            'Día'
+        ));
 
         return [
             'error' => false,
             'code' => 201,
-            'message' => 'Día creado correctamente'
+            'message' => 'Día creado correctamente',
+            'data' => $day
         ];
     }
 
@@ -71,19 +81,29 @@ class DayService
             $dayData['day_number'] = $data['day_number'];
         }
 
-        if (empty($dayData))
+        if (empty($dayData)) {
             return [
                 "error" => true,
                 "code" => 400,
                 "message" => "No hay datos para actualizar",
             ];
+        }
 
         $day->update($dayData);
+
+        event(new ResourceChanged(
+            'actualizar',
+            Day::class,
+            $day->id,
+            Auth::id(),
+            'Día'
+        ));
 
         return [
             'error' => false,
             'code' => 200,
-            'message' => 'Día actualizado con éxito'
+            'message' => 'Día actualizado con éxito',
+            'data' => $day->fresh()
         ];
     }
 
@@ -100,6 +120,14 @@ class DayService
         }
 
         $day->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            Day::class,
+            $id,
+            Auth::id(),
+            'Día'
+        ));
 
         return [
             'error' => false,

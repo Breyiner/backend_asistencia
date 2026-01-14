@@ -2,7 +2,9 @@
 
 namespace App\Services\QualificationLevel;
 
+use App\Events\ResourceChanged;
 use App\Models\QualificationLevel;
+use Illuminate\Support\Facades\Auth;
 
 class QualificationLevelService
 {
@@ -49,15 +51,24 @@ class QualificationLevelService
 
     public function create(array $data)
     {
-        QualificationLevel::create([
+        $item = QualificationLevel::create([
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
         ]);
+
+        event(new ResourceChanged(
+            'crear',
+            QualificationLevel::class,
+            $item->id,
+            Auth::id(),
+            'Nivel de formación'
+        ));
 
         return [
             "error" => false,
             "code" => 201,
             "message" => "Nivel de formación creado con éxito",
+            "data" => $item,
         ];
     }
 
@@ -78,12 +89,23 @@ class QualificationLevelService
         if (array_key_exists('name', $data)) $payload['name'] = $data['name'];
         if (array_key_exists('description', $data)) $payload['description'] = $data['description'];
 
-        if (!empty($payload)) $item->update($payload);
+        if (!empty($payload)) {
+            $item->update($payload);
+
+            event(new ResourceChanged(
+                'actualizar',
+                QualificationLevel::class,
+                $item->id,
+                Auth::id(),
+                'Nivel de formación'
+            ));
+        }
 
         return [
             "error" => false,
             "code" => 200,
             "message" => "Nivel de formación actualizado con éxito",
+            "data" => $item->fresh(),
         ];
     }
 
@@ -99,7 +121,7 @@ class QualificationLevelService
             ];
         }
 
-        if($item->trainingPrograms()->count() > 0){
+        if ($item->trainingPrograms()->count() > 0) {
             return [
                 "error" => true,
                 "code" => 400,
@@ -108,6 +130,14 @@ class QualificationLevelService
         }
 
         $item->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            QualificationLevel::class,
+            $id,
+            Auth::id(),
+            'Nivel de formación'
+        ));
 
         return [
             "error" => false,

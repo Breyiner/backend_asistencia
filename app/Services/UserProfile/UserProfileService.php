@@ -2,10 +2,12 @@
 
 namespace App\Services\UserProfile;
 
+use App\Events\ResourceChanged;
 use App\Models\User;
 use App\Models\UserProfile;
 use Exception;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class UserProfileService
@@ -98,6 +100,14 @@ class UserProfileService
                 'message' => 'Perfil creado con éxito',
             ];
 
+        event(new ResourceChanged(
+            'crear',
+            UserProfile::class,
+            $profile->id,
+            Auth::id(),
+            'Perfil de usuario',
+        ));
+
         return [
             'error' => true,
             'code' => 500,
@@ -145,6 +155,14 @@ class UserProfileService
             }
 
             DB::commit();
+
+            event(new ResourceChanged(
+                'actualizar',
+                UserProfile::class,
+                $profile->id,
+                Auth::id(),
+                'Perfil de usuario',
+            ));
 
             return [
                 "error" => false,

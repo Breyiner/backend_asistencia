@@ -2,7 +2,9 @@
 
 namespace App\Services\ScheduleSession;
 
+use App\Events\ResourceChanged;
 use App\Models\ScheduleSession;
+use Illuminate\Support\Facades\Auth;
 
 class ScheduleSessionService
 {
@@ -43,12 +45,21 @@ class ScheduleSessionService
 
     public function create(array $data): array
     {
-        ScheduleSession::create($data);
+        $session = ScheduleSession::create($data);
+
+        event(new ResourceChanged(
+            'crear',
+            ScheduleSession::class,
+            $session->id,
+            Auth::id(),
+            'Sesión de horario'
+        ));
 
         return [
             'error' => false,
             'code' => 201,
             'message' => 'Registro creado correctamente',
+            'data' => $session,
         ];
     }
 
@@ -73,7 +84,6 @@ class ScheduleSessionService
         if (array_key_exists('start_time', $data))    $sessionData['start_time'] = $data['start_time'];
         if (array_key_exists('end_time', $data))      $sessionData['end_time'] = $data['end_time'];
 
-        // schedule_id NO se actualiza
         if (empty($sessionData)) {
             return [
                 'error' => true,
@@ -84,10 +94,19 @@ class ScheduleSessionService
 
         $session->update($sessionData);
 
+        event(new ResourceChanged(
+            'actualizar',
+            ScheduleSession::class,
+            $session->id,
+            Auth::id(),
+            'Sesión de horario'
+        ));
+
         return [
             'error' => false,
             'code' => 200,
             'message' => 'Registro actualizado correctamente',
+            'data' => $session->fresh(),
         ];
     }
 
@@ -104,6 +123,14 @@ class ScheduleSessionService
         }
 
         $session->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            ScheduleSession::class,
+            $id,
+            Auth::id(),
+            'Sesión de horario'
+        ));
 
         return [
             'error' => false,

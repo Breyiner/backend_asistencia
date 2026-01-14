@@ -2,7 +2,9 @@
 
 namespace App\Services\Area;
 
+use App\Events\ResourceChanged;
 use App\Models\Area;
+use Illuminate\Support\Facades\Auth;
 
 class AreaService
 {
@@ -49,15 +51,24 @@ class AreaService
 
     public function createArea(array $data)
     {
-        Area::create([
+        $area = Area::create([
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-        ]); // Eloquent: create model [web:46]
+        ]);
+
+        event(new ResourceChanged(
+            'crear',
+            Area::class,
+            $area->id,
+            Auth::id(),
+            'Área'
+        ));
 
         return [
             "error" => false,
             "code" => 201,
             "message" => "Área creada con éxito",
+            "data" => $area,
         ];
     }
 
@@ -85,12 +96,21 @@ class AreaService
 
         if (!empty($areaData)) {
             $area->update($areaData);
+
+            event(new ResourceChanged(
+                'actualizar',
+                Area::class,
+                $area->id,
+                Auth::id(),
+                'Área'
+            ));
         }
 
         return [
             "error" => false,
             "code" => 200,
             "message" => "Área actualizada con éxito",
+            "data" => $area->fresh(),
         ];
     }
 
@@ -106,7 +126,7 @@ class AreaService
             ];
         }
 
-        if($area->trainingPrograms()->count() > 0){
+        if ($area->trainingPrograms()->count() > 0) {
             return [
                 "error" => true,
                 "code" => 400,
@@ -115,6 +135,14 @@ class AreaService
         }
 
         $area->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            Area::class,
+            $id,
+            Auth::id(),
+            'Área'
+        ));
 
         return [
             "error" => false,

@@ -2,22 +2,24 @@
 
 namespace App\Services\Ficha;
 
+use App\Events\ResourceChanged;
 use App\Models\Ficha;
+use Illuminate\Support\Facades\Auth;
 
 class FichaService
 {
-    
     public function getAll()
     {
         $fichas = Ficha::with(['gestor', 'trainingProgram', 'status'])->get();
 
-        if (count($fichas) == 0)
+        if (count($fichas) == 0) {
             return [
                 "error" => false,
                 "code" => 200,
                 "message" => "No hay fichas registradas",
                 "data" => $fichas
             ];
+        }
 
         return [
             "error" => false,
@@ -25,19 +27,19 @@ class FichaService
             "message" => "Fichas obtenidas con éxito",
             "data" => $fichas
         ];
-
     }
 
     public function getById($id)
     {
         $ficha = Ficha::with(['gestor', 'trainingProgram', 'status'])->find($id);
 
-        if (!$ficha)
+        if (!$ficha) {
             return [
                 "error" => true,
                 "code" => 404,
                 "message" => "Esta ficha no existe",
             ];
+        }
 
         return [
             "error" => false,
@@ -58,6 +60,14 @@ class FichaService
             'status_id' => $data['status_id'],
         ]);
 
+        event(new ResourceChanged(
+            'crear',
+            Ficha::class,
+            $ficha->id,
+            Auth::id(),
+            'Ficha'
+        ));
+
         return [
             "error" => false,
             "code" => 201,
@@ -70,53 +80,46 @@ class FichaService
     {
         $ficha = Ficha::find($id);
 
-        if (!$ficha)
+        if (!$ficha) {
             return [
                 "error" => true,
                 "code" => 404,
                 "message" => "Esta ficha no existe",
             ];
+        }
 
         $fichaData = [];
 
-        if(array_key_exists('gestor_id', $data)) {
-            $fichaData['gestor_id'] = $data['gestor_id'];
-        }
+        if (array_key_exists('gestor_id', $data)) $fichaData['gestor_id'] = $data['gestor_id'];
+        if (array_key_exists('ficha_number', $data)) $fichaData['ficha_number'] = $data['ficha_number'];
+        if (array_key_exists('start_date', $data)) $fichaData['start_date'] = $data['start_date'];
+        if (array_key_exists('end_date', $data)) $fichaData['end_date'] = $data['end_date'];
+        if (array_key_exists('training_program_id', $data)) $fichaData['training_program_id'] = $data['training_program_id'];
+        if (array_key_exists('status_id', $data)) $fichaData['status_id'] = $data['status_id'];
 
-        if(array_key_exists('ficha_number', $data)) {
-            $fichaData['ficha_number'] = $data['ficha_number'];
-        }
-
-        if(array_key_exists('start_date', $data)) {
-            $fichaData['start_date'] = $data['start_date'];
-        }
-
-        if(array_key_exists('end_date', $data)) {
-            $fichaData['end_date'] = $data['end_date'];
-        }
-
-        if(array_key_exists('training_program_id', $data)) {
-            $fichaData['training_program_id'] = $data['training_program_id'];
-        }
-
-        if(array_key_exists('status_id', $data)) {
-            $fichaData['status_id'] = $data['status_id'];
-        }
-
-        if(empty($fichaData))
+        if (empty($fichaData)) {
             return [
                 "error" => true,
                 "code" => 400,
                 "message" => "No hay datos para actualizar",
             ];
+        }
 
         $ficha->update($fichaData);
+
+        event(new ResourceChanged(
+            'actualizar',
+            Ficha::class,
+            $ficha->id,
+            Auth::id(),
+            'Ficha'
+        ));
 
         return [
             "error" => false,
             "code" => 200,
             "message" => "Ficha actualizada con éxito",
-            "data" => $ficha
+            "data" => $ficha->fresh()
         ];
     }
 
@@ -124,14 +127,23 @@ class FichaService
     {
         $ficha = Ficha::find($id);
 
-        if (!$ficha)
+        if (!$ficha) {
             return [
                 "error" => true,
                 "code" => 404,
                 "message" => "Esta ficha no existe",
             ];
+        }
 
         $ficha->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            Ficha::class,
+            $id,
+            Auth::id(),
+            'Ficha'
+        ));
 
         return [
             "error" => false,

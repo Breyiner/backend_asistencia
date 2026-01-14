@@ -184,6 +184,16 @@ class PermissionSeeder extends Seeder
             ['name' => 'notifications.markAsRead', 'guard_name' => 'web', 'display_name' => 'Marcar como leída', 'group' => 'Notificaciones'],
             ['name' => 'notifications.markAllAsRead', 'guard_name' => 'web', 'display_name' => 'Marcar todas como leídas', 'group' => 'Notificaciones'],
             ['name' => 'notifications.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar notificación', 'group' => 'Notificaciones'],
+        
+
+            // Días sin clase
+            ['name' => 'no_class_days.viewAny', 'guard_name' => 'web', 'display_name' => 'Listar días sin clase', 'group' => 'Días Sin Clase'],
+            ['name' => 'no_class_days.view', 'guard_name' => 'web', 'display_name' => 'Ver día sin clase', 'group' => 'Días Sin Clase'],
+            ['name' => 'no_class_days.check', 'guard_name' => 'web', 'display_name' => 'Consultar día sin clase', 'group' => 'Días Sin Clase'],
+            ['name' => 'no_class_days.create', 'guard_name' => 'web', 'display_name' => 'Crear día sin clase', 'group' => 'Días Sin Clase'],
+            ['name' => 'no_class_days.update', 'guard_name' => 'web', 'display_name' => 'Editar día sin clase', 'group' => 'Días Sin Clase'],
+            ['name' => 'no_class_days.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar día sin clase', 'group' => 'Días Sin Clase'],
+
         ];
 
         foreach ($permissions as $permission) {

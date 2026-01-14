@@ -2,9 +2,11 @@
 
 namespace App\Services\Attendance;
 
+use App\Events\ResourceChanged;
 use App\Models\Attendance;
 use App\Models\RealClass;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceService
 {
@@ -189,6 +191,16 @@ class AttendanceService
         $attendanceData['absent_hours'] = $this->calculateAbsentHours($calcData);
 
         $attendance->update($attendanceData);
+
+        if ($attendance->fresh()->attendance_status_id === 2) {
+            event(new ResourceChanged(
+                'updated',
+                Attendance::class,
+                $attendance->id,
+                Auth::id(),
+                'Inasistencia',
+            ));
+        }
 
         return ['error' => false, 'code' => 200, 'message' => 'Asistencia actualizada correctamente'];
     }

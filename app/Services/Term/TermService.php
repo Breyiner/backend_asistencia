@@ -2,7 +2,9 @@
 
 namespace App\Services\Term;
 
+use App\Events\ResourceChanged;
 use App\Models\Term;
+use Illuminate\Support\Facades\Auth;
 
 class TermService
 {
@@ -49,9 +51,17 @@ class TermService
 
   public function create(array $data)
   {
-    Term::create([
+    $term = Term::create([
       'name' => $data['name'],
     ]);
+
+    event(new ResourceChanged(
+      'crear',
+      Term::class,
+      $term->id,
+      Auth::id(),
+      'Trimestre',
+    ));
 
     return [
       "error" => false,
@@ -80,6 +90,14 @@ class TermService
 
     if(!empty($termData)) {
         $term->update($termData);
+
+        event(new ResourceChanged(
+          'actualizar',
+          Term::class,
+          $term->id,
+          Auth::id(),
+          'Trimestre',
+        ));
     }
 
     return [
@@ -102,6 +120,14 @@ class TermService
     }
 
     $term->delete();
+
+    event(new ResourceChanged(
+      'eliminar',
+      Term::class,
+      $term->id,
+      Auth::id(),
+      'Trimestre',
+    ));
 
     return [
       "error" => false,

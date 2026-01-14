@@ -2,7 +2,9 @@
 
 namespace App\Services\Shift;
 
+use App\Events\ResourceChanged;
 use App\Models\Shift;
+use Illuminate\Support\Facades\Auth;
 
 class ShiftService
 {
@@ -41,7 +43,15 @@ class ShiftService
     public function create(array $data): array
     {
 
-        Shift::create($data);
+        $shift = Shift::create($data);
+
+        event(new ResourceChanged(
+            'crear',
+            Shift::class,
+            $shift->id,
+            Auth::id(),
+            'Jornada'
+        ));
 
         return [
             'error' => false,
@@ -85,6 +95,14 @@ class ShiftService
 
         $shift->update($shiftData);
 
+        event(new ResourceChanged(
+            'actualizar',
+            Shift::class,
+            $shift->id,
+            Auth::id(),
+            'Jornada'
+        ));
+
         return [
             'error' => false,
             'code' => 200,
@@ -105,6 +123,14 @@ class ShiftService
         }
 
         $shift->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            Shift::class,
+            $shift->id,
+            Auth::id(),
+            'Jornada'
+        ));
 
         return [
             'error' => false,

@@ -2,7 +2,9 @@
 
 namespace App\Services\AttendanceStatus;
 
+use App\Events\ResourceChanged;
 use App\Models\AttendanceStatus;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceStatusService
 {
@@ -40,12 +42,21 @@ class AttendanceStatusService
 
     public function create($data)
     {
-        AttendanceStatus::create($data);
+        $status = AttendanceStatus::create($data);
+
+        event(new ResourceChanged(
+            'crear',
+            AttendanceStatus::class,
+            $status->id,
+            Auth::id(),
+            'Estado de asistencia'
+        ));
 
         return [
             'error' => false,
             'code' => 201,
             'message' => 'Estado de asistencia creado correctamente',
+            'data' => $status,
         ];
     }
 
@@ -76,10 +87,19 @@ class AttendanceStatusService
 
         $status->update($statusData);
 
+        event(new ResourceChanged(
+            'actualizar',
+            AttendanceStatus::class,
+            $status->id,
+            Auth::id(),
+            'Estado de asistencia'
+        ));
+
         return [
             'error' => false,
             'code' => 200,
             'message' => 'Estado de asistencia actualizado correctamente',
+            'data' => $status->fresh(),
         ];
     }
 
@@ -96,6 +116,14 @@ class AttendanceStatusService
         }
 
         $status->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            AttendanceStatus::class,
+            $id,
+            Auth::id(),
+            'Estado de asistencia'
+        ));
 
         return [
             'error' => false,

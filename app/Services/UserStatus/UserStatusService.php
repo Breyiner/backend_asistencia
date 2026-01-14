@@ -2,9 +2,11 @@
 
 namespace App\Services\UserStatus;
 
+use App\Events\ResourceChanged;
 use App\Models\UserStatus;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 
 class UserStatusService
 {
@@ -59,6 +61,14 @@ class UserStatusService
       'description' => $data['description'],
     ]);
 
+    event(new ResourceChanged(
+      'crear',
+      UserStatus::class,
+      $status->id,
+      Auth::id(),
+      'Estado de usuario',
+    ));
+
     return [
       'error' => false,
       'code' => 201,
@@ -80,6 +90,14 @@ class UserStatusService
 
     $status->update(Arr::only($data, ['name', 'description']));
 
+    event(new ResourceChanged(
+      'actualizar',
+      UserStatus::class,
+      $status->id,
+      Auth::id(),
+      'Estado de usuario',
+    ));
+
     return [
       "error" => false,
       "code" => 200,
@@ -100,6 +118,14 @@ class UserStatusService
       ];
 
     $status->update($entryData);
+
+    event(new ResourceChanged(
+      'actualizar',
+      UserStatus::class,
+      $status->id,
+      Auth::id(),
+      'Estado de usuario',
+    ));
 
     return [
       "error" => false,
@@ -129,6 +155,14 @@ class UserStatusService
     }
 
     $status->delete();
+
+    event(new ResourceChanged(
+      'eliminar',
+      UserStatus::class,
+      $status->id,
+      Auth::id(),
+      'Estado de usuario',
+    ));
 
     return [
       "error" => false,

@@ -2,7 +2,9 @@
 
 namespace App\Services\NotificationType;
 
+use App\Events\ResourceChanged;
 use App\Models\NotificationType;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationTypeService
 {
@@ -43,6 +45,15 @@ class NotificationTypeService
     {
         $data = NotificationType::create($data);
 
+        event(new ResourceChanged(
+            'crear',
+            NotificationType::class,
+            $data->id,
+            Auth::id(),
+            'Tipo de Notificación',
+        ));
+
+
         return [
             'error' => false,
             'code' => 201,
@@ -76,6 +87,15 @@ class NotificationTypeService
 
         if (!empty($dataToUpdate)) {
             $notificationType->update($dataToUpdate);
+
+            event(new ResourceChanged(
+                'actualizar',
+                NotificationType::class,
+                $notificationType->id,
+                Auth::id(),
+                'Tipo de Notificación',
+            ));
+
         }
 
         return [
@@ -100,6 +120,14 @@ class NotificationTypeService
         }
 
         $notificationType->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            NotificationType::class,
+            $notificationTypeId,
+            Auth::id(),
+            'Tipo de Notificación',
+        ));
 
         return [
             'error' => false,

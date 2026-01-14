@@ -2,7 +2,9 @@
 
 namespace App\Services\TrainingProgram;
 
+use App\Events\ResourceChanged;
 use App\Models\TrainingProgram;
+use Illuminate\Support\Facades\Auth;
 
 class TrainingProgramService
 {
@@ -58,6 +60,14 @@ class TrainingProgramService
             ]
         );
 
+        event(new ResourceChanged(
+            'crear',
+            TrainingProgram::class,
+            $program->id,
+            Auth::id(),
+            'Programa de formación'
+        ));
+
         return [
             "error" => false,
             "code" => 201,
@@ -105,6 +115,14 @@ class TrainingProgramService
         }
 
         $program->update($programData);
+
+        event(new ResourceChanged(
+            'actualizar',
+            TrainingProgram::class,
+            $program->id,
+            Auth::id(),
+            'Programa de formación'
+        ));
         
         return [
             "error" => false,
@@ -134,6 +152,14 @@ class TrainingProgramService
         }
 
         $program->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            TrainingProgram::class,
+            $program->id,
+            Auth::id(),
+            'Programa de formación'
+        ));
 
         return [
             "error" => false,
