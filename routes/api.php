@@ -94,13 +94,12 @@ Route::middleware('throttle:api')->group(function () {
             Route::get('/{user_id}', [UserController::class, 'show'])->middleware('permission:users.view');
             Route::post('/', [UserController::class, 'store'])->middleware('permission:users.create');
             Route::patch('/{user_id}', [UserController::class, 'update'])->middleware('permission:users.update');
-            Route::patch('/{user_id}/roles', [UserController::class, 'updateRoles'])->middleware('permission:users.updateRoles');
             Route::patch('/me/password', [UserController::class, 'updateOwnPassword'])->middleware('permission:users.updateOwnPassword');
             Route::delete('/{id}', [UserController::class, 'destroy'])->middleware('permission:users.delete');
         });
 
         // Profiles
-        Route::prefix('profiles/users')->group(function () {
+        Route::prefix('profiles/users')->group(function () {  
             Route::get('/', [UserProfileController::class, 'index'])->middleware('permission:profiles_users.viewAny');
             Route::get('/me', [UserProfileController::class, 'showOwn'])->middleware('permission:profiles_users.viewOwn');
             Route::get('/profile/{profile_id}', [UserProfileController::class, 'show'])->middleware('permission:profiles_users.view');

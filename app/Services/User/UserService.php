@@ -76,7 +76,6 @@ class UserService
 
         $users = $query->paginate($perPage);
 
-        // Transforma a formato plano para frontend
         $items = $users->getCollection()->map(function ($user) {
             return [
                 'id' => $user->id,
@@ -118,11 +117,29 @@ class UserService
                 "message" => "Este usuario no existe",
             ];
 
+        $items = [
+            'id' => $user->id,
+            'first_name' => $user->profile?->first_name ?? '',
+            'last_name' => $user->profile?->last_name ?? '',
+            'email' => $user->email,
+            'roles' => $user->roles->pluck('name')->toArray(),
+            'role_ids' => $user->roles->pluck('id')->toArray(),
+            'status_id' => $user->status?->id,
+            'status' => $user->status?->name ?? 'Sin estado',
+            'document_number' => $user->document_number,
+            'document_type_id' => $user->document_type_id,
+            'document_type_name' => $user->documentType?->name ?? '',
+            'telephone_number' => $user->profile?->telephone_number ?? '',
+            'created_at' => $user->created_at?->toDateString(),
+            'updated_at' => $user->updated_at?->toDateString(),
+
+        ];
+
         return [
             "error" => false,
             "code" => 200,
             "message" => "Usuario obtenido con éxito",
-            "data" => $$user
+            "data" => $items
         ];
     }
 
@@ -246,6 +263,12 @@ class UserService
 
             if (!empty($profileData)) {
                 $user->profile()->update($profileData);
+            }
+
+            if (array_key_exists('roles', $data)) {
+                $this->syncUserRoles($user, $data['roles']);
+            } else {
+                $user->assignRole('Pendiente');
             }
 
             DB::commit();

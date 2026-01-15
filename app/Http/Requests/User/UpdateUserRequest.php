@@ -22,14 +22,19 @@ class UpdateUserRequest extends FormRequest
      */
     public function rules(): array
     {
+
+        $id = $this->route('user_id');
+
         return [
             'first_name' => ['sometimes', 'string', new AlphaSpaces()],
             'last_name' => ['sometimes', 'string', new AlphaSpaces()],
             'telephone_number' => ['sometimes', 'string', 'size:10', 'regex:/^\d+$/'],
             'document_type_id' => ['sometimes', 'integer', 'exists:document_types,id'],
-            'document_number' => ['sometimes', 'string', 'min:6', 'max:20', 'unique:users,document_number'],
-            'email' => ['sometimes', 'email', 'unique:users'],
+            'document_number' => ['sometimes', 'string', 'min:6', 'max:20', 'unique:users,document_number,' . $id . ',id'],
+            'email' => ['sometimes', 'email', 'unique:users,email,' . $id . ',id'],
             'status_id' => ['sometimes', 'integer', 'exists:user_statuses,id'],
+            'roles' => ['sometimes', 'array', 'min:1'],
+            'roles.*' => ['integer', 'distinct', 'exists:roles,id'],
         ];
     }
 
@@ -64,6 +69,14 @@ class UpdateUserRequest extends FormRequest
             'status_id.integer' => 'El :attribute debe ser un número entero',
             'status_id.exists' => 'El :attribute no existe',
 
+            'roles.required' => 'Los :attribute son obligatorios.',
+            'roles.array' => 'Los :attribute deben enviarse en formato de lista.',
+            'roles.min' => 'Debes seleccionar al menos :min rol.',
+
+            'roles.*.integer' => 'Cada :attribute seleccionado debe ser un identificador numérico.',
+            'roles.*.distinct' => 'No puedes repetir roles en la selección.',
+            'roles.*.exists' => 'Uno de los roles seleccionados no existe.',
+
         ];
     }
 
@@ -81,7 +94,9 @@ class UpdateUserRequest extends FormRequest
             'email' => 'correo',
             'document_type_id' => 'tipo de documento',
             'document_number' => 'número de documento',
-            'status_id' => 'estado'
+            'status_id' => 'estado',
+            'roles' => 'roles',
+            'roles.*' => 'rol',
         ];
     }
 }

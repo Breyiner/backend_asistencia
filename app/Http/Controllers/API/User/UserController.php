@@ -83,19 +83,6 @@ class UserController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
-    public function updateRoles(UpdateRolesUserRequest $request, string $id)
-    {
-
-        $data = $request->validated();
-
-        $response = $this->userService->updateRoles($data, $id);
-
-        if ($response['error'])
-            return ResponseFormatter::error($response['message'], $response['code']);
-
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
-    }
-
     public function updateOwnPassword(UpdateOwnUserPasswordRequest $request)
     {
         $user = Auth::user();
