@@ -26,7 +26,7 @@ class UpdateFichaRequest extends FormRequest
         $fichaId = $this->route('ficha_id');
 
         return [
-            'gestor_id' => ['sometimes', 'required', 'integer', 'exists:users,id', new UserHasRole('gestor')],
+            'gestor_id' => ['sometimes', 'required', 'integer', 'exists:users,id', new UserHasRole('Gestor de Fichas')],
             'ficha_number' => ['sometimes', 'required', 'string', "unique:fichas,ficha_number,{$fichaId},id", 'digits_between:5,20'],
             'start_date' => ['sometimes', 'required', 'date'],
             'end_date' => ['sometimes', 'required', 'date', 'after:start_date'],

@@ -19,14 +19,14 @@ class TrainingProgramController extends Controller
         $this->trainingProgramService = $trainingProgramService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $reponse = $this->trainingProgramService->getAll();
+        $reponse = $this->trainingProgramService->getAll($request->get('per_page', 10));
 
         if ($reponse['error'])
             return ResponseFormatter::error($reponse['message'], $reponse['code']);
 
-        return ResponseFormatter::success($reponse['message'], $reponse['code'], $reponse['data'] ?? []);
+        return ResponseFormatter::success($reponse['message'], $reponse['code'], $reponse['data'] ?? [], $reponse['paginate']);
     }
 
     public function show(string $id)

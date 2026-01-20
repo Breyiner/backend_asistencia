@@ -22,15 +22,18 @@ class UpdateApprenticeRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('apprentice_id');
+
         return [
             'first_name' => ['sometimes', 'required', 'string', new AlphaSpaces()],
             'last_name' => ['sometimes', 'required', 'string', new AlphaSpaces()],
             'telephone_number' => ['sometimes', 'required', 'string', 'size:10', 'regex:/^\d+$/'],
             'document_type_id' => ['sometimes', 'required', 'integer', 'exists:document_types,id'],
-            'document_number' => ['sometimes', 'required', 'string', 'min:6', 'max:20', 'unique:users,document_number'],
-            'email' => ['sometimes', 'required', 'email', 'unique:users'],
+            'document_number' => ['sometimes', 'required', 'string', 'min:6', 'max:20', 'unique:users,document_number,' . $id . ',id'],
+            'email' => ['sometimes', 'required', 'email', 'unique:users,email,' . $id . ',id'],
             'birt_date' => ['sometimes', 'required', 'date', 'before:today'],
             'ficha_id' => ['sometimes', 'required', 'integer', 'exists:fichas,ficha_id'],
+            'status_id' => ['sometimes', 'integer', 'exists:user_statuses,id'],
         ];
     }
 
@@ -75,6 +78,9 @@ class UpdateApprenticeRequest extends FormRequest
             'ficha_id.required' => 'El :attribute es obligatorio',
             'ficha_id.integer' => 'El :attribute debe ser un número entero',
             'ficha_id.exists' => 'Ficha :input no existe',
+
+            'status_id.integer' => 'El :attribute debe ser un número entero',
+            'status_id.exists' => 'El :attribute no existe',
         ];
     }
 
@@ -93,7 +99,8 @@ class UpdateApprenticeRequest extends FormRequest
             'document_type_id' => 'tipo de documento',
             'document_number' => 'número de documento',
             'birth_date' => 'fecha de nacimiento',
-            'ficha_id' => 'ficha'
+            'ficha_id' => 'ficha',
+            'status_id' => 'estado',
         ];
     }
 }

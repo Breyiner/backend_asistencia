@@ -8,16 +8,80 @@ use Illuminate\Support\Facades\Auth;
 
 class FichaService
 {
-    public function getAll()
+    public function getAll($perPage = 10)
     {
-        $fichas = Ficha::with(['gestor', 'trainingProgram', 'status'])->get();
+        $query = Ficha::select([
+            'id',
+            'gestor_id',
+            'training_program_id',
+            'status_id',
+            'ficha_number',
+            'created_at',
+            'updated_at',
+        ])->with([
+            'gestor.profile:id,user_id,first_name,last_name',
+            'trainingProgram:id,name',
+            'status:id,name',
 
-        if (count($fichas) == 0) {
+            'currentFichaTerm:id,ficha_id,term_id,is_active',
+            'currentFichaTerm.term:id,name',
+        ])->withCount('apprentices');
+
+        if (request()->filled('ficha_number')) {
+            $query->where('ficha_number', 'like', '%' . request('ficha_number') . '%');
+        }
+
+        if (request()->filled('training_program_name')) {
+            $query->whereHas('trainingProgram', function ($q) {
+                $q->where('name', 'like', '%' . request('training_program_name') . '%');
+            });
+        }
+
+        if (request()->filled('status_name')) {
+            $query->whereHas('status', function ($q) {
+                $q->where('name', 'like', '%' . request('status_name') . '%');
+            });
+        }
+
+        if (request()->filled('term_name')) {
+            $query->whereHas('currentFichaTerm.term', function ($q) {
+                $q->where('name', 'like', '%' . request('term_name') . '%');
+            });
+        }
+
+        $fichas = $query->paginate($perPage);
+
+        $items = $fichas->getCollection()->map(function ($ficha) {
+            return [
+                'id' => $ficha->id,
+                'ficha_number' => $ficha->ficha_number,
+
+                'gestor_id' => $ficha->gestor_id,
+                'gestor_name' => $ficha->gestor?->profile
+                    ? $ficha->gestor->profile->first_name . ' ' . $ficha->gestor->profile->last_name
+                    : 'Sin gestor',
+
+                'training_program_id' => $ficha->training_program_id,
+                'training_program_name' => $ficha->trainingProgram?->name ?? 'Sin programa',
+
+                'status_id' => $ficha->status_id,
+                'status_name' => $ficha->status?->name ?? 'Sin estado',
+
+                'current_term_id' => $ficha->currentFichaTerm?->term?->id,
+                'current_term_name' => $ficha->currentFichaTerm?->term?->name ?? 'Sin trimestre actual',
+
+                'apprentices_count' => (int) ($ficha->apprentices_count ?? 0),
+
+                'created_at' => $ficha->created_at?->toDateString(),
+                'updated_at' => $ficha->updated_at?->toDateString(),
+            ];
+        });
+
+        if ($items->isEmpty()) {
             return [
                 "error" => false,
                 "code" => 200,
                 "message" => "No hay fichas registradas",
-                "data" => $fichas
             ];
         }
 
@@ -25,13 +89,40 @@ class FichaService
             "error" => false,
             "code" => 200,
             "message" => "Fichas obtenidas con éxito",
-            "data" => $fichas
+            "data" => $items,
+            "paginate" => [
+                "current_page" => $fichas->currentPage(),
+                "per_page" => $fichas->perPage(),
+                "total" => $fichas->total(),
+                "last_page" => $fichas->lastPage(),
+                "from" => $fichas->firstItem(),
+                "to" => $fichas->lastItem(),
+            ],
         ];
     }
 
+
     public function getById($id)
     {
-        $ficha = Ficha::with(['gestor', 'trainingProgram', 'status'])->find($id);
+        $ficha = Ficha::select([
+            'id',
+            'gestor_id',
+            'training_program_id',
+            'status_id',
+            'ficha_number',
+            'start_date',
+            'end_date',
+            'created_at',
+            'updated_at',
+        ])
+            ->with([
+                'gestor.profile:id,user_id,first_name,last_name',
+                'trainingProgram:id,name',
+                'status:id,name',
+                'currentFichaTerm'
+            ])
+            ->withCount('apprentices')
+            ->find($id);
 
         if (!$ficha) {
             return [
@@ -41,13 +132,99 @@ class FichaService
             ];
         }
 
+        $gestorName = $ficha->gestor?->profile
+            ? trim($ficha->gestor->profile->first_name . ' ' . $ficha->gestor->profile->last_name)
+            : 'Sin gestor';
+
+        $data = [
+            'id' => $ficha->id,
+            'ficha_number' => $ficha->ficha_number,
+            'gestor_id' => $ficha->gestor_id,
+            'gestor_name' => $gestorName,
+            'training_program_id' => $ficha->training_program_id,
+            'training_program_name' => $ficha->trainingProgram?->name ?? 'Sin programa',
+            'apprentices_count' => (int) ($ficha->apprentices_count ?? 0),
+            'status_id' => $ficha->status_id,
+            'status_name' => $ficha->status?->name ?? 'Sin estado',
+            'start_date' => $ficha->start_date?->toDateString(),
+            'end_date' => $ficha->end_date?->toDateString(),
+            'current_ficha_term_id' => $ficha->currentFichaTerm?->id ?? null,
+            'current_term_name' => $ficha->currentFichaTerm?->term?->name ?? 'Sin trimestre actual',
+
+            'created_at' => $ficha->created_at?->toDateString(),
+            'updated_at' => $ficha->updated_at?->toDateString(),
+        ];
+
         return [
             "error" => false,
             "code" => 200,
             "message" => "Ficha obtenida con éxito",
-            "data" => $ficha
+            "data" => $data
         ];
     }
+
+
+    public function getByTrainingProgram($trainingProgramId)
+    {
+        $query = Ficha::select([
+            'id',
+            'gestor_id',
+            'training_program_id',
+            'status_id',
+            'ficha_number',
+            'created_at',
+            'updated_at',
+        ])
+            ->with([
+                'gestor.profile:id,user_id,first_name,last_name',
+                'trainingProgram:id,name',
+                'status:id,name',
+            ])
+            ->where('training_program_id', $trainingProgramId);
+
+        $fichas = $query->paginate(10);
+
+        $items = $fichas->getCollection()->map(function ($ficha) {
+            return [
+                'id' => $ficha->id,
+                'number' => $ficha->ficha_number,
+                'gestor_id' => $ficha->gestor_id,
+                'gestor_name' => $ficha->gestor?->profile
+                    ? $ficha->gestor->profile->first_name . ' ' . $ficha->gestor->profile->last_name
+                    : 'Sin gestor',
+                'training_program_id' => $ficha->training_program_id,
+                'training_program_name' => $ficha->trainingProgram?->name ?? 'Sin programa',
+                'status_id' => $ficha->status_id,
+                'status_name' => $ficha->status?->name ?? 'Sin estado',
+                'created_at' => $ficha->created_at?->toDateString(),
+                'updated_at' => $ficha->updated_at?->toDateString(),
+            ];
+        });
+
+        if ($items->isEmpty()) {
+            return [
+                "error" => true,
+                "code" => 404,
+                "message" => "No hay fichas para este programa",
+            ];
+        }
+
+        return [
+            "error" => false,
+            "code" => 200,
+            "message" => "Fichas del programa obtenidas con éxito",
+            "data" => $items,
+            "paginate" => [
+                "current_page" => $fichas->currentPage(),
+                "per_page" => $fichas->perPage(),
+                "total" => $fichas->total(),
+                "last_page" => $fichas->lastPage(),
+                "from" => $fichas->firstItem(),
+                "to" => $fichas->lastItem(),
+            ],
+        ];
+    }
+
 
     public function create(array $data)
     {
@@ -57,7 +234,7 @@ class FichaService
             'start_date' => $data['start_date'],
             'end_date' => $data['end_date'],
             'training_program_id' => $data['training_program_id'],
-            'status_id' => $data['status_id'],
+            'status_id' => 1,
         ]);
 
         event(new ResourceChanged(
@@ -119,7 +296,7 @@ class FichaService
             "error" => false,
             "code" => 200,
             "message" => "Ficha actualizada con éxito",
-            "data" => $ficha->fresh()
+            "data" => $ficha
         ];
     }
 

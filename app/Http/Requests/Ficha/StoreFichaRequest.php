@@ -23,12 +23,11 @@ class StoreFichaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'gestor_id' => ['required', 'integer', 'exists:users,id', new UserHasRole('gestor')],
+            'gestor_id' => ['required', 'integer', 'exists:users,id', new UserHasRole('Gestor de Fichas')],
             'ficha_number' => ['required', 'string', 'unique:fichas,ficha_number', 'digits_between:5,20'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
             'training_program_id' => ['required', 'integer', 'exists:training_programs,id'],
-            'status_id' => ['required', 'integer', 'exists:ficha_statuses,id'],
         ];
     }
 
@@ -54,10 +53,6 @@ class StoreFichaRequest extends FormRequest
             'training_program_id.required' => 'El :attribute es obligatorio.',
             'training_program_id.integer' => 'El :attribute debe ser un número entero.',
             'training_program_id.exists' => 'El :attribute seleccionado no existe.',
-
-            'status_id.required' => 'El :attribute es obligatorio.',
-            'status_id.integer' => 'El :attribute debe ser un número entero.',
-            'status_id.exists' => 'El :attribute seleccionado no existe.',
         ];
     }
 
@@ -74,7 +69,6 @@ class StoreFichaRequest extends FormRequest
             'start_date' => 'fecha de inicio',
             'end_date' => 'fecha de finalización',
             'training_program_id' => 'programa de formación',
-            'status_id' => 'estado',
         ];
     }
 }

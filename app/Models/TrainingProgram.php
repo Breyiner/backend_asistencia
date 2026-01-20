@@ -28,4 +28,16 @@ class TrainingProgram extends Model
     {
         return $this->hasMany(Ficha::class);
     }
+
+    public function apprentices()
+    {
+        return $this->hasManyThrough(
+            Apprentice::class,
+            Ficha::class,
+            'training_program_id',
+            'ficha_id',
+            'id',
+            'id'
+        );
+    }
 }

@@ -11,48 +11,150 @@ use Illuminate\Support\Facades\DB;
 class ApprenticeService
 {
 
-    public function getAll()
+    public function getAll($perPage = 10)
     {
+        $query = Apprentice::select([
+            'id',
+            'email',
+            'document_number',
+            'status_id',
+            'ficha_id',
+        ])
+            ->with([
+                'profile:id,user_id,first_name,last_name,telephone_number',
+                'status:id,name',
+                'ficha:id,ficha_number',
+            ]);
 
-        $apprentices = Apprentice::with('ficha', 'profile')->get();
+        if (request()->filled('email')) {
+            $query->where('email', 'like', '%' . request('email') . '%');
+        }
 
-        if ($apprentices->isEmpty()) {
+        if (request()->filled('document_number')) {
+            $query->where('document_number', 'like', '%' . request('document_number') . '%');
+        }
+
+        if (request()->filled('status_name')) {
+            $query->whereHas('status', function ($q) {
+                $q->where('name', 'like', request('status_name') . '%');
+            });
+        }
+
+        if (request()->filled('document_type_id')) {
+            $query->where('document_type_id', request('document_type_id'));
+        }
+
+        if (request()->filled('first_name')) {
+            $query->whereHas('profile', function ($q) {
+                $q->where('first_name', 'like', '%' . request('first_name') . '%');
+            });
+        }
+
+        if (request()->filled('last_name')) {
+            $query->whereHas('profile', function ($q) {
+                $q->where('last_name', 'like', '%' . request('last_name') . '%');
+            });
+        }
+
+        if (request()->filled('telephone_number')) {
+            $query->whereHas('profile', function ($q) {
+                $q->where('telephone_number', 'like', '%' . request('telephone_number') . '%');
+            });
+        }
+
+        if (request()->filled('ficha_number')) {
+            $query->whereHas('ficha', function ($q) {
+                $q->where('ficha_number', 'like', '%' . request('ficha_number') . '%');
+            });
+        }
+
+        $apprentices = $query->paginate($perPage);
+
+        $items = $apprentices->getCollection()->map(function ($apprentice) {
             return [
-                "error" => false,
-                "code" => 200,
-                "message" => "Aprendices obtenidos con éxito"
+                'id' => $apprentice->id,
+                'first_name' => $apprentice->profile?->first_name ?? '',
+                'last_name' => $apprentice->profile?->last_name ?? '',
+                'email' => $apprentice->email,
+                'status' => $apprentice->status?->name ?? 'Sin estado',
+                'document_number' => $apprentice->document_number,
+                'telephone_number' => $apprentice->profile?->telephone_number ?? '',
+                'ficha_number' => $apprentice->ficha?->ficha_number ?? '',
+            ];
+        });
+
+        if ($items->isEmpty()) {
+            return [
+                'error' => false,
+                'code' => 200,
+                'message' => 'Aprendices obtenidos con éxito',
             ];
         }
 
         return [
-            "error" => false,
-            "code" => 200,
-            "message" => "Aprendices obtenidos con éxito",
-            "data" => $apprentices
+            'error' => false,
+            'code' => 200,
+            'message' => 'Aprendices obtenidos con éxito',
+            'data' => $items,
+            'paginate' => [
+                'current_page' => $apprentices->currentPage(),
+                'per_page' => $apprentices->perPage(),
+                'total' => $apprentices->total(),
+                'last_page' => $apprentices->lastPage(),
+                'from' => $apprentices->firstItem(),
+                'to' => $apprentices->lastItem(),
+            ],
         ];
     }
 
+
     public function getById($id)
     {
-
-        $apprentice = Apprentice::with(['profile', 'ficha'])->find($id);
+        $apprentice = Apprentice::with([
+                'profile',
+                'status:id,name',
+                'ficha',
+                'ficha.trainingProgram',
+            ])
+            ->find($id);
 
         if (!$apprentice) {
             return [
-                "error" => false,
-                "code" => 200,
-                "message" => "Aprendiz no encontrado"
+                "error" => true,
+                "code" => 404,
+                "message" => "Este aprendiz no existe",
             ];
         }
+        
+        $items = [
+            'id' => $apprentice->id,
+            'first_name' => $apprentice->profile?->first_name ?? '',
+            'last_name' => $apprentice->profile?->last_name ?? '',
+            'email' => $apprentice->email,
+            'roles' => $apprentice->roles->pluck('name')->toArray(),
+            'role_ids' => $apprentice->roles->pluck('id')->toArray(),
+            'status_id' => $apprentice->status?->id,
+            'status' => $apprentice->status?->name ?? 'Sin estado',
+            'document_number' => $apprentice->document_number,
+            'document_type_id' => $apprentice->document_type_id,
+            'document_type_name' => $apprentice->documentType?->name ?? '',
+            'telephone_number' => $apprentice->profile?->telephone_number ?? '',
+            'birth_date' => $apprentice->profile?->birth_date?->toDateString() ?? '',
+            'ficha_id' => $apprentice->ficha_id,
+            'ficha_number' => $apprentice->ficha?->ficha_number ?? '',
+            'training_program_id' => $apprentice->ficha?->trainingProgram?->id ?? null,
+            'training_program' => $apprentice->ficha?->trainingProgram?->name ?? '',
+            'created_at' => $apprentice->created_at?->toDateString(),
+            'updated_at' => $apprentice->updated_at?->toDateString(),
+        ];
 
         return [
             "error" => false,
             "code" => 200,
             "message" => "Aprendiz obtenido con éxito",
-            "data" => $apprentice
+            "data" => $items
         ];
     }
-
 
     public function create($data)
     {
@@ -82,7 +184,7 @@ class ApprenticeService
 
             ]);
 
-            $apprentice->roles()->attach(4);
+            $apprentice->roles()->attach(ids: [4]);
 
             DB::commit();
 

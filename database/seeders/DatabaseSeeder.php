@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             TrainingProgramSeeder::class,
             FichaStatusSeeder::class,
             FichaSeeder::class,
+            ApprenticeSeeder::class,
             TermSeeder::class,
             PhaseSeeder::class,
             FichaTermSeeder::class,

@@ -29,8 +29,8 @@ class StoreApprenticeRequest extends FormRequest
             'document_type_id' => ['required', 'integer', 'exists:document_types,id'],
             'document_number' => ['required', 'string', 'min:6', 'max:20', 'unique:users,document_number'],
             'email' => ['required', 'email', 'unique:users'],
-            'birt_date' => ['required', 'date', 'before:today'],
-            'ficha_id' => ['required', 'integer', 'exists:fichas,ficha_id'],
+            'birth_date' => ['required', 'date', 'before:today'],
+            'ficha_id' => ['required', 'integer', 'exists:fichas,id'],
         ];
     }
 

@@ -15,9 +15,24 @@ class Ficha extends Model
         'status_id',
     ];
 
+    public function casts()
+    {
+        return [
+
+            'start_date' => 'date:Y-m-d',
+            'end_date' => 'date:Y-m-d',
+
+        ];
+    }
+
     public function gestor()
     {
         return $this->belongsTo(User::class, 'gestor_id');
+    }
+
+    public function apprentices()
+    {
+        return $this->hasMany(User::class, 'ficha_id');
     }
 
     public function trainingProgram()
@@ -30,8 +45,13 @@ class Ficha extends Model
         return $this->belongsTo(FichaStatus::class, 'status_id');
     }
 
-    public function fichaTerm()
+    public function fichaTerms()
     {
-        return $this->hasMany(FichaTerm::class, 'term_id');
+        return $this->hasMany(FichaTerm::class, 'ficha_id');
+    }
+
+    public function currentFichaTerm()
+    {
+        return $this->hasOne(FichaTerm::class, 'ficha_id')->where('is_active', true);
     }
 }

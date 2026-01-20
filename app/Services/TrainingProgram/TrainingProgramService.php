@@ -8,16 +8,57 @@ use Illuminate\Support\Facades\Auth;
 
 class TrainingProgramService
 {
-    public function getAll() {
+    public function getAll($perPage = 10)
+    {
+        $query = TrainingProgram::select([
+            'id',
+            'name',
+            'duration',
+            'area_id',
+            'qualification_level_id',
+        ])
+            ->with([
+                'area:id,name',
+                'qualificationLevel:id,name',
+            ])
+            ->withCount('fichas');
 
-        $programs = TrainingProgram::with(['qualificationLevel', 'area'])->get();
+        // Filtros
+        if (request()->filled('program_name')) {
+            $query->where('name', 'like', '%' . request('program_name') . '%');
+        }
 
-        if ($programs->isEmpty()){
+        if (request()->filled('area_name')) {
+            $query->whereHas('area', function ($q) {
+                $q->where('name', 'like', '%' . request('area_name') . '%');
+            });
+        }
+
+        if (request()->filled('qualification_level_name')) {
+            $query->whereHas('qualificationLevel', function ($q) {
+                $q->where('name', 'like', '%' . request('qualification_level_name') . '%');
+            });
+        }
+
+        $programs = $query->paginate($perPage);
+
+        $items = $programs->getCollection()->map(function ($program) {
+            return [
+                'id' => $program->id,
+                'name' => $program->name,
+                'area_name' => $program->area?->name ?? 'Sin área',
+                'qualification_level_name' => $program->qualificationLevel?->name ?? 'Sin titulación',
+                'fichas_count' => (int) ($program->fichas_count ?? 0),
+                'duration' => ($program->duration ?? 0) . ' meses',
+            ];
+        });
+
+        if ($items->isEmpty()) {
             return [
                 "error" => false,
                 "code" => 200,
                 "message" => "No hay programas de formación registrados",
-                "data" => $programs,
+                "data" => $items,
             ];
         }
 
@@ -25,15 +66,29 @@ class TrainingProgramService
             "error" => false,
             "code" => 200,
             "message" => "Programas de formación obtenidos exitosamente",
-            "data" => $programs,
+            "data" => $items,
+            "paginate" => [
+                "current_page" => $programs->currentPage(),
+                "per_page" => $programs->perPage(),
+                "total" => $programs->total(),
+                "last_page" => $programs->lastPage(),
+                "from" => $programs->firstItem(),
+                "to" => $programs->lastItem(),
+            ],
         ];
-
     }
 
-    public function getById($id) {
-        $program = TrainingProgram::with(['qualificationLevel', 'area'])->find($id);
 
-        if (!$program){
+    public function getById($id)
+    {
+        $program = TrainingProgram::with([
+            'area:id,name',
+            'qualificationLevel:id,name',
+        ])
+            ->withCount(['fichas', 'apprentices'])
+            ->find($id);
+
+        if (!$program) {
             return [
                 "error" => true,
                 "code" => 404,
@@ -41,15 +96,37 @@ class TrainingProgramService
             ];
         }
 
+        $duration = (int) ($program->duration ?? 0);
+        $trimestersLective = (int) max(0, ($duration - 6) / 3);
+
+        $item = [
+            'id' => $program->id,
+            'name' => $program->name,
+            'area_id' => $program->area_id,
+            'area_name' => $program->area?->name ?? 'Sin área',
+            'qualification_level_id' => $program->qualification_level_id,
+            'qualification_level_name' => $program->qualificationLevel?->name ?? 'Sin titulación',
+            'description' => $program->description,
+            'fichas_count' => (int) ($program->fichas_count ?? 0),
+            'apprentices_count' => (int) ($program->apprentices_count ?? 0),
+            'duration' => $duration,
+            'trimesters_lective' => $trimestersLective,
+            'created_at' => $program->created_at?->toDateString(),
+            'updated_at' => $program->updated_at?->toDateString(),
+        ];
+
         return [
             "error" => false,
             "code" => 200,
             "message" => "Programa de formación obtenido exitosamente",
-            "data" => $program,
+            "data" => $item,
         ];
     }
 
-    public function create(array $data) {
+
+
+    public function create(array $data)
+    {
         $program = TrainingProgram::create(
             [
                 'name' => $data['name'],
@@ -76,10 +153,11 @@ class TrainingProgramService
         ];
     }
 
-    public function update(array $data, $id) {
+    public function update(array $data, $id)
+    {
         $program = TrainingProgram::find($id);
 
-        if (!$program){
+        if (!$program) {
             return [
                 "error" => true,
                 "code" => 404,
@@ -89,23 +167,24 @@ class TrainingProgramService
 
         $programData = [];
 
-        if (array_key_exists('name', $data)){
+        if (array_key_exists('name', $data)) {
             $programData['name'] = $data['name'];
         }
-        if (array_key_exists('description', $data)){
+        if (array_key_exists('description', $data)) {
+            echo $data['description'];
             $programData['description'] = $data['description'] ?? null;
         }
-        if (array_key_exists('duration', $data)){
+        if (array_key_exists('duration', $data)) {
             $programData['duration'] = $data['duration'];
         }
-        if (array_key_exists('qualification_level_id', $data)){
+        if (array_key_exists('qualification_level_id', $data)) {
             $programData['qualification_level_id'] = $data['qualification_level_id'];
         }
-        if (array_key_exists('area_id', $data)){
+        if (array_key_exists('area_id', $data)) {
             $programData['area_id'] = $data['area_id'];
-        }   
+        }
 
-        if (empty($programData)){
+        if (empty($programData)) {
             return [
                 "error" => false,
                 "code" => 200,
@@ -123,7 +202,7 @@ class TrainingProgramService
             Auth::id(),
             'Programa de formación'
         ));
-        
+
         return [
             "error" => false,
             "code" => 200,
@@ -132,10 +211,11 @@ class TrainingProgramService
         ];
     }
 
-    public function delete($id) {
+    public function delete($id)
+    {
         $program = TrainingProgram::find($id);
 
-        if (!$program){
+        if (!$program) {
             return [
                 "error" => true,
                 "code" => 404,

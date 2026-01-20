@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API\Apprentice;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Apprentice\StoreApprenticeRequest;
+use App\Http\Requests\Apprentice\UpdateApprenticeRequest;
 use App\Http\Requests\ImportApprentice\ImportApprenticeRequest;
 use App\Services\Apprentice\ApprenticeService;
 use App\Services\ImportExcel\ImportExcelService;
@@ -21,15 +23,15 @@ class ApprenticeController extends Controller
         $this->importService = $importExcelService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
 
-        $response = $this->apprenticeService->getAll();
+        $response = $this->apprenticeService->getAll($request->get('per_page', 10));
 
         if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? [], $response['paginate']);
     }
 
     public function show(string $id)
@@ -43,10 +45,10 @@ class ApprenticeController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
-    public function store(Request $request)
+    public function store(StoreApprenticeRequest $request)
     {
 
-        $data = $request->all();
+        $data = $request->validated();
 
         $response = $this->apprenticeService->create($data);
 
@@ -56,7 +58,7 @@ class ApprenticeController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdateApprenticeRequest $request, string $id)
     {
 
         $data = $request->validated();

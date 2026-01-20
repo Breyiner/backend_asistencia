@@ -90,6 +90,7 @@ Route::middleware('throttle:api')->group(function () {
         // Users
         Route::prefix('users')->group(function () {
             Route::get('/', [UserController::class, 'index'])->middleware('permission:users.viewAny');
+            Route::get('/role/{role_id}', [UserController::class, 'indexByRole'])->middleware('permission:users.viewAny');
             Route::get('/me', [UserController::class, 'showOwn'])->middleware('permission:users.viewOwn');
             Route::get('/{user_id}', [UserController::class, 'show'])->middleware('permission:users.view');
             Route::post('/', [UserController::class, 'store'])->middleware('permission:users.create');
@@ -148,6 +149,7 @@ Route::middleware('throttle:api')->group(function () {
         Route::prefix('fichas')->group(function () {
             Route::get('/', [FichaController::class, 'index'])->middleware('permission:fichas.viewAny');
             Route::get('/{ficha_id}', [FichaController::class, 'show'])->middleware('permission:fichas.view');
+            Route::get('/training_program/{training_program_id}', [FichaController::class, 'showByTrainingProgram'])->middleware('permission:fichas.viewAny');
             Route::post('/', [FichaController::class, 'store'])->middleware('permission:fichas.create');
             Route::patch('/{ficha_id}', [FichaController::class, 'update'])->middleware('permission:fichas.update');
             Route::delete('/{ficha_id}', [FichaController::class, 'destroy'])->middleware('permission:fichas.delete');

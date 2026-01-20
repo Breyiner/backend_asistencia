@@ -25,13 +25,13 @@ class UserService
             'document_number',
             'status_id'
         ])
+            ->whereNull('type')
             ->with([
                 'profile:id,user_id,first_name,last_name',
                 'status:id,name',
                 'roles:id,name'
             ]);
 
-        // Filtros (mantén todos)
         if (request()->filled('email')) {
             $query->where('email', 'like', "%" . request('email') . "%");
         }
@@ -104,11 +104,52 @@ class UserService
         ];
     }
 
+    public function getAllByRoleId(int $roleId)
+    {
+        $users = User::select([
+            'id',
+            'email',
+            'document_number',
+            'status_id'
+        ])
+            ->whereNull('type')
+            ->with([
+                'profile:id,user_id,first_name,last_name',
+                'status:id,name',
+                'roles:id,name'
+            ])
+            ->whereHas('roles', function ($q) use ($roleId) {
+                $q->where('id', $roleId);
+            })
+            ->get();
+
+        $items = $users->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'first_name' => $user->profile?->first_name ?? '',
+                'last_name' => $user->profile?->last_name ?? '',
+                'full_name' => "{$user->profile?->first_name} {$user->profile?->last_name}",
+                'email' => $user->email,
+                'roles' => $user->roles->pluck('name'),
+                'status' => $user->status?->name ?? 'Sin estado',
+                'document_number' => $user->document_number
+            ];
+        });
+
+        return [
+            "error" => false,
+            "code" => 200,
+            "message" => "Usuarios obtenidos con éxito",
+            "data" => $items
+        ];
+    }
 
     public function getById($id)
     {
 
-        $user = User::find($id);
+        $user = User::whereNull('type')
+            ->with(['profile', 'status', 'roles'])
+            ->find($id);
 
         if (!$user)
             return [

@@ -18,9 +18,19 @@ class FichaController extends Controller
         $this->fichaService = $fichaService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $response = $this->fichaService->getAll();
+        $response = $this->fichaService->getAll($request->get('per_page', 10));
+
+        if ($response['error'])
+            return ResponseFormatter::error($response['message'], $response['code']);
+
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? [], $response['paginate']);
+    }
+
+    public function show(string $id)
+    {
+        $response = $this->fichaService->getById($id);
 
         if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
@@ -28,9 +38,9 @@ class FichaController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
-    public function show(string $id)
+    public function showByTrainingProgram(string $trining_progra_id)
     {
-        $response = $this->fichaService->getById($id);
+        $response = $this->fichaService->getByTrainingProgram($trining_progra_id);
 
         if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
@@ -54,7 +64,7 @@ class FichaController extends Controller
     {
         $data = $request->validated();
 
-        $response = $this->fichaService->update($data, $data);
+        $response = $this->fichaService->update($id, $data);
 
         if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
