@@ -83,7 +83,7 @@ class FichaTermService
         ];
     }
 
-    public function update($data, $id)
+    public function update($data, int $id)
     {
         $fichaTerm = FichaTerm::find($id);
 
@@ -140,9 +140,9 @@ class FichaTermService
                 }
 
                 FichaTerm::where('ficha_id', $fichaTerm->ficha_id)
-                    ->update(['is_active' => false]);
+                    ->update(['is_current' => false]);
 
-                $fichaTerm->update(['is_active' => true]);
+                $fichaTerm->update(['is_current' => true]);
             });
 
             $fichaTerm = FichaTerm::with(['ficha', 'term'])->find($fichaTermId);

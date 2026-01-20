@@ -52,6 +52,6 @@ class Ficha extends Model
 
     public function currentFichaTerm()
     {
-        return $this->hasOne(FichaTerm::class, 'ficha_id')->where('is_active', true);
+        return $this->hasOne(FichaTerm::class, 'ficha_id')->where('is_current', true);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\FichaTerm;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateFichaTermRequest extends FormRequest
 {
@@ -14,23 +15,24 @@ class UpdateFichaTermRequest extends FormRequest
     public function rules(): array
     {
         $fichaId = $this->input('ficha_id');
-        $fichaTermId = $this->route('ficha_term_id')->id;
+        $fichaTermId = $this->route('ficha_term_id');
 
         return [
             'ficha_id' => ['sometimes', 'exists:fichas,id'],
+
             'term_id' => [
                 'sometimes',
                 'required',
                 'exists:terms,id',
-                "unique:ficha_terms,ficha_id,{$fichaId},term_id,{$fichaTermId}"
+                Rule::unique('ficha_terms', 'term_id')
+                    ->where(fn($q) => $q->where('ficha_id', $fichaId))
+                    ->ignore($fichaTermId),
             ],
-            'phase_id' => [
-                'required',
-                'exists:phases,id'
-            ],
+
+            'phase_id' => ['required', 'exists:phases,id'],
             'start_date' => ['sometimes', 'required', 'date', 'before:end_date'],
             'end_date' => ['sometimes', 'required', 'date', 'after:start_date'],
-            'is_active' => ['sometimes', 'boolean'],
+            'is_current' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -55,7 +57,7 @@ class UpdateFichaTermRequest extends FormRequest
             'end_date.date' => 'El :attribute debe ser una fecha válida.',
             'end_date.after' => 'El :attribute debe ser posterior a la fecha inicio.',
 
-            'is_active.boolean' => 'El :attribute debe ser verdadero o falso.',
+            'is_current.boolean' => 'El :attribute debe ser verdadero o falso.',
         ];
     }
 
@@ -67,7 +69,7 @@ class UpdateFichaTermRequest extends FormRequest
             'phase_id' => 'fase',
             'start_date' => 'fecha de inicio',
             'end_date' => 'fecha fin',
-            'is_active' => 'activo',
+            'is_current' => 'activo',
         ];
     }
 }

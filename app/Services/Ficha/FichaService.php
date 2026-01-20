@@ -23,7 +23,7 @@ class FichaService
             'trainingProgram:id,name',
             'status:id,name',
 
-            'currentFichaTerm:id,ficha_id,term_id,is_active',
+            'currentFichaTerm:id,ficha_id,term_id,is_current',
             'currentFichaTerm.term:id,name',
         ])->withCount('apprentices');
 
@@ -119,7 +119,26 @@ class FichaService
                 'gestor.profile:id,user_id,first_name,last_name',
                 'trainingProgram:id,name',
                 'status:id,name',
-                'currentFichaTerm'
+
+                'currentFichaTerm:id,ficha_id,term_id,phase_id,start_date,end_date,is_current',
+                'currentFichaTerm.term:id,name',
+                'currentFichaTerm.phase:id,name',
+
+                'fichaTerms' => function ($q) {
+                    $q->select([
+                        'id',
+                        'ficha_id',
+                        'term_id',
+                        'phase_id',
+                        'start_date',
+                        'end_date',
+                        'is_current',
+                    ])
+                        ->orderBy('start_date', 'asc');
+                },
+                'fichaTerms.term:id,name',
+                'fichaTerms.phase:id,name',
+                'fichaTerms.schedule:id,ficha_term_id',
             ])
             ->withCount('apprentices')
             ->find($id);
@@ -139,17 +158,37 @@ class FichaService
         $data = [
             'id' => $ficha->id,
             'ficha_number' => $ficha->ficha_number,
+
             'gestor_id' => $ficha->gestor_id,
             'gestor_name' => $gestorName,
+
             'training_program_id' => $ficha->training_program_id,
             'training_program_name' => $ficha->trainingProgram?->name ?? 'Sin programa',
+
             'apprentices_count' => (int) ($ficha->apprentices_count ?? 0),
+
             'status_id' => $ficha->status_id,
             'status_name' => $ficha->status?->name ?? 'Sin estado',
+
             'start_date' => $ficha->start_date?->toDateString(),
             'end_date' => $ficha->end_date?->toDateString(),
+
             'current_ficha_term_id' => $ficha->currentFichaTerm?->id ?? null,
             'current_term_name' => $ficha->currentFichaTerm?->term?->name ?? 'Sin trimestre actual',
+            'current_phase_name' => $ficha->currentFichaTerm?->phase?->name ?? null,
+
+            'ficha_terms' => $ficha->fichaTerms->map(function ($ft) {
+                return [
+                    'id' => $ft->id,
+                    'term_id' => $ft->term_id,
+                    'term_name' => $ft->term?->name ?? null,
+                    'phase_id' => $ft->phase_id,
+                    'phase_name' => $ft->phase?->name ?? null,
+                    'start_date' => $ft->start_date?->toDateString(),
+                    'end_date' => $ft->end_date?->toDateString(),
+                    'is_current' => (bool) $ft->is_current,
+                ];
+            })->values(),
 
             'created_at' => $ficha->created_at?->toDateString(),
             'updated_at' => $ficha->updated_at?->toDateString(),
@@ -162,6 +201,7 @@ class FichaService
             "data" => $data
         ];
     }
+
 
 
     public function getByTrainingProgram($trainingProgramId)

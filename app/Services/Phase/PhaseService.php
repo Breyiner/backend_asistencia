@@ -10,14 +10,17 @@ class PhaseService
 {
     public static function getAll()
     {
-        $phases = Phase::all();
+        $phases = Phase::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
 
-        if (count($phases) == 0) {
+        if ($phases->isEmpty()) {
             return [
                 "error" => false,
                 "code" => 200,
                 "message" => "No hay fases registradas",
-                "data" => $phases,
+                "data" => [],
             ];
         }
 
@@ -28,6 +31,7 @@ class PhaseService
             "data" => $phases,
         ];
     }
+
 
     public function getById($id)
     {

@@ -34,7 +34,7 @@ class StoreFichaTermRequest extends FormRequest
             ],
             'start_date' => ['required', 'date', 'before:end_date'],
             'end_date' => ['required', 'date', 'after:start_date'],
-            'is_active' => ['boolean'],
+            'is_current' => ['boolean'],
         ];
     }
 
@@ -59,7 +59,7 @@ class StoreFichaTermRequest extends FormRequest
             'end_date.date' => 'El :attribute debe ser una fecha válida.',
             'end_date.after' => 'El :attribute debe ser posterior a la fecha inicio.',
 
-            'is_active.boolean' => 'El :attribute debe ser verdadero o falso.',
+            'is_current.boolean' => 'El :attribute debe ser verdadero o falso.',
         ];
     }
 
@@ -71,7 +71,7 @@ class StoreFichaTermRequest extends FormRequest
             'phase_id' => 'fase',
             'start_date' => 'fecha de inicio',
             'end_date' => 'fecha fin',
-            'is_active' => 'activo',
+            'is_current' => 'activo',
         ];
     }
 }

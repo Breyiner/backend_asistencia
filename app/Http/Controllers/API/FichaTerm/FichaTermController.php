@@ -28,7 +28,7 @@ class FichaTermController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
-    public function show(string $id)
+    public function show($id)
     {
         $response = $this->fichaTermService->getById($id);
 
@@ -50,7 +50,7 @@ class FichaTermController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
-    public function update(UpdateFichaTermRequest $request, string $id)
+    public function update(UpdateFichaTermRequest $request, int $id)
     {
         $data = $request->validated();
 

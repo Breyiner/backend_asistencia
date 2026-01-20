@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('phase_id');
             $table->date('start_date');
             $table->date('end_date');
-            $table->boolean('is_active')->default(false);
+            $table->boolean('is_current')->default(false);
             $table->unique(['ficha_id', 'term_id'], 'unique_ficha_term');
             $table->foreign('term_id')->references('id')->on('terms');
             $table->foreign('ficha_id')->references('id')->on('fichas');

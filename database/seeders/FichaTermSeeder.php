@@ -21,7 +21,7 @@ class FichaTermSeeder extends Seeder
                 "phase_id" => 2,
                 "start_date" => "2024-12-13",
                 "end_date" => "2025-03-13",
-                "is_active" => true
+                "is_current" => true
             ],
 
         ];
