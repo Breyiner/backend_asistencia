@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('schedule_sessions', function (Blueprint $table) {
@@ -29,19 +26,20 @@ return new class extends Migration
             $table->foreign('classroom_id')->references('id')->on('classrooms');
             $table->foreign('day_id')->references('id')->on('days');
 
-            // Un ambiente solo se puede ocupar una vez por jornada
-            $table->unique(['shift_id', 'classroom_id'], 'unique_classroom_per_shift');
+            $table->unique(
+                ['schedule_id', 'day_id', 'shift_id', 'classroom_id'],
+                'unique_classroom_per_schedule_day_shift'
+            );
 
-            // Un instructor solo una vez por ambiente y jornada a la vez
-            $table->unique(['shift_id', 'classroom_id', 'instructor_id'], 'unique_instructor_per_classroom_shift');
+            $table->unique(
+                ['schedule_id', 'day_id', 'shift_id', 'classroom_id', 'instructor_id'],
+                'unique_instructor_per_schedule_day_shift_classroom'
+            );
 
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('schedule_sessions');

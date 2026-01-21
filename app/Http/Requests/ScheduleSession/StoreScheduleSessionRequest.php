@@ -9,9 +9,6 @@ use Illuminate\Validation\Rule;
 
 class StoreScheduleSessionRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -24,11 +21,6 @@ class StoreScheduleSessionRequest extends FormRequest
         ]);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -36,46 +28,56 @@ class StoreScheduleSessionRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:users,id',
-                 new UserHasRole('Instructor')
+                new UserHasRole('Instructor'),
             ],
+
             'schedule_id' => [
                 'required',
                 'integer',
                 'exists:schedules,id',
             ],
+
             'shift_id' => [
                 'required',
                 'integer',
                 'exists:shifts,id',
             ],
+
             'classroom_id' => [
                 'required',
                 'integer',
                 'exists:classrooms,id',
 
-                //Un ambiente único por jornada
                 Rule::unique('schedule_sessions', 'classroom_id')
-                    ->where(fn ($q) => $q->where('shift_id', $this->shift_id)),
+                    ->where(fn ($q) => $q
+                        ->where('schedule_id', $this->schedule_id)
+                        ->where('day_id', $this->day_id)
+                        ->where('shift_id', $this->shift_id)
+                    ),
             ],
+
             'day_id' => [
                 'required',
                 'integer',
                 'exists:days,id',
             ],
+
             'start_time' => [
                 'required',
                 'date_format:H:i',
             ],
+
             'end_time' => [
                 'required',
                 'date_format:H:i',
                 'after:start_time',
             ],
 
-            // Un instructor único por ambiente y jornada
             'instructor_unique' => [
                 Rule::unique('schedule_sessions', 'instructor_id')
                     ->where(fn ($q) => $q
+                        ->where('schedule_id', $this->schedule_id)
+                        ->where('day_id', $this->day_id)
                         ->where('shift_id', $this->shift_id)
                         ->where('classroom_id', $this->classroom_id)
                     ),
@@ -86,24 +88,33 @@ class StoreScheduleSessionRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }
 
             $shift = Shift::find($this->shift_id);
-            if (!$shift) return;
-
-            $start = $this->start_time;
+            if (!$shift) {
+                return;
+            }
 
             $shiftStart = substr($shift->start_time, 0, 5);
-            $shiftEnd = substr($shift->end_time, 0, 5);
+            $shiftEnd   = substr($shift->end_time, 0, 5);
+
+            $start = $this->start_time;
+            $end   = $this->end_time;
 
             if ($shiftEnd >= $shiftStart) {
                 if ($start < $shiftStart || $start > $shiftEnd) {
                     $validator->errors()->add(
                         'start_time',
                         'La hora de inicio debe estar dentro del rango de la jornada.'
+                    );
+                }
+
+                if ($end < $shiftStart || $end > $shiftEnd) {
+                    $validator->errors()->add(
+                        'end_time',
+                        'La hora de finalización debe estar dentro del rango de la jornada.'
                     );
                 }
             }
@@ -113,9 +124,8 @@ class StoreScheduleSessionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'classroom_id.unique' => 'El :attribute ya está ocupado en esta jornada.',
-
-            'instructor_unique.unique' => 'El :attribute ya está asignado a ese ambiente en esa jornada.',
+            'classroom_id.unique' => 'El :attribute ya está ocupado en esta jornada para ese día.',
+            'instructor_unique.unique' => 'El :attribute ya está asignado a ese ambiente en esa jornada para ese día.',
 
             'instructor_id.required' => 'El :attribute es obligatorio.',
             'instructor_id.integer' => 'El :attribute debe ser un número.',

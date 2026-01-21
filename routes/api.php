@@ -197,6 +197,7 @@ Route::middleware('throttle:api')->group(function () {
         Route::prefix('schedules')->group(function () {
             Route::get('/', [ScheduleController::class, 'index'])->middleware('permission:schedules.viewAny');
             Route::get('/{schedule_id}', [ScheduleController::class, 'show'])->middleware('permission:schedules.view');
+            Route::get('/ficha_term/{ficha_term_id}', [ScheduleController::class, 'showByFichaTerm'])->middleware('permission:schedules.view');
             Route::post('/', [ScheduleController::class, 'store'])->middleware('permission:schedules.create');
             Route::patch('/{schedule_id}', [ScheduleController::class, 'update'])->middleware('permission:schedules.update');
             Route::delete('/{schedule_id}', [ScheduleController::class, 'destroy'])->middleware('permission:schedules.delete');

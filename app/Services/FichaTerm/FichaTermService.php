@@ -4,6 +4,7 @@ namespace App\Services\FichaTerm;
 
 use App\Events\ResourceChanged;
 use App\Models\FichaTerm;
+use App\Models\Schedule;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -59,28 +60,47 @@ class FichaTermService
 
     public function create($data)
     {
-        $fichaTerm = FichaTerm::create([
-            'term_id' => $data['term_id'],
-            'ficha_id' => $data['ficha_id'],
-            'phase_id' => $data['phase_id'],
-            'start_date' => $data['start_date'],
-            'end_date' => $data['end_date'],
-        ]);
+        try {
 
-        event(new ResourceChanged(
-            'crear',
-            FichaTerm::class,
-            $fichaTerm->id,
-            Auth::id(),
-            'Trimestre de ficha'
-        ));
+            $fichaTerm = FichaTerm::create([
+                'term_id' => $data['term_id'],
+                'ficha_id' => $data['ficha_id'],
+                'phase_id' => $data['phase_id'],
+                'start_date' => $data['start_date'],
+                'end_date' => $data['end_date'],
+            ]);
 
-        return [
-            'error' => false,
-            'code' => 200,
-            'message' => 'Trimestre de Ficha asignado con éxito',
-            'data' => $fichaTerm
-        ];
+            $schedule = Schedule::create(['ficha_term_id' => $fichaTerm->id]);
+
+            event(new ResourceChanged(
+                'crear',
+                FichaTerm::class,
+                $fichaTerm->id,
+                Auth::id(),
+                'Trimestre de ficha'
+            ));
+
+            event(new ResourceChanged(
+                'crear',
+                Schedule::class,
+                $schedule->id,
+                Auth::id(),
+                'Horario de trimestre de ficha'
+            ));
+            return [
+                'error' => false,
+                'code' => 200,
+                'message' => 'Trimestre de Ficha asignado con éxito',
+                'data' => $fichaTerm
+            ];
+        } catch (Exception $e) {
+            DB::rollBack();
+            return [
+                "error" => true,
+                "code" => 500,
+                "message" => "Ocurrió un error al registrar el trimestre a la ficha  {$e->getMessage()}",
+            ];
+        }
     }
 
     public function update($data, int $id)
