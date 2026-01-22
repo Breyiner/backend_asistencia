@@ -47,6 +47,18 @@ class ScheduleSessionController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
+    public function showByFicha(int $ficha_id)
+    {
+        $response = $this->scheduleSessionService->getByFichaId($ficha_id);
+
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
+
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+    }
+
+
     public function update(UpdateScheduleSessionRequest $request, int $id)
     {
         $response = $this->scheduleSessionService->update($request->validated(), $id);

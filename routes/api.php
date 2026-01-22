@@ -234,6 +234,7 @@ Route::middleware('throttle:api')->group(function () {
         Route::prefix('schedule_sessions')->group(function () {
             Route::get('/', [ScheduleSessionController::class, 'index'])->middleware('permission:schedule_sessions.viewAny');
             Route::get('/{schedule_session_id}', [ScheduleSessionController::class, 'show'])->middleware('permission:schedule_sessions.view');
+            Route::get('/ficha/{ficha_id}', [ScheduleSessionController::class, 'showByFicha'])->middleware('permission:schedule_sessions.viewAny');
             Route::post('/', [ScheduleSessionController::class, 'store'])->middleware('permission:schedule_sessions.create');
             Route::patch('/{schedule_session_id}', [ScheduleSessionController::class, 'update'])->middleware('permission:schedule_sessions.update');
             Route::delete('/{schedule_session_id}', [ScheduleSessionController::class, 'destroy'])->middleware('permission:schedule_sessions.delete');
@@ -277,7 +278,7 @@ Route::middleware('throttle:api')->group(function () {
         });
 
         // Notification Types
-        Route::prefix('notification-types')->group(function () {
+        Route::prefix('notification_types')->group(function () {
             Route::get('/', [NotificationTypeController::class, 'index'])->middleware('permission:notification_types.viewAny');
             Route::get('/{notification_type_id}', [NotificationTypeController::class, 'show'])->middleware('permission:notification_types.view');
             Route::post('/', [NotificationTypeController::class, 'store'])->middleware('permission:notification_types.create');

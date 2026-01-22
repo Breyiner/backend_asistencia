@@ -32,7 +32,7 @@ class UpdateRealClassRequest extends FormRequest
             'schedule_session_id' => ['sometimes', 'required', 'exists:schedule_sessions,id'],
             'start_hour' => ['sometimes', 'required', 'date_format:H:i'],
             'end_hour' => ['sometimes', 'required', 'date_format:H:i', 'after:start_hour'],
-            'original_date' => ['sometimes', 'required', 'nullable', 'date', 'required_if:class_type_id,3'],
+            'original_date' => ['sometimes', 'nullable', 'date', 'required_if:class_type_id,3'],
             'observations' => ['sometimes', 'required', 'nullable', 'string', 'max:500'],
         ];
     }

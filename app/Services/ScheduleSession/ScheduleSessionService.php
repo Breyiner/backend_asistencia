@@ -3,6 +3,8 @@
 namespace App\Services\ScheduleSession;
 
 use App\Events\ResourceChanged;
+use App\Models\Ficha;
+use App\Models\Schedule;
 use App\Models\ScheduleSession;
 use Illuminate\Support\Facades\Auth;
 
@@ -42,6 +44,74 @@ class ScheduleSessionService
             'data' => $session
         ];
     }
+
+    public function getByFichaId($fichaId)
+    {
+        $ficha = Ficha::query()
+            ->select(['id'])
+            ->with(['currentFichaTerm:id,ficha_id,is_current'])
+            ->find($fichaId);
+
+        if (!$ficha || !$ficha->currentFichaTerm) {
+            return [
+                'error' => true,
+                'code' => 404,
+                'message' => 'La ficha no tiene trimestre actual (ficha_term actual).',
+            ];
+        }
+
+        $fichaTermId = $ficha->currentFichaTerm->id;
+
+        $schedule = Schedule::query()
+            ->select(['id', 'ficha_term_id'])
+            ->where('ficha_term_id', $fichaTermId)
+            ->with([
+                'scheduleSessions:id,schedule_id,day_id,shift_id,instructor_id,start_time,end_time',
+                'scheduleSessions.day:id,name',
+                'scheduleSessions.shift:id,name',
+
+                'scheduleSessions.instructor:id',
+                'scheduleSessions.instructor.profile:id,user_id,first_name,last_name',
+            ])
+            ->first();
+
+        if (!$schedule) {
+            return [
+                'error' => true,
+                'code' => 404,
+                'message' => 'No hay horario para el trimestre actual de la ficha.',
+            ];
+        }
+
+        $sessions = $schedule->scheduleSessions
+            ->map(function ($s) {
+                $dayName = $s->day?->name ?? 'Sin día';
+                $shiftName = $s->shift?->name ?? 'Sin jornada';
+
+                $start = $s->start_time ? substr($s->start_time, 0, 5) : '--:--';
+                $end   = $s->end_time ? substr($s->end_time, 0, 5) : '--:--';
+
+                $first = $s->instructor?->profile?->first_name ?? '';
+                $last  = $s->instructor?->profile?->last_name ?? '';
+                $instructorName = trim("$first $last");
+                if ($instructorName === '') $instructorName = 'Sin instructor';
+
+                return [
+                    'id' => $s->id,
+                    'name' => "{$dayName} - {$shiftName} - {$start} - {$end} - {$instructorName}",
+                ];
+            })
+            ->values();
+
+        return [
+            'error' => false,
+            'code' => 200,
+            'message' => 'Sesiones del horario actual obtenidas con éxito',
+            'data' => $sessions,
+        ];
+    }
+
+
 
     public function create(array $data): array
     {

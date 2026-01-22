@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RealClass\StoreRealClassRequest;
 use App\Http\Requests\RealClass\UpdateRealClassRequest;
 use App\Services\RealClass\RealClassService;
+use Illuminate\Http\Request;
 
 class RealClassController extends Controller
 {
@@ -16,9 +17,9 @@ class RealClassController extends Controller
         $this->realClassService = $realClassService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $response = $this->realClassService->getAll();
+        $response = $this->realClassService->getAll($request, $request->get('per_page', 10));
 
         if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);

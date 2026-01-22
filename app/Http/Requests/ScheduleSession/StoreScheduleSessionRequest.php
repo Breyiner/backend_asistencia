@@ -2,23 +2,16 @@
 
 namespace App\Http\Requests\ScheduleSession;
 
+use App\Models\ScheduleSession;
 use App\Models\Shift;
 use App\Rules\UserHasRole;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreScheduleSessionRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'instructor_unique' => $this->input('instructor_id'),
-        ]);
     }
 
     public function rules(): array
@@ -47,13 +40,6 @@ class StoreScheduleSessionRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:classrooms,id',
-
-                Rule::unique('schedule_sessions', 'classroom_id')
-                    ->where(fn ($q) => $q
-                        ->where('schedule_id', $this->schedule_id)
-                        ->where('day_id', $this->day_id)
-                        ->where('shift_id', $this->shift_id)
-                    ),
             ],
 
             'day_id' => [
@@ -72,16 +58,6 @@ class StoreScheduleSessionRequest extends FormRequest
                 'date_format:H:i',
                 'after:start_time',
             ],
-
-            'instructor_unique' => [
-                Rule::unique('schedule_sessions', 'instructor_id')
-                    ->where(fn ($q) => $q
-                        ->where('schedule_id', $this->schedule_id)
-                        ->where('day_id', $this->day_id)
-                        ->where('shift_id', $this->shift_id)
-                        ->where('classroom_id', $this->classroom_id)
-                    ),
-            ],
         ];
     }
 
@@ -92,31 +68,57 @@ class StoreScheduleSessionRequest extends FormRequest
                 return;
             }
 
-            $shift = Shift::find($this->shift_id);
-            if (!$shift) {
-                return;
-            }
-
-            $shiftStart = substr($shift->start_time, 0, 5);
-            $shiftEnd   = substr($shift->end_time, 0, 5);
-
             $start = $this->start_time;
             $end   = $this->end_time;
 
-            if ($shiftEnd >= $shiftStart) {
-                if ($start < $shiftStart || $start > $shiftEnd) {
-                    $validator->errors()->add(
-                        'start_time',
-                        'La hora de inicio debe estar dentro del rango de la jornada.'
-                    );
-                }
+            $shift = Shift::find($this->shift_id);
+            if ($shift) {
+                $shiftStart = substr($shift->start_time, 0, 5);
+                $shiftEnd   = substr($shift->end_time, 0, 5);
 
-                if ($end < $shiftStart || $end > $shiftEnd) {
-                    $validator->errors()->add(
-                        'end_time',
-                        'La hora de finalización debe estar dentro del rango de la jornada.'
-                    );
+                if ($shiftEnd >= $shiftStart) {
+                    if ($start < $shiftStart || $start > $shiftEnd) {
+                        $validator->errors()->add('start_time', 'La hora de inicio debe estar dentro del rango de la jornada.');
+                        return;
+                    }
+
+                    if ($end < $shiftStart || $end > $shiftEnd) {
+                        $validator->errors()->add('end_time', 'La hora de finalización debe estar dentro del rango de la jornada.');
+                        return;
+                    }
                 }
+            }
+
+            $classroomOverlap = ScheduleSession::query()
+                ->where('schedule_id', $this->schedule_id)
+                ->where('day_id', $this->day_id)
+                ->where('shift_id', $this->shift_id)
+                ->where('classroom_id', $this->classroom_id)
+                ->where('start_time', '<', $end)
+                ->where('end_time', '>', $start)
+                ->exists();
+
+            if ($classroomOverlap) {
+                $validator->errors()->add(
+                    'classroom_id',
+                    'El ambiente ya tiene una clase asignada en ese día y jornada que se cruza con el horario ingresado.'
+                );
+            }
+
+            $instructorOverlap = ScheduleSession::query()
+                ->where('schedule_id', $this->schedule_id)
+                ->where('day_id', $this->day_id)
+                ->where('shift_id', $this->shift_id)
+                ->where('instructor_id', $this->instructor_id)
+                ->where('start_time', '<', $end)
+                ->where('end_time', '>', $start)
+                ->exists();
+
+            if ($instructorOverlap) {
+                $validator->errors()->add(
+                    'instructor_id',
+                    'El instructor ya tiene una clase asignada en ese día y jornada que se cruza con el horario ingresado.'
+                );
             }
         });
     }
@@ -124,9 +126,6 @@ class StoreScheduleSessionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'classroom_id.unique' => 'El :attribute ya está ocupado en esta jornada para ese día.',
-            'instructor_unique.unique' => 'El :attribute ya está asignado a ese ambiente en esa jornada para ese día.',
-
             'instructor_id.required' => 'El :attribute es obligatorio.',
             'instructor_id.integer' => 'El :attribute debe ser un número.',
             'instructor_id.exists' => 'El :attribute seleccionado no existe.',
@@ -166,7 +165,6 @@ class StoreScheduleSessionRequest extends FormRequest
             'day_id' => 'día',
             'start_time' => 'hora de inicio',
             'end_time' => 'hora de fin',
-            'instructor_unique' => 'instructor',
         ];
     }
 }

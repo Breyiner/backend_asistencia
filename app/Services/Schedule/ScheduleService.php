@@ -88,8 +88,8 @@ class ScheduleService
                         'name' => $s->day?->name,
                     ],
 
-                    'start_time' => $s->start_time,
-                    'end_time' => $s->end_time,
+                    'start_time' => $s->start_time ? substr($s->start_time, 0, 5) : null,
+                    'end_time'   => $s->end_time ? substr($s->end_time, 0, 5) : null,
 
                     'shift' => [
                         'id' => $s->shift_id,

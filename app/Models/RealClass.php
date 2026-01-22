@@ -42,5 +42,10 @@ class RealClass extends Model
     public function scheduleSession()
     {
         return $this->belongsTo(ScheduleSession::class, 'schedule_session_id');
-    }   
+    } 
+    
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class,'real_class_id');
+    }
 }
