@@ -38,7 +38,7 @@ class UpdateAttendanceRequest extends FormRequest
             ],
             
             'exit_hour' => [
-                'required_if:attendance_status_id,5',
+                // 'required_if:attendance_status_id,5',
                 'prohibited_unless:attendance_status_id,5',
                 'nullable',
                 'date_format:H:i',

@@ -15,29 +15,43 @@ class AttendanceStatusSeeder extends Seeder
     {
         $statuses = [
             [
-                'name' => 'presente',
-                'description' => 'Aprendiz asistió completo a la clase',
+                'code' => 'present',         
+                'name' => 'Presente',             
+                'description' => 'Aprendiz asistió completo a la clase'
             ],
             [
-                'name' => 'ausente',
-                'description' => 'Aprendiz no asistió a la clase',
+                'code' => 'absent',          
+                'name' => 'Ausente',              
+                'description' => 'Aprendiz no asistió a la clase'
             ],
             [
-                'name' => 'ausencia_justificada',
-                'description' => 'Ausencia con justificación médica o permiso',
+                'code' => 'excused_absence', 
+                'name' => 'Ausencia Justificada', 
+                'description' => 'Ausencia con justificación médica o permiso'
             ],
             [
-                'name' => 'tardanza',
-                'description' => 'Aprendiz llegó tarde a la clase',
+                'code' => 'late',            
+                'name' => 'Tardanza',             
+                'description' => 'Aprendiz llegó tarde a la clase'
             ],
             [
-                'name' => 'salida_anticipada',
-                'description' => 'Aprendiz salió antes de finalizar la clase',
+                'code' => 'early_exit',      
+                'name' => 'Salida Anticipada',    
+                'description' => 'Aprendiz salió antes de finalizar la clase'
+            ],
+            [
+                'code' => 'unregistered',    
+                'name' => 'Sin Registrar',        
+                'description' => 'Estado inicial al crear la clase Real'
             ],
         ];
 
         foreach ($statuses as $status) {
-            AttendanceStatus::create($status);
+            AttendanceStatus::create([
+                'code' => $status['code'],
+                'name' => $status['name'],
+                'description' => $status['description']
+            ]);
         }
     }
 }

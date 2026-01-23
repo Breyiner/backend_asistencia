@@ -6,18 +6,21 @@ use App\Events\ResourceChanged;
 use App\Listeners\NotifyGestorOnAttendanceOrRealClass;
 use App\Models\RealClass;
 use App\Models\ScheduleSession;
+use App\Services\Attendance\AttendanceService;
 use App\Services\NoClassDay\NoClassDayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class RealClassService
 {
 
-    protected $noClassDayService;
+    protected $noClassDayService, $attendanceService;
 
-    public function __construct(NoClassDayService $noClassDayService)
+    public function __construct(NoClassDayService $noClassDayService, AttendanceService $attendanceService)
     {
         $this->noClassDayService = $noClassDayService;
+        $this->attendanceService = $attendanceService;
     }
 
 
@@ -57,7 +60,7 @@ class RealClassService
             ])
             ->withCount([
                 'attendances as attendances_count' => function ($q) {
-                    $q->whereNotIn('attendance_status_id', [2, 3]);
+                    $q->whereNotIn('attendance_status_id', [2, 3, 6]);
                 },
             ]);
 
@@ -204,7 +207,7 @@ class RealClassService
             ])
             ->withCount([
                 'attendances as attendances_count' => function ($q) {
-                    $q->whereNotIn('attendance_status_id', [2, 3]);
+                    $q->whereNotIn('attendance_status_id', [2, 3, 6]);
                 },
             ])
             ->find($id);
@@ -321,50 +324,54 @@ class RealClassService
 
     public function create($data)
     {
+        return DB::transaction(function () use ($data) {
+            $executionDate = now()->format('Y-m-d');
+            $data['execution_date'] = $executionDate;
 
-        $executionDate = now()->format('Y-m-d');
-        $data['execution_date'] = $executionDate;
+            $scheduleSession = ScheduleSession::with('schedule.fichaTerm')
+                ->find($data['schedule_session_id']);
 
-        $scheduleSession = ScheduleSession::with('schedule.fichaTerm')
-            ->find($data['schedule_session_id']);
+            if (!$scheduleSession || !$scheduleSession->schedule || !$scheduleSession->schedule->fichaTerm) {
+                return [
+                    'error' => true,
+                    'code' => 404,
+                    'message' => 'No se pudo resolver la ficha desde la sesión de horario.',
+                    'data' => [],
+                ];
+            }
 
-        if (!$scheduleSession || !$scheduleSession->schedule || !$scheduleSession->schedule->fichaTerm) {
+            $fichaId = $scheduleSession->schedule->fichaTerm->ficha_id;
+
+            $check = $this->noClassDayService->checkByFichaAndDate($fichaId, $executionDate);
+
+            if (!empty($check['data']['is_no_class_day'])) {
+                return [
+                    'error' => true,
+                    'code' => 409,
+                    'message' => 'No se puede registrar la clase real: el día está marcado como día sin clase para la ficha.',
+                    'data' => $check['data'],
+                ];
+            }
+
+            $realClass = RealClass::create($data);
+
+            $this->attendanceService->createdByFicha($fichaId, $realClass->id);
+
+            event(new ResourceChanged(
+                action: 'created',
+                subjectType: RealClass::class,
+                subjectId: $realClass->id,
+                actorUserId: Auth::id(),
+                subjectLabel: 'Clase real',
+            ));
+
             return [
-                'error' => true,
-                'code' => 404,
-                'message' => 'No se pudo resolver la ficha desde la sesión de horario.',
-                'data' => [],
+                'error' => false,
+                'code' => 201,
+                'message' => 'Clase real registrada',
+                'data' => $realClass->fresh(),
             ];
-        }
-
-        $fichaId = $scheduleSession->schedule->fichaTerm->ficha_id;
-
-        $check = $this->noClassDayService->checkByFichaAndDate($fichaId, $executionDate);
-
-        if (!empty($check['data']['is_no_class_day'])) {
-            return [
-                'error' => true,
-                'code' => 409,
-                'message' => 'No se puede registrar la clase real: el día está marcado como día sin clase para la ficha.',
-                'data' => $check['data'],
-            ];
-        }
-
-        $realClass = RealClass::create($data);
-
-        event(new ResourceChanged(
-            action: 'created',
-            subjectType: RealClass::class,
-            subjectId: $realClass->id,
-            actorUserId: Auth::id(),
-            subjectLabel: 'Clase real',
-        ));
-
-        return [
-            'error' => false,
-            'code' => 201,
-            'message' => 'Clase real registrada'
-        ];
+        });
     }
 
     public function update($data, $id)

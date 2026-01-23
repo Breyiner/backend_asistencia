@@ -54,17 +54,34 @@ class AttendanceController extends Controller
         if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'], 
+            $response['code'], 
+            $response['data'] ?? [], 
+            $response['paginate'] ?? [], 
+            $response['summary']);
     }
 
-    public function update(UpdateAttendanceRequest $request, int $id)
+    public function update(UpdateAttendanceRequest $request, $id)
     {
-        $response = $this->attendanceService->update($request->validated(), $id);
+        $result = $this->attendanceService->update($request->all(), $id);
 
-        if ($response['error'])
-            return ResponseFormatter::error($response['message'], $response['code']);
+        if (!empty($result['error'])) {
+            return ResponseFormatter::error(
+                $result['message'] ?? 'Error',
+                $result['code'] ?? 400,
+                $result['errors'] ?? [],
+                $result['errorKey'] ?? null
+            );
+        }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $result['message'] ?? 'Operación exitosa',
+            $result['code'] ?? 200,
+            $result['data'] ?? null,
+            $result['paginate'] ?? [],
+            $result['summary'] ?? []
+        );
     }
 
     public function destroy(int $id)

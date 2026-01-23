@@ -7,14 +7,15 @@ class ResponseFormatter
     /**
      * Create a new class instance.
      */
-    public static function success($message = "Operación exitosa", $status = 200, $data, $paginate = []) {
+    public static function success($message = "Operación exitosa", $status = 200, $data, $paginate = [], $summary = []) {
 
       return response()->json([
         "success"=> true,
         "code" => $status,
         "message"=> $message,
         "data" => $data,
-        "paginate" => $paginate
+        "paginate" => $paginate,
+        "summary" => $summary
       ], $status);
 
     }

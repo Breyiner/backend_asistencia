@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('attendance_statuses', function (Blueprint $table) {
             $table->id();
+            $table->string('code', 50)->unique();
             $table->string('name', 50);
-            $table->text('description')->nullable();
+            $table->string('description', 255)->nullable();
             $table->timestamps();
         });
     }

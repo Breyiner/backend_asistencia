@@ -6,22 +6,15 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAttendanceStatusRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
+            'code' => ['required', 'string', 'max:50', 'unique:attendance_statuses,code'],
             'name' => ['required', 'string', 'max:50', 'unique:attendance_statuses,name'],
             'description' => ['nullable', 'string', 'max:255'],
         ];
@@ -30,6 +23,11 @@ class StoreAttendanceStatusRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'code.required' => 'El :attribute es obligatorio.',
+            'code.string' => 'El :attribute debe ser texto.',
+            'code.max' => 'El :attribute no puede exceder :max caracteres.',
+            'code.unique' => 'El :attribute ya existe.',
+
             'name.required' => 'El :attribute es obligatorio.',
             'name.string' => 'El :attribute debe ser texto.',
             'name.max' => 'El :attribute no puede exceder :max caracteres.',
@@ -43,6 +41,7 @@ class StoreAttendanceStatusRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'code' => 'código del estado de asistencia',
             'name' => 'nombre del estado de asistencia',
             'description' => 'descripción del estado',
         ];
