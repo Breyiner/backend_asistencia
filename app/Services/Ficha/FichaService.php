@@ -202,8 +202,6 @@ class FichaService
         ];
     }
 
-
-
     public function getByTrainingProgram($trainingProgramId)
     {
         $query = Ficha::select([
@@ -265,6 +263,52 @@ class FichaService
         ];
     }
 
+    public function availableForRealClass()
+    {
+        $userId = Auth::id();
+
+        $query = Ficha::select([
+            'id',
+            'gestor_id',
+            'training_program_id',
+            'status_id',
+            'ficha_number',
+            'created_at',
+            'updated_at',
+        ])->with([
+            'trainingProgram:id,name',
+            'currentFichaTerm:id,ficha_id,term_id,is_current',
+            'currentFichaTerm.term:id,name',
+        ])->whereHas('currentFichaTerm', fn($q) => $q->where('is_current', 1))
+            ->where(function ($q) use ($userId) {
+                $q->where('gestor_id', $userId)
+
+                    ->orWhereHas('currentFichaTerm.schedule.scheduleSessions', function ($qq) use ($userId) {
+                        $qq->where('instructor_id', $userId);
+                    });
+            });
+
+        $fichas = $query->orderBy('ficha_number', 'asc')->get();
+
+        $items = $fichas->map(function ($ficha) {
+            return [
+                'id' => $ficha->id,
+                'ficha_number' => $ficha->ficha_number,
+                'training_program_id' => $ficha->training_program_id,
+                'training_program_name' => $ficha->trainingProgram?->name ?? 'Sin programa',
+                'current_term_id' => $ficha->currentFichaTerm?->term?->id,
+                'current_term_name' => $ficha->currentFichaTerm?->term?->name ?? 'Sin trimestre actual',
+            ];
+        })->values();
+
+        return [
+            'error' => false,
+            'code' => 200,
+            'message' => 'Fichas disponibles obtenidas con éxito',
+            'data' => $items
+        ];
+    }
+
 
     public function create(array $data)
     {
@@ -292,7 +336,6 @@ class FichaService
             "data" => $ficha
         ];
     }
-
     public function update($id, array $data)
     {
         $ficha = Ficha::find($id);

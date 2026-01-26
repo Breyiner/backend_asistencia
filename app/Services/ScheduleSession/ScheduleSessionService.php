@@ -47,8 +47,12 @@ class ScheduleSessionService
 
     public function getByFichaId($fichaId)
     {
-        $ficha = Ficha::query()
-            ->select(['id'])
+        $userId = Auth::id();
+        $user   = Auth::user();
+
+        $isAdmin = $user?->hasRole('Administrador') ?? false;
+
+        $ficha = Ficha::select(['id', 'gestor_id'])
             ->with(['currentFichaTerm:id,ficha_id,is_current'])
             ->find($fichaId);
 
@@ -62,14 +66,37 @@ class ScheduleSessionService
 
         $fichaTermId = $ficha->currentFichaTerm->id;
 
-        $schedule = Schedule::query()
-            ->select(['id', 'ficha_term_id'])
+        $isGestorOfFicha = (int) ($ficha->gestor_id ?? 0) === (int) $userId;
+
+        if (!$isAdmin && !$isGestorOfFicha) {
+            $hasAnySession = ScheduleSession::whereHas('schedule', function ($q) use ($fichaTermId) {
+                $q->where('ficha_term_id', $fichaTermId);
+            })
+                ->where('instructor_id', $userId)
+                ->exists();
+
+            if (!$hasAnySession) {
+                return [
+                    'error' => true,
+                    'code' => 403,
+                    'message' => 'No tienes acceso al horario de esta ficha.',
+                ];
+            }
+        }
+
+        $schedule = Schedule::select(['id', 'ficha_term_id'])
             ->where('ficha_term_id', $fichaTermId)
             ->with([
-                'scheduleSessions:id,schedule_id,day_id,shift_id,instructor_id,start_time,end_time',
+                'scheduleSessions' => function ($q) use ($isAdmin, $isGestorOfFicha, $userId) {
+                    $q->select(['id', 'schedule_id', 'day_id', 'shift_id', 'instructor_id', 'start_time', 'end_time'])
+                        ->when(!$isAdmin && !$isGestorOfFicha, function ($qq) use ($userId) {
+                            $qq->where('instructor_id', $userId);
+                        })
+                        ->orderBy('day_id')
+                        ->orderBy('start_time');
+                },
                 'scheduleSessions.day:id,name',
                 'scheduleSessions.shift:id,name',
-
                 'scheduleSessions.instructor:id',
                 'scheduleSessions.instructor.profile:id,user_id,first_name,last_name',
             ])
@@ -110,8 +137,6 @@ class ScheduleSessionService
             'data' => $sessions,
         ];
     }
-
-
 
     public function create(array $data): array
     {

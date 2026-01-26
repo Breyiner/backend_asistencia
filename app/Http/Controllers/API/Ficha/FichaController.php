@@ -48,6 +48,14 @@ class FichaController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
+    public function availableForRealClass()
+    {
+        $response = $this->fichaService->availableForRealClass();
+
+        if ($response['error']) return ResponseFormatter::error($response['message'], $response['code']);
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+    }
+
     public function store(StoreFichaRequest $request)
     {
         $data = $request->validated();

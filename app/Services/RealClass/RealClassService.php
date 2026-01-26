@@ -321,6 +321,229 @@ class RealClassService
         ];
     }
 
+    public function getMine(Request $request, $perPage = 10)
+    {
+        $query = RealClass::query()
+            ->select([
+                'id',
+                'instructor_id',
+                'class_type_id',
+                'classroom_id',
+                'shift_id',
+                'schedule_session_id',
+                'execution_date',
+                'start_hour',
+                'end_hour',
+                'original_date',
+                'observations',
+                'created_at',
+                'updated_at',
+            ])
+            ->with([
+                'classType:id,name',
+                'classroom:id,name',
+                'shift:id,name,start_time,end_time',
+
+                'instructor:id',
+                'instructor.profile:id,user_id,first_name,last_name',
+
+                'scheduleSession:id,schedule_id',
+                'scheduleSession.schedule:id,ficha_term_id',
+                'scheduleSession.schedule.fichaTerm:id,ficha_id,term_id,is_current',
+                'scheduleSession.schedule.fichaTerm.term:id,name',
+
+                'scheduleSession.schedule.fichaTerm.ficha:id,ficha_number,training_program_id,gestor_id',
+                'scheduleSession.schedule.fichaTerm.ficha.trainingProgram:id,name',
+            ])
+            ->withCount([
+                'attendances as attendances_count' => function ($q) {
+                    $q->whereNotIn('attendance_status_id', [2, 3, 6]);
+                },
+            ])
+            ->where('instructor_id', Auth::id());
+
+        if ($request->filled('date')) $query->whereDate('execution_date', $request->date);
+        if ($request->filled('ficha_id')) $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('id', $request->ficha_id));
+        if ($request->filled('training_program_id')) $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('training_program_id', $request->training_program_id));
+        if ($request->filled('term_id')) $query->whereHas('scheduleSession.schedule.fichaTerm', fn($q) => $q->where('term_id', $request->term_id));
+
+        $query->orderBy('execution_date', 'desc')->orderBy('start_hour', 'asc');
+
+        $realClasses = $query->paginate($perPage);
+
+        $realClasses->load([
+            'scheduleSession.schedule.fichaTerm.ficha' => fn($q) => $q->withCount('apprentices')
+        ]);
+
+        $items = $realClasses->getCollection()->map(function ($rc) {
+            $profile = $rc->instructor?->profile;
+            $instructorName = $profile ? trim(($profile->first_name ?? '') . ' ' . ($profile->last_name ?? '')) : 'Sin instructor';
+
+            $fichaTerm = $rc->scheduleSession?->schedule?->fichaTerm;
+            $ficha = $fichaTerm?->ficha;
+
+            $attendancesCount = (int) ($rc->attendances_count ?? 0);
+            $apprenticesCount = (int) ($ficha?->apprentices_count ?? 0);
+
+            return [
+                'id' => $rc->id,
+                'class_date' => $rc->execution_date,
+                'start_hour' => $rc->start_hour,
+                'end_hour' => $rc->end_hour,
+
+                'ficha_id' => $ficha?->id,
+                'ficha_number' => $ficha?->ficha_number,
+
+                'training_program_id' => $ficha?->training_program_id,
+                'training_program_name' => $ficha?->trainingProgram?->name ?? 'Sin programa',
+
+                'term_id' => $fichaTerm?->term_id,
+                'term_name' => $fichaTerm?->term?->name ?? 'Sin trimestre',
+
+                'instructor_id' => $rc->instructor_id,
+                'instructor_name' => $instructorName,
+
+                'attendances_count' => $attendancesCount,
+                'apprentices_count' => $apprenticesCount,
+                'attendance_ratio' => "{$attendancesCount}/{$apprenticesCount}",
+
+                'created_at' => $rc->created_at?->toDateString(),
+                'updated_at' => $rc->updated_at?->toDateString(),
+            ];
+        });
+
+        if ($items->isEmpty()) {
+            return ["error" => false, "code" => 200, "message" => "No hay clases reales registradas"];
+        }
+
+        return [
+            "error" => false,
+            "code" => 200,
+            "message" => "Clases reales obtenidas con éxito",
+            "data" => $items,
+            "paginate" => [
+                "current_page" => $realClasses->currentPage(),
+                "per_page" => $realClasses->perPage(),
+                "total" => $realClasses->total(),
+                "last_page" => $realClasses->lastPage(),
+                "from" => $realClasses->firstItem(),
+                "to" => $realClasses->lastItem(),
+            ],
+        ];
+    }
+
+    public function getManaged(Request $request, $perPage = 10)
+    {
+        $query = RealClass::query()
+            ->select([
+                'id',
+                'instructor_id',
+                'class_type_id',
+                'classroom_id',
+                'shift_id',
+                'schedule_session_id',
+                'execution_date',
+                'start_hour',
+                'end_hour',
+                'original_date',
+                'observations',
+                'created_at',
+                'updated_at',
+            ])
+            ->with([
+                'classType:id,name',
+                'classroom:id,name',
+                'shift:id,name,start_time,end_time',
+
+                'instructor:id',
+                'instructor.profile:id,user_id,first_name,last_name',
+
+                'scheduleSession:id,schedule_id',
+                'scheduleSession.schedule:id,ficha_term_id',
+                'scheduleSession.schedule.fichaTerm:id,ficha_id,term_id,is_current',
+                'scheduleSession.schedule.fichaTerm.term:id,name',
+
+                'scheduleSession.schedule.fichaTerm.ficha:id,ficha_number,training_program_id,gestor_id',
+                'scheduleSession.schedule.fichaTerm.ficha.trainingProgram:id,name',
+            ])
+            ->withCount([
+                'attendances as attendances_count' => function ($q) {
+                    $q->whereNotIn('attendance_status_id', [2, 3, 6]);
+                },
+            ])
+            ->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('gestor_id', Auth::id()))
+            ->whereHas('scheduleSession.schedule.fichaTerm', fn($q) => $q->where('is_current', 1));
+
+        if ($request->filled('date')) $query->whereDate('execution_date', $request->date);
+        if ($request->filled('instructor_id')) $query->where('instructor_id', $request->instructor_id);
+        if ($request->filled('ficha_id')) $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('id', $request->ficha_id));
+        if ($request->filled('training_program_id')) $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('training_program_id', $request->training_program_id));
+        if ($request->filled('term_id')) $query->whereHas('scheduleSession.schedule.fichaTerm', fn($q) => $q->where('term_id', $request->term_id));
+
+        $query->orderBy('execution_date', 'desc')->orderBy('start_hour', 'asc');
+
+        $realClasses = $query->paginate($perPage);
+
+        $realClasses->load([
+            'scheduleSession.schedule.fichaTerm.ficha' => fn($q) => $q->withCount('apprentices')
+        ]);
+
+        $items = $realClasses->getCollection()->map(function ($rc) {
+            $profile = $rc->instructor?->profile;
+            $instructorName = $profile ? trim(($profile->first_name ?? '') . ' ' . ($profile->last_name ?? '')) : 'Sin instructor';
+
+            $fichaTerm = $rc->scheduleSession?->schedule?->fichaTerm;
+            $ficha = $fichaTerm?->ficha;
+
+            $attendancesCount = (int) ($rc->attendances_count ?? 0);
+            $apprenticesCount = (int) ($ficha?->apprentices_count ?? 0);
+
+            return [
+                'id' => $rc->id,
+                'class_date' => $rc->execution_date,
+                'start_hour' => $rc->start_hour,
+                'end_hour' => $rc->end_hour,
+
+                'ficha_id' => $ficha?->id,
+                'ficha_number' => $ficha?->ficha_number,
+
+                'training_program_id' => $ficha?->training_program_id,
+                'training_program_name' => $ficha?->trainingProgram?->name ?? 'Sin programa',
+
+                'term_id' => $fichaTerm?->term_id,
+                'term_name' => $fichaTerm?->term?->name ?? 'Sin trimestre',
+
+                'instructor_id' => $rc->instructor_id,
+                'instructor_name' => $instructorName,
+
+                'attendances_count' => $attendancesCount,
+                'apprentices_count' => $apprenticesCount,
+                'attendance_ratio' => "{$attendancesCount}/{$apprenticesCount}",
+
+                'created_at' => $rc->created_at?->toDateString(),
+                'updated_at' => $rc->updated_at?->toDateString(),
+            ];
+        });
+
+        if ($items->isEmpty()) {
+            return ["error" => false, "code" => 200, "message" => "No hay clases reales registradas"];
+        }
+
+        return [
+            "error" => false,
+            "code" => 200,
+            "message" => "Clases reales obtenidas con éxito",
+            "data" => $items,
+            "paginate" => [
+                "current_page" => $realClasses->currentPage(),
+                "per_page" => $realClasses->perPage(),
+                "total" => $realClasses->total(),
+                "last_page" => $realClasses->lastPage(),
+                "from" => $realClasses->firstItem(),
+                "to" => $realClasses->lastItem(),
+            ],
+        ];
+    }
 
     public function create($data)
     {
@@ -328,7 +551,7 @@ class RealClassService
             $executionDate = now()->format('Y-m-d');
             $data['execution_date'] = $executionDate;
 
-            $scheduleSession = ScheduleSession::with('schedule.fichaTerm')
+            $scheduleSession = ScheduleSession::with('schedule.fichaTerm.ficha')
                 ->find($data['schedule_session_id']);
 
             if (!$scheduleSession || !$scheduleSession->schedule || !$scheduleSession->schedule->fichaTerm) {
@@ -336,6 +559,27 @@ class RealClassService
                     'error' => true,
                     'code' => 404,
                     'message' => 'No se pudo resolver la ficha desde la sesión de horario.',
+                    'data' => [],
+                ];
+            }
+
+            if (
+                empty($data['instructor_id']) ||
+                (int) $data['instructor_id'] !== (int) $scheduleSession->instructor_id
+            ) {
+                return [
+                    'error' => true,
+                    'code' => 422,
+                    'message' => 'El instructor_id no coincide con el instructor asignado a la sesión de horario.',
+                    'data' => [],
+                ];
+            }
+
+            if (!(bool) ($scheduleSession->schedule->fichaTerm->is_current ?? false)) {
+                return [
+                    'error' => true,
+                    'code' => 409,
+                    'message' => 'La sesión no pertenece al trimestre actual de la ficha.',
                     'data' => [],
                 ];
             }

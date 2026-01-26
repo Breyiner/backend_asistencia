@@ -83,6 +83,7 @@ class PermissionSeeder extends Seeder
 
             ['name' => 'fichas.viewAny', 'guard_name' => 'web', 'display_name' => 'Listar fichas', 'group' => 'Fichas'],
             ['name' => 'fichas.view', 'guard_name' => 'web', 'display_name' => 'Ver ficha', 'group' => 'Fichas'],
+            ['name' => 'fichas.availableForRealClass', 'guard_name' => 'web', 'display_name' => 'Listar fichas disponibles para registrar clase real', 'group' => 'Fichas'],
             ['name' => 'fichas.create', 'guard_name' => 'web', 'display_name' => 'Crear ficha', 'group' => 'Fichas'],
             ['name' => 'fichas.update', 'guard_name' => 'web', 'display_name' => 'Editar ficha', 'group' => 'Fichas'],
             ['name' => 'fichas.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar ficha', 'group' => 'Fichas'],
@@ -147,12 +148,15 @@ class PermissionSeeder extends Seeder
 
             // Ejecución y Asistencia
             ['name' => 'schedule_sessions.viewAny', 'guard_name' => 'web', 'display_name' => 'Listar sesiones horario', 'group' => 'Sesiones Horario'],
+            ['name' => 'schedule_sessions.byFichaId', 'guard_name' => 'web', 'display_name' => 'Ver sesiones del horario actual por ficha', 'group' => 'Sesiones Horario'],
             ['name' => 'schedule_sessions.view', 'guard_name' => 'web', 'display_name' => 'Ver sesión horario', 'group' => 'Sesiones Horario'],
             ['name' => 'schedule_sessions.create', 'guard_name' => 'web', 'display_name' => 'Crear sesión horario', 'group' => 'Sesiones Horario'],
             ['name' => 'schedule_sessions.update', 'guard_name' => 'web', 'display_name' => 'Editar sesión horario', 'group' => 'Sesiones Horario'],
             ['name' => 'schedule_sessions.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar sesión horario', 'group' => 'Sesiones Horario'],
 
             ['name' => 'real_classes.viewAny', 'guard_name' => 'web', 'display_name' => 'Listar clases reales', 'group' => 'Clases Reales'],
+            ['name' => 'real_classes.viewOwn', 'guard_name' => 'web', 'display_name' => 'Listar mis clases reales', 'group' => 'Clases Reales'],
+            ['name' => 'real_classes.viewManaged', 'guard_name' => 'web', 'display_name' => 'Listar clases reales de mis fichas', 'group' => 'Clases Reales'],
             ['name' => 'real_classes.view', 'guard_name' => 'web', 'display_name' => 'Ver clase real', 'group' => 'Clases Reales'],
             ['name' => 'real_classes.create', 'guard_name' => 'web', 'display_name' => 'Registrar clase real', 'group' => 'Clases Reales'],
             ['name' => 'real_classes.update', 'guard_name' => 'web', 'display_name' => 'Editar clase real', 'group' => 'Clases Reales'],
@@ -184,7 +188,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'notifications.markAsRead', 'guard_name' => 'web', 'display_name' => 'Marcar como leída', 'group' => 'Notificaciones'],
             ['name' => 'notifications.markAllAsRead', 'guard_name' => 'web', 'display_name' => 'Marcar todas como leídas', 'group' => 'Notificaciones'],
             ['name' => 'notifications.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar notificación', 'group' => 'Notificaciones'],
-        
+
 
             // Días sin clase
             ['name' => 'no_class_days.viewAny', 'guard_name' => 'web', 'display_name' => 'Listar días sin clase', 'group' => 'Días Sin Clase'],

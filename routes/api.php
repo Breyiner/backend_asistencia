@@ -100,7 +100,7 @@ Route::middleware('throttle:api')->group(function () {
         });
 
         // Profiles
-        Route::prefix('profiles/users')->group(function () {  
+        Route::prefix('profiles/users')->group(function () {
             Route::get('/', [UserProfileController::class, 'index'])->middleware('permission:profiles_users.viewAny');
             Route::get('/me', [UserProfileController::class, 'showOwn'])->middleware('permission:profiles_users.viewOwn');
             Route::get('/profile/{profile_id}', [UserProfileController::class, 'show'])->middleware('permission:profiles_users.view');
@@ -150,6 +150,9 @@ Route::middleware('throttle:api')->group(function () {
             Route::get('/', [FichaController::class, 'index'])->middleware('permission:fichas.viewAny');
             Route::get('/{ficha_id}', [FichaController::class, 'show'])->middleware('permission:fichas.view');
             Route::get('/training_program/{training_program_id}', [FichaController::class, 'showByTrainingProgram'])->middleware('permission:fichas.viewAny');
+
+            Route::get('/available_for_real_class', [FichaController::class, 'availableForRealClass'])->middleware('permission:fichas.availableForRealClass');
+
             Route::post('/', [FichaController::class, 'store'])->middleware('permission:fichas.create');
             Route::patch('/{ficha_id}', [FichaController::class, 'update'])->middleware('permission:fichas.update');
             Route::delete('/{ficha_id}', [FichaController::class, 'destroy'])->middleware('permission:fichas.delete');
@@ -234,7 +237,7 @@ Route::middleware('throttle:api')->group(function () {
         Route::prefix('schedule_sessions')->group(function () {
             Route::get('/', [ScheduleSessionController::class, 'index'])->middleware('permission:schedule_sessions.viewAny');
             Route::get('/{schedule_session_id}', [ScheduleSessionController::class, 'show'])->middleware('permission:schedule_sessions.view');
-            Route::get('/ficha/{ficha_id}', [ScheduleSessionController::class, 'showByFicha'])->middleware('permission:schedule_sessions.viewAny');
+            Route::get('/ficha/{ficha_id}', [ScheduleSessionController::class, 'showByFicha'])->middleware('permission:schedule_sessions.byFichaId');
             Route::post('/', [ScheduleSessionController::class, 'store'])->middleware('permission:schedule_sessions.create');
             Route::patch('/{schedule_session_id}', [ScheduleSessionController::class, 'update'])->middleware('permission:schedule_sessions.update');
             Route::delete('/{schedule_session_id}', [ScheduleSessionController::class, 'destroy'])->middleware('permission:schedule_sessions.delete');
@@ -252,6 +255,10 @@ Route::middleware('throttle:api')->group(function () {
         // Real Classes
         Route::prefix('real_classes')->group(function () {
             Route::get('/', [RealClassController::class, 'index'])->middleware('permission:real_classes.viewAny');
+
+            Route::get('/mine', [RealClassController::class, 'mine'])->middleware('permission:real_classes.viewOwn');
+            Route::get('/managed', [RealClassController::class, 'managed'])->middleware('permission:real_classes.viewManaged');
+
             Route::get('/{real_class_id}', [RealClassController::class, 'show'])->middleware('permission:real_classes.view');
             Route::post('/', [RealClassController::class, 'store'])->middleware('permission:real_classes.create');
             Route::patch('/{real_class_id}', [RealClassController::class, 'update'])->middleware('permission:real_classes.update');
