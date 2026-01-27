@@ -54,6 +54,7 @@ class RoleService
   {
     $role = Role::create([
       'name' => $data['name'],
+      'code' => $data['code'], // NUEVO
       'description' => $data['description'] ?? null,
       'guard_name' => 'web',
     ]);
