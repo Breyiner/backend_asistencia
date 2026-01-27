@@ -106,6 +106,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 return [
                     'id' => $role->id,
                     'name' => $role->name,
+                    'code' => $role->code,
                     'permissions' => $role->permissions->pluck('name')->toArray()
                 ];
             })->toArray()

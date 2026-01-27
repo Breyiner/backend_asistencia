@@ -56,7 +56,7 @@ Route::middleware('throttle:api')->group(function () {
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->middleware('throttle:verification')->name('verification.send');
 
     // Rutas protegidas
-    Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::middleware(['auth:sanctum', 'verified', 'acting.role'])->group(function () {
 
         // Roles
         Route::prefix('roles')->group(function () {

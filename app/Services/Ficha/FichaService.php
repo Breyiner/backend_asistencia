@@ -10,6 +10,10 @@ class FichaService
 {
     public function getAll($perPage = 10)
     {
+        $userId = Auth::id();
+
+        $roleCode = request()->attributes->get('acting_role_code');
+
         $query = Ficha::select([
             'id',
             'gestor_id',
@@ -22,10 +26,20 @@ class FichaService
             'gestor.profile:id,user_id,first_name,last_name',
             'trainingProgram:id,name',
             'status:id,name',
-
             'currentFichaTerm:id,ficha_id,term_id,is_current',
             'currentFichaTerm.term:id,name',
         ])->withCount('apprentices');
+
+        if ($roleCode === 'INSTRUCTOR') {
+            $query->whereHas('currentFichaTerm', fn($q) => $q->where('is_current', 1))
+                ->whereHas('currentFichaTerm.schedule.scheduleSessions', function ($q) use ($userId) {
+                    $q->where('instructor_id', $userId);
+                });
+        } elseif ($roleCode === 'GESTOR_FICHAS') {
+            $query->where('gestor_id', $userId);
+        } else {
+            // ADMIN: sin filtro
+        }
 
         if (request()->filled('ficha_number')) {
             $query->where('ficha_number', 'like', '%' . request('ficha_number') . '%');
@@ -49,7 +63,7 @@ class FichaService
             });
         }
 
-        $fichas = $query->paginate($perPage);
+        $fichas = $query->orderBy('ficha_number', 'asc')->paginate($perPage);
 
         $items = $fichas->getCollection()->map(function ($ficha) {
             return [
@@ -75,32 +89,40 @@ class FichaService
                 'created_at' => $ficha->created_at?->toDateString(),
                 'updated_at' => $ficha->updated_at?->toDateString(),
             ];
-        });
+        })->values();
 
         if ($items->isEmpty()) {
             return [
-                "error" => false,
-                "code" => 200,
-                "message" => "No hay fichas registradas",
+                'error' => false,
+                'code' => 200,
+                'message' => 'No hay fichas registradas',
+                'data' => [],
+                'paginate' => [
+                    'current_page' => $fichas->currentPage(),
+                    'per_page' => $fichas->perPage(),
+                    'total' => $fichas->total(),
+                    'last_page' => $fichas->lastPage(),
+                    'from' => $fichas->firstItem(),
+                    'to' => $fichas->lastItem(),
+                ],
             ];
         }
 
         return [
-            "error" => false,
-            "code" => 200,
-            "message" => "Fichas obtenidas con éxito",
-            "data" => $items,
-            "paginate" => [
-                "current_page" => $fichas->currentPage(),
-                "per_page" => $fichas->perPage(),
-                "total" => $fichas->total(),
-                "last_page" => $fichas->lastPage(),
-                "from" => $fichas->firstItem(),
-                "to" => $fichas->lastItem(),
+            'error' => false,
+            'code' => 200,
+            'message' => 'Fichas obtenidas con éxito',
+            'data' => $items,
+            'paginate' => [
+                'current_page' => $fichas->currentPage(),
+                'per_page' => $fichas->perPage(),
+                'total' => $fichas->total(),
+                'last_page' => $fichas->lastPage(),
+                'from' => $fichas->firstItem(),
+                'to' => $fichas->lastItem(),
             ],
         ];
     }
-
 
     public function getById($id)
     {
@@ -308,7 +330,6 @@ class FichaService
             'data' => $items
         ];
     }
-
 
     public function create(array $data)
     {
