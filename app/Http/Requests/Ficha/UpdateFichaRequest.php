@@ -7,22 +7,13 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateFichaRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-
         $fichaId = $this->route('ficha_id');
 
         return [
@@ -32,6 +23,8 @@ class UpdateFichaRequest extends FormRequest
             'end_date' => ['sometimes', 'required', 'date', 'after:start_date'],
             'training_program_id' => ['sometimes', 'required', 'integer', 'exists:training_programs,id'],
             'status_id' => ['sometimes', 'required', 'integer', 'exists:ficha_statuses,id'],
+
+            'shift_id' => ['sometimes', 'required', 'integer', 'exists:shifts,id'],
         ];
     }
 
@@ -61,14 +54,13 @@ class UpdateFichaRequest extends FormRequest
             'status_id.required' => 'El :attribute es obligatorio.',
             'status_id.integer' => 'El :attribute debe ser un número entero.',
             'status_id.exists' => 'El :attribute seleccionado no existe.',
+
+            'shift_id.required' => 'La :attribute es obligatoria.',
+            'shift_id.integer' => 'El :attribute debe ser un número entero.',
+            'shift_id.exists' => 'El :attribute seleccionado no existe.',
         ];
     }
 
-    /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
-     */
     public function attributes(): array
     {
         return [
@@ -78,6 +70,7 @@ class UpdateFichaRequest extends FormRequest
             'end_date' => 'fecha de finalización',
             'training_program_id' => 'programa de formación',
             'status_id' => 'estado',
+            'shift_id' => 'jornada',
         ];
     }
 }

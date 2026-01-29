@@ -11,7 +11,6 @@ class FichaService
     public function getAll($perPage = 10)
     {
         $userId = Auth::id();
-
         $roleCode = request()->attributes->get('acting_role_code');
 
         $query = Ficha::select([
@@ -19,6 +18,7 @@ class FichaService
             'gestor_id',
             'training_program_id',
             'status_id',
+            'shift_id',
             'ficha_number',
             'created_at',
             'updated_at',
@@ -26,6 +26,7 @@ class FichaService
             'gestor.profile:id,user_id,first_name,last_name',
             'trainingProgram:id,name',
             'status:id,name',
+            'shift:id,name',
             'currentFichaTerm:id,ficha_id,term_id,is_current',
             'currentFichaTerm.term:id,name',
         ])->withCount('apprentices');
@@ -37,8 +38,6 @@ class FichaService
                 });
         } elseif ($roleCode === 'GESTOR_FICHAS') {
             $query->where('gestor_id', $userId);
-        } else {
-            // ADMIN: sin filtro
         }
 
         if (request()->filled('ficha_number')) {
@@ -63,6 +62,10 @@ class FichaService
             });
         }
 
+        if (request()->filled('shift_id')) {
+            $query->where('shift_id', request('shift_id'));
+        }
+
         $fichas = $query->orderBy('ficha_number', 'asc')->paginate($perPage);
 
         $items = $fichas->getCollection()->map(function ($ficha) {
@@ -80,6 +83,9 @@ class FichaService
 
                 'status_id' => $ficha->status_id,
                 'status_name' => $ficha->status?->name ?? 'Sin estado',
+
+                'shift_id' => $ficha->shift_id,
+                'shift_name' => $ficha->shift?->name ?? 'Sin jornada',
 
                 'current_term_id' => $ficha->currentFichaTerm?->term?->id,
                 'current_term_name' => $ficha->currentFichaTerm?->term?->name ?? 'Sin trimestre actual',
@@ -134,6 +140,7 @@ class FichaService
             'gestor_id',
             'training_program_id',
             'status_id',
+            'shift_id',
             'ficha_number',
             'start_date',
             'end_date',
@@ -144,6 +151,7 @@ class FichaService
                 'gestor.profile:id,user_id,first_name,last_name',
                 'trainingProgram:id,name',
                 'status:id,name',
+                'shift:id,name',
 
                 'currentFichaTerm:id,ficha_id,term_id,phase_id,start_date,end_date,is_current',
                 'currentFichaTerm.term:id,name',
@@ -158,8 +166,7 @@ class FichaService
                         'start_date',
                         'end_date',
                         'is_current',
-                    ])
-                        ->orderBy('start_date', 'asc');
+                    ])->orderBy('start_date', 'asc');
                 },
                 'fichaTerms.term:id,name',
                 'fichaTerms.phase:id,name',
@@ -200,6 +207,11 @@ class FichaService
             'training_program_id' => $ficha->training_program_id,
             'training_program_name' => $ficha->trainingProgram?->name ?? 'Sin programa',
 
+            'shift' => [
+                'id' => $ficha->shift_id,
+                'name' => $ficha->shift?->name ?? 'Sin jornada',
+            ],
+
             'apprentices_count' => (int) ($ficha->apprentices_count ?? 0),
 
             'status_id' => $ficha->status_id,
@@ -237,7 +249,6 @@ class FichaService
         ];
     }
 
-
     public function getByTrainingProgram($trainingProgramId)
     {
         $query = Ficha::select([
@@ -245,6 +256,7 @@ class FichaService
             'gestor_id',
             'training_program_id',
             'status_id',
+            'shift_id',
             'ficha_number',
             'created_at',
             'updated_at',
@@ -253,6 +265,7 @@ class FichaService
                 'gestor.profile:id,user_id,first_name,last_name',
                 'trainingProgram:id,name',
                 'status:id,name',
+                'shift:id,name',
             ])
             ->where('training_program_id', $trainingProgramId);
 
@@ -270,6 +283,8 @@ class FichaService
                 'training_program_name' => $ficha->trainingProgram?->name ?? 'Sin programa',
                 'status_id' => $ficha->status_id,
                 'status_name' => $ficha->status?->name ?? 'Sin estado',
+                'shift_id' => $ficha->shift_id,
+                'shift_name' => $ficha->shift?->name ?? 'Sin jornada',
                 'created_at' => $ficha->created_at?->toDateString(),
                 'updated_at' => $ficha->updated_at?->toDateString(),
             ];
@@ -308,17 +323,18 @@ class FichaService
             'gestor_id',
             'training_program_id',
             'status_id',
+            'shift_id',
             'ficha_number',
             'created_at',
             'updated_at',
         ])->with([
             'trainingProgram:id,name',
+            'shift:id,name',
             'currentFichaTerm:id,ficha_id,term_id,is_current',
             'currentFichaTerm.term:id,name',
         ])->whereHas('currentFichaTerm', fn($q) => $q->where('is_current', 1))
             ->where(function ($q) use ($userId) {
                 $q->where('gestor_id', $userId)
-
                     ->orWhereHas('currentFichaTerm.schedule.scheduleSessions', function ($qq) use ($userId) {
                         $qq->where('instructor_id', $userId);
                     });
@@ -332,6 +348,8 @@ class FichaService
                 'ficha_number' => $ficha->ficha_number,
                 'training_program_id' => $ficha->training_program_id,
                 'training_program_name' => $ficha->trainingProgram?->name ?? 'Sin programa',
+                'shift_id' => $ficha->shift_id,
+                'shift_name' => $ficha->shift?->name ?? 'Sin jornada',
                 'current_term_id' => $ficha->currentFichaTerm?->term?->id,
                 'current_term_name' => $ficha->currentFichaTerm?->term?->name ?? 'Sin trimestre actual',
             ];
@@ -353,6 +371,7 @@ class FichaService
             'start_date' => $data['start_date'],
             'end_date' => $data['end_date'],
             'training_program_id' => $data['training_program_id'],
+            'shift_id' => $data['shift_id'],
             'status_id' => 1,
         ]);
 
@@ -371,6 +390,7 @@ class FichaService
             "data" => $ficha
         ];
     }
+
     public function update($id, array $data)
     {
         $ficha = Ficha::find($id);
@@ -390,6 +410,7 @@ class FichaService
         if (array_key_exists('start_date', $data)) $fichaData['start_date'] = $data['start_date'];
         if (array_key_exists('end_date', $data)) $fichaData['end_date'] = $data['end_date'];
         if (array_key_exists('training_program_id', $data)) $fichaData['training_program_id'] = $data['training_program_id'];
+        if (array_key_exists('shift_id', $data)) $fichaData['shift_id'] = $data['shift_id']; // NEW
         if (array_key_exists('status_id', $data)) $fichaData['status_id'] = $data['status_id'];
 
         if (empty($fichaData)) {

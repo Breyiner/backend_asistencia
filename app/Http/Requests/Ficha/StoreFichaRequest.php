@@ -7,19 +7,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreFichaRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -28,6 +20,8 @@ class StoreFichaRequest extends FormRequest
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
             'training_program_id' => ['required', 'integer', 'exists:training_programs,id'],
+
+            'shift_id' => ['nullable', 'integer', 'exists:shifts,id'],
         ];
     }
 
@@ -53,14 +47,12 @@ class StoreFichaRequest extends FormRequest
             'training_program_id.required' => 'El :attribute es obligatorio.',
             'training_program_id.integer' => 'El :attribute debe ser un número entero.',
             'training_program_id.exists' => 'El :attribute seleccionado no existe.',
+
+            'shift_id.integer' => 'El :attribute debe ser un número entero.',
+            'shift_id.exists' => 'El :attribute seleccionado no existe.',
         ];
     }
 
-    /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
-     */
     public function attributes(): array
     {
         return [
@@ -69,6 +61,7 @@ class StoreFichaRequest extends FormRequest
             'start_date' => 'fecha de inicio',
             'end_date' => 'fecha de finalización',
             'training_program_id' => 'programa de formación',
+            'shift_id' => 'jornada',
         ];
     }
 }

@@ -27,16 +27,7 @@ class StoreShiftRequest extends FormRequest
                 'string',
                 'max:50',
                 'unique:shifts,name'
-            ],
-            'start_time' => [
-                'required',
-                'date_format:H:i'
-            ],
-            'end_time' => [
-                'required',
-                'date_format:H:i',
-                'after:start_time'
-            ],
+            ]
         ];
     }
 
@@ -47,13 +38,6 @@ class StoreShiftRequest extends FormRequest
             'name.string' => 'El :attribute debe ser texto.',
             'name.max' => 'El :attribute no puede exceder :max caracteres.',
             'name.unique' => 'El :attribute ya está registrado.',
-
-            'start_time.required' => 'La :attribute es obligatoria.',
-            'start_time.date_format' => 'La :attribute debe tener formato HH:MM (24h).',
-
-            'end_time.required' => 'La :attribute es obligatoria.',
-            'end_time.date_format' => 'La :attribute debe tener formato HH:MM (24h).',
-            'end_time.after' => 'La :attribute debe ser mayor que la hora de inicio.',
         ];
     }
 
@@ -61,8 +45,6 @@ class StoreShiftRequest extends FormRequest
     {
         return [
             'name' => 'nombre de la jornada',
-            'start_time' => 'hora de inicio',
-            'end_time' => 'hora de fin',
         ];
     }
 }

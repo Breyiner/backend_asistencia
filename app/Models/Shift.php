@@ -8,13 +8,11 @@ class Shift extends Model
 {
     protected $fillable = [
         'name',
-        'start_time',
-        'end_time',
     ];
 
-    public function scheduleSessions()
+    public function fichas()
     {
-        return $this->hasMany(ScheduleSession::class);
+        return $this->hasMany(Ficha::class);
     }
 
 }

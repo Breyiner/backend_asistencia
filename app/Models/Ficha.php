@@ -8,6 +8,7 @@ class Ficha extends Model
 {
     protected $fillable = [
         'gestor_id',
+        'shift_id',
         'ficha_number',
         'start_date',
         'end_date',
@@ -28,6 +29,11 @@ class Ficha extends Model
     public function gestor()
     {
         return $this->belongsTo(User::class, 'gestor_id');
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class, 'shift_id');
     }
 
     public function apprentices()

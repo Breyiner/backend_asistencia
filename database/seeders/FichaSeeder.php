@@ -18,6 +18,7 @@ class FichaSeeder extends Seeder
                 'gestor_id' => 2,
                 'ficha_number' => '2894667',
                 'start_date' => '2024-02-01',
+                'shift_id' => 1,
                 'end_date' => '2024-08-01',
                 'training_program_id' => 4,
                 'status_id' => 1,
@@ -25,6 +26,7 @@ class FichaSeeder extends Seeder
             [
                 'gestor_id' => 2,
                 'ficha_number' => '67890',
+                'shift_id' => 2,
                 'start_date' => '2024-03-01',
                 'end_date' => '2024-09-01',
                 'training_program_id' => 2,

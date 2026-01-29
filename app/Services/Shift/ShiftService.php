@@ -77,14 +77,6 @@ class ShiftService
             $shiftData['name'] = $data['name'];
         }
 
-        if (array_key_exists('start_time', $data)) {
-            $shiftData['start_time'] = $data['start_time'];
-        }
-
-        if (array_key_exists('end_time', $data)) {
-            $shiftData['end_time'] = $data['end_time'];
-        }
-
         if (empty($shiftData)) {
             return [
                 'error' => true,
