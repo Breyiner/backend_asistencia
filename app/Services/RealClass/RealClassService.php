@@ -168,7 +168,10 @@ class RealClassService
 
     public function getById($id)
     {
-        $realClass = RealClass::query()
+        $userId = Auth::id();
+        $roleCode = request()->attributes->get('acting_role_code');
+
+        $query = RealClass::query()
             ->select([
                 'id',
                 'instructor_id',
@@ -199,7 +202,7 @@ class RealClassService
                 'scheduleSession.schedule:id,ficha_term_id',
                 'scheduleSession.schedule.fichaTerm:id,ficha_id,term_id',
                 'scheduleSession.schedule.fichaTerm.term:id,name',
-                'scheduleSession.schedule.fichaTerm.ficha:id,ficha_number,training_program_id',
+                'scheduleSession.schedule.fichaTerm.ficha:id,ficha_number,training_program_id,gestor_id',
                 'scheduleSession.schedule.fichaTerm.ficha.trainingProgram:id,name',
 
                 'scheduleSession.instructor:id',
@@ -209,8 +212,17 @@ class RealClassService
                 'attendances as attendances_count' => function ($q) {
                     $q->whereNotIn('attendance_status_id', [2, 3, 6]);
                 },
-            ])
-            ->find($id);
+            ]);
+
+        if ($roleCode === 'GESTOR_FICHAS') {
+            $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', function ($q) use ($userId) {
+                $q->where('gestor_id', $userId);
+            });
+        } elseif ($roleCode === 'INSTRUCTOR') {
+            $query->where('instructor_id', $userId);
+        }
+
+        $realClass = $query->find($id);
 
         if (!$realClass) {
             return [
@@ -310,7 +322,6 @@ class RealClassService
                 'id' => $realClass->schedule_session_id,
                 'label' => $scheduleSessionLabel,
             ],
-
         ];
 
         return [

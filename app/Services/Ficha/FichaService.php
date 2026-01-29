@@ -126,7 +126,10 @@ class FichaService
 
     public function getById($id)
     {
-        $ficha = Ficha::select([
+        $userId = Auth::id();
+        $roleCode = request()->attributes->get('acting_role_code');
+
+        $query = Ficha::select([
             'id',
             'gestor_id',
             'training_program_id',
@@ -162,14 +165,24 @@ class FichaService
                 'fichaTerms.phase:id,name',
                 'fichaTerms.schedule:id,ficha_term_id',
             ])
-            ->withCount('apprentices')
-            ->find($id);
+            ->withCount('apprentices');
+
+        if ($roleCode === 'GESTOR_FICHAS') {
+            $query->where('gestor_id', $userId);
+        } elseif ($roleCode === 'INSTRUCTOR') {
+            $query->whereHas('currentFichaTerm', fn($q) => $q->where('is_current', 1))
+                ->whereHas('currentFichaTerm.schedule.scheduleSessions', function ($q) use ($userId) {
+                    $q->where('instructor_id', $userId);
+                });
+        }
+
+        $ficha = $query->find($id);
 
         if (!$ficha) {
             return [
                 "error" => true,
                 "code" => 404,
-                "message" => "Esta ficha no existe",
+                "message" => "Ficha no encontrada",
             ];
         }
 
@@ -223,6 +236,7 @@ class FichaService
             "data" => $data
         ];
     }
+
 
     public function getByTrainingProgram($trainingProgramId)
     {
