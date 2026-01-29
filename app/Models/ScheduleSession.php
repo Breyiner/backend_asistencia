@@ -10,7 +10,7 @@ class ScheduleSession extends Model
     protected $fillable = [
         'instructor_id',
         'schedule_id',
-        'shift_id',
+        'time_slot_id',
         'classroom_id',
         'day_id',
         'start_time',
@@ -27,9 +27,9 @@ class ScheduleSession extends Model
         return $this->belongsTo(Schedule::class);
     }
 
-    public function shift()
+    public function timeSlot()
     {
-        return $this->belongsTo(Shift::class);
+        return $this->belongsTo(TimeSlot::class);
     }
 
     public function classroom()

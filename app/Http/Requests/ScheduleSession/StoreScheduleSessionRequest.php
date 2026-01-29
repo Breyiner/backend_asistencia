@@ -3,7 +3,7 @@
 namespace App\Http\Requests\ScheduleSession;
 
 use App\Models\ScheduleSession;
-use App\Models\Shift;
+use App\Models\TimeSlot;
 use App\Rules\UserHasRole;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -30,10 +30,10 @@ class StoreScheduleSessionRequest extends FormRequest
                 'exists:schedules,id',
             ],
 
-            'shift_id' => [
+            'time_slot_id' => [
                 'required',
                 'integer',
-                'exists:shifts,id',
+                'exists:time_slots,id',
             ],
 
             'classroom_id' => [
@@ -71,19 +71,19 @@ class StoreScheduleSessionRequest extends FormRequest
             $start = $this->start_time;
             $end   = $this->end_time;
 
-            $shift = Shift::find($this->shift_id);
-            if ($shift) {
-                $shiftStart = substr($shift->start_time, 0, 5);
-                $shiftEnd   = substr($shift->end_time, 0, 5);
+            $timeSlot = TimeSlot::find($this->time_slot_id);
+            if ($timeSlot) {
+                $timeSlotStart = substr($timeSlot->start_time, 0, 5);
+                $timeSlotEnd   = substr($timeSlot->end_time, 0, 5);
 
-                if ($shiftEnd >= $shiftStart) {
-                    if ($start < $shiftStart || $start > $shiftEnd) {
-                        $validator->errors()->add('start_time', 'La hora de inicio debe estar dentro del rango de la jornada.');
+                if ($timeSlotEnd >= $timeSlotStart) {
+                    if ($start < $timeSlotStart || $start > $timeSlotEnd) {
+                        $validator->errors()->add('start_time', 'La hora de inicio debe estar dentro del rango de la franja horaria.');
                         return;
                     }
 
-                    if ($end < $shiftStart || $end > $shiftEnd) {
-                        $validator->errors()->add('end_time', 'La hora de finalización debe estar dentro del rango de la jornada.');
+                    if ($end < $timeSlotStart || $end > $timeSlotEnd) {
+                        $validator->errors()->add('end_time', 'La hora de finalización debe estar dentro del rango de la franja horaria.');
                         return;
                     }
                 }
@@ -92,7 +92,7 @@ class StoreScheduleSessionRequest extends FormRequest
             $classroomOverlap = ScheduleSession::query()
                 ->where('schedule_id', $this->schedule_id)
                 ->where('day_id', $this->day_id)
-                ->where('shift_id', $this->shift_id)
+                ->where('time_slot_id', $this->time_slot_id)
                 ->where('classroom_id', $this->classroom_id)
                 ->where('start_time', '<', $end)
                 ->where('end_time', '>', $start)
@@ -108,7 +108,7 @@ class StoreScheduleSessionRequest extends FormRequest
             $instructorOverlap = ScheduleSession::query()
                 ->where('schedule_id', $this->schedule_id)
                 ->where('day_id', $this->day_id)
-                ->where('shift_id', $this->shift_id)
+                ->where('time_slot_id', $this->time_slot_id)
                 ->where('instructor_id', $this->instructor_id)
                 ->where('start_time', '<', $end)
                 ->where('end_time', '>', $start)
@@ -134,9 +134,9 @@ class StoreScheduleSessionRequest extends FormRequest
             'schedule_id.integer' => 'El :attribute debe ser un número.',
             'schedule_id.exists' => 'El :attribute seleccionado no existe.',
 
-            'shift_id.required' => 'El :attribute es obligatorio.',
-            'shift_id.integer' => 'El :attribute debe ser un número.',
-            'shift_id.exists' => 'El :attribute seleccionado no existe.',
+            'time_slot_id.required' => 'La :attribute es obligatoria.',
+            'time_slot_id.integer' => 'La :attribute debe ser un número.',
+            'time_slot_id.exists' => 'La :attribute seleccionada no existe.',
 
             'classroom_id.required' => 'El :attribute es obligatorio.',
             'classroom_id.integer' => 'El :attribute debe ser un número.',
@@ -160,7 +160,7 @@ class StoreScheduleSessionRequest extends FormRequest
         return [
             'instructor_id' => 'instructor',
             'schedule_id' => 'horario',
-            'shift_id' => 'jornada',
+            'time_slot_id' => 'franja horaria',
             'classroom_id' => 'ambiente',
             'day_id' => 'día',
             'start_time' => 'hora de inicio',

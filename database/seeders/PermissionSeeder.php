@@ -133,6 +133,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'shifts.create', 'guard_name' => 'web', 'display_name' => 'Crear Jornada', 'group' => 'Jornadas'],
             ['name' => 'shifts.update', 'guard_name' => 'web', 'display_name' => 'Editar Jornada', 'group' => 'Jornadas'],
             ['name' => 'shifts.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar Jornada', 'group' => 'Jornadas'],
+            
+            ['name' => 'time_slots.viewAny', 'guard_name' => 'web', 'display_name' => 'Listar franjas horarias', 'group' => 'Franjas Horarias'],
+            ['name' => 'time_slots.view',    'guard_name' => 'web', 'display_name' => 'Ver franja horaria',     'group' => 'Franjas Horarias'],
+            ['name' => 'time_slots.create',  'guard_name' => 'web', 'display_name' => 'Crear franja horaria',   'group' => 'Franjas Horarias'],
+            ['name' => 'time_slots.update',  'guard_name' => 'web', 'display_name' => 'Editar franja horaria',  'group' => 'Franjas Horarias'],
+            ['name' => 'time_slots.delete',  'guard_name' => 'web', 'display_name' => 'Eliminar franja horaria', 'group' => 'Franjas Horarias'],
 
             ['name' => 'classrooms.viewAny', 'guard_name' => 'web', 'display_name' => 'Listar Ambientes', 'group' => 'Ambientes'],
             ['name' => 'classrooms.view', 'guard_name' => 'web', 'display_name' => 'Ver Ambiente', 'group' => 'Ambientes'],

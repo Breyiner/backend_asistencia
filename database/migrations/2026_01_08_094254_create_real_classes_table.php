@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('instructor_id');
             $table->unsignedBigInteger('class_type_id');
             $table->unsignedBigInteger('classroom_id');
-            $table->unsignedBigInteger('shift_id');
+            $table->unsignedBigInteger('time_slot_id');
             $table->unsignedBigInteger('schedule_session_id');
 
             $table->date('execution_date');
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->foreign('instructor_id')->references('id')->on('users');
             $table->foreign('class_type_id')->references('id')->on('class_types');
             $table->foreign('classroom_id')->references('id')->on('classrooms');
-            $table->foreign('shift_id')->references('id')->on('shifts');
+            $table->foreign('time_slot_id')->references('id')->on('time_slots');
             $table->foreign('schedule_session_id')->references('id')->on('schedule_sessions');
 
             $table->timestamps();

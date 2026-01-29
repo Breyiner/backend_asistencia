@@ -25,6 +25,7 @@ use App\Http\Controllers\API\Schedule\ScheduleController;
 use App\Http\Controllers\API\ScheduleSession\ScheduleSessionController;
 use App\Http\Controllers\API\Shift\ShiftController;
 use App\Http\Controllers\API\Term\TermController;
+use App\Http\Controllers\API\TimeSlot\TimeSlotController;
 use App\Http\Controllers\API\TrainingProgram\TrainingProgramController;
 use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\UserProfile\UserProfileController;
@@ -222,6 +223,15 @@ Route::middleware('throttle:api')->group(function () {
             Route::post('/', [ShiftController::class, 'store'])->middleware('permission:shifts.create');
             Route::patch('/{shift_id}', [ShiftController::class, 'update'])->middleware('permission:shifts.update');
             Route::delete('/{shift_id}', [ShiftController::class, 'destroy'])->middleware('permission:shifts.delete');
+        });
+
+        // Time Slots (Franjas horarias)
+        Route::prefix('time_slots')->group(function () {
+            Route::get('/', [TimeSlotController::class, 'index'])->middleware('permission:time_slots.viewAny');
+            Route::get('/{time_slot_id}', [TimeSlotController::class, 'show'])->middleware('permission:time_slots.view');
+            Route::post('/', [TimeSlotController::class, 'store'])->middleware('permission:time_slots.create');
+            Route::patch('/{time_slot_id}', [TimeSlotController::class, 'update'])->middleware('permission:time_slots.update');
+            Route::delete('/{time_slot_id}', [TimeSlotController::class, 'destroy'])->middleware('permission:time_slots.delete');
         });
 
         // Classrooms

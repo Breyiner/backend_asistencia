@@ -31,9 +31,9 @@ class ScheduleService
                 'fichaTerm.term:id,name',
                 'fichaTerm.phase:id,name',
 
-                'scheduleSessions:id,schedule_id,instructor_id,shift_id,classroom_id,day_id,start_time,end_time',
+                'scheduleSessions:id,schedule_id,instructor_id,time_slot_id,classroom_id,day_id,start_time,end_time',
                 'scheduleSessions.day:id,name',
-                'scheduleSessions.shift:id,name',
+                'scheduleSessions.timeSlot:id,name,code,start_time,end_time',
                 'scheduleSessions.classroom:id,name',
                 'scheduleSessions.instructor:id',
                 'scheduleSessions.instructor.profile:id,user_id,first_name,last_name',
@@ -91,9 +91,12 @@ class ScheduleService
                     'start_time' => $s->start_time ? substr($s->start_time, 0, 5) : null,
                     'end_time'   => $s->end_time ? substr($s->end_time, 0, 5) : null,
 
-                    'shift' => [
-                        'id' => $s->shift_id,
-                        'name' => $s->shift?->name,
+                    'time_slot' => [
+                        'id' => $s->time_slot_id,
+                        'name' => $s->timeSlot?->name,
+                        'code' => $s->timeSlot?->code,
+                        'start_time' => $s->timeSlot?->start_time ? substr($s->timeSlot->start_time, 0, 5) : null,
+                        'end_time' => $s->timeSlot?->end_time ? substr($s->timeSlot->end_time, 0, 5) : null,
                     ],
 
                     'instructor' => [
@@ -135,17 +138,18 @@ class ScheduleService
                         'id',
                         'schedule_id',
                         'instructor_id',
-                        'shift_id',
+                        'time_slot_id',
                         'classroom_id',
                         'day_id',
                         'start_time',
                         'end_time',
                     ])
                         ->orderBy('day_id', 'asc')
-                        ->orderBy('shift_id', 'asc');
+                        ->orderBy('time_slot_id', 'asc');
                 },
+
                 'scheduleSessions.day:id,name',
-                'scheduleSessions.shift:id,name',
+                'scheduleSessions.timeSlot:id,name,code,start_time,end_time',
                 'scheduleSessions.classroom:id,name',
                 'scheduleSessions.instructor:id',
                 'scheduleSessions.instructor.profile:id,user_id,first_name,last_name',
@@ -207,9 +211,12 @@ class ScheduleService
                     'start_time' => $s->start_time,
                     'end_time' => $s->end_time,
 
-                    'shift' => [
-                        'id' => $s->shift_id,
-                        'name' => $s->shift?->name,
+                    'time_slot' => [
+                        'id' => $s->time_slot_id,
+                        'name' => $s->timeSlot?->name,
+                        'code' => $s->timeSlot?->code,
+                        'start_time' => $s->timeSlot?->start_time ? substr($s->timeSlot->start_time, 0, 5) : null,
+                        'end_time' => $s->timeSlot?->end_time ? substr($s->timeSlot->end_time, 0, 5) : null,
                     ],
 
                     'instructor' => [
@@ -234,7 +241,6 @@ class ScheduleService
             'data' => $data
         ];
     }
-
 
     public function create(array $data): array
     {

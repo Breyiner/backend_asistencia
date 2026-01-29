@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             ScheduleSeeder::class,
             DaySeeder::class,
             ShiftSeeder::class,
+            TimeSlotSeeder::class,
             ClassroomSeeder::class,
             ScheduleSessionSeeder::class,
             ClassTypeSeeder::class,

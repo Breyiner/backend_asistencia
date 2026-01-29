@@ -28,7 +28,7 @@ class UpdateRealClassRequest extends FormRequest
             'instructor_id' => ['sometimes', 'required', 'exists:users,id', new UserHasRole('Instructor')],
             'class_type_id' => ['sometimes', 'required', 'exists:class_types,id'],
             'classroom_id' => ['sometimes', 'required', 'exists:classrooms,id'],
-            'shift_id' => ['sometimes', 'required', 'exists:shifts,id'],
+            'time_slot_id' => ['sometimes', 'required', 'exists:time_slots,id'],
             'schedule_session_id' => ['sometimes', 'required', 'exists:schedule_sessions,id'],
             'start_hour' => ['sometimes', 'required', 'date_format:H:i'],
             'end_hour' => ['sometimes', 'required', 'date_format:H:i', 'after:start_hour'],
@@ -49,8 +49,8 @@ class UpdateRealClassRequest extends FormRequest
             'classroom_id.required' => 'El :attribute es obligatorio.',
             'classroom_id.exists' => 'El :attribute no existe.',
 
-            'shift_id.required' => 'El :attribute es obligatorio.',
-            'shift_id.exists' => 'El :attribute no existe.',
+            'time_slot_id.required' => 'La :attribute es obligatoria.',
+            'time_slot_id.exists' => 'La :attribute no existe.',
 
             'schedule_session_id.required' => 'La :attribute es obligatoria.',
             'schedule_session_id.exists' => 'La :attribute no existe.',
@@ -76,7 +76,7 @@ class UpdateRealClassRequest extends FormRequest
             'instructor_id' => 'instructor',
             'class_type_id' => 'tipo de clase',
             'classroom_id' => 'aula',
-            'shift_id' => 'jornada',
+            'time_slot_id' => 'franja Horaria',
             'schedule_session_id' => 'la formación del horario',
             'start_hour' => 'hora inicio',
             'end_hour' => 'hora fin',

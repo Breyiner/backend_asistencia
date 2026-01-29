@@ -21,7 +21,7 @@ class UpdateShiftRequest extends FormRequest
      */
     public function rules(): array
     {
-        $shiftId = $this->route('shift_id');
+        $time_slot_id = $this->route('time_slot_id');
 
         return [
             'name' => [
@@ -29,7 +29,7 @@ class UpdateShiftRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                "unique:shifts,name,{$shiftId},id" ,
+                "unique:time_slots,name,{$time_slot_id},id" ,
             ],
             'start_time' => [
                 'sometimes',

@@ -10,7 +10,7 @@ class RealClass extends Model
         'instructor_id',
         'class_type_id',
         'classroom_id',
-        'shift_id',
+        'time_slot_id',
         'schedule_session_id',
         'execution_date',
         'start_hour',
@@ -34,9 +34,9 @@ class RealClass extends Model
         return $this->belongsTo(Classroom::class, 'classroom_id');
     }
 
-    public function shift()
+    public function timeSlot()
     {
-        return $this->belongsTo(Shift::class, 'shift_id');
+        return $this->belongsTo(TimeSlot::class, 'time_slot_id');
     }
 
     public function scheduleSession()

@@ -18,7 +18,7 @@ class ScheduleSessionSeeder extends Seeder
             [
                 "instructor_id" => 3,
                 "schedule_id" => 1,
-                "shift_id" => 1,
+                "time_slot_id" => 1,
                 "classroom_id" => 1,
                 "day_id" => 1,
                 "start_time" => "06:30",

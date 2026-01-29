@@ -3,7 +3,6 @@
 namespace App\Services\RealClass;
 
 use App\Events\ResourceChanged;
-use App\Listeners\NotifyGestorOnAttendanceOrRealClass;
 use App\Models\RealClass;
 use App\Models\ScheduleSession;
 use App\Services\Attendance\AttendanceService;
@@ -14,7 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class RealClassService
 {
-
     protected $noClassDayService, $attendanceService;
 
     public function __construct(NoClassDayService $noClassDayService, AttendanceService $attendanceService)
@@ -22,7 +20,6 @@ class RealClassService
         $this->noClassDayService = $noClassDayService;
         $this->attendanceService = $attendanceService;
     }
-
 
     public function getAll(Request $request, $perPage = 10)
     {
@@ -32,7 +29,7 @@ class RealClassService
                 'instructor_id',
                 'class_type_id',
                 'classroom_id',
-                'shift_id',
+                'time_slot_id',
                 'schedule_session_id',
                 'execution_date',
                 'start_hour',
@@ -45,7 +42,7 @@ class RealClassService
             ->with([
                 'classType:id,name',
                 'classroom:id,name',
-                'shift:id,name,start_time,end_time',
+                'timeSlot:id,name,code,start_time,end_time',
 
                 'instructor:id',
                 'instructor.profile:id,user_id,first_name,last_name',
@@ -64,30 +61,23 @@ class RealClassService
                 },
             ]);
 
-        if ($request->filled('date')) {
-            $query->whereDate('execution_date', $request->date);
-        }
-
-        if ($request->filled('instructor_id')) {
-            $query->where('instructor_id', $request->instructor_id);
-        }
+        if ($request->filled('date')) $query->whereDate('execution_date', $request->date);
+        if ($request->filled('instructor_id')) $query->where('instructor_id', $request->instructor_id);
 
         if ($request->filled('ficha_id')) {
-            $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', function ($q) use ($request) {
-                $q->where('id', $request->ficha_id);
-            });
+            $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('id', $request->ficha_id));
         }
 
         if ($request->filled('training_program_id')) {
-            $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', function ($q) use ($request) {
-                $q->where('training_program_id', $request->training_program_id);
-            });
+            $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('training_program_id', $request->training_program_id));
         }
 
         if ($request->filled('term_id')) {
-            $query->whereHas('scheduleSession.schedule.fichaTerm', function ($q) use ($request) {
-                $q->where('term_id', $request->term_id);
-            });
+            $query->whereHas('scheduleSession.schedule.fichaTerm', fn($q) => $q->where('term_id', $request->term_id));
+        }
+
+        if ($request->filled('time_slot_id')) {
+            $query->where('time_slot_id', $request->time_slot_id);
         }
 
         $query->orderBy('execution_date', 'desc')
@@ -96,14 +86,11 @@ class RealClassService
         $realClasses = $query->paginate($perPage);
 
         $realClasses->load([
-            'scheduleSession.schedule.fichaTerm.ficha' => function ($q) {
-                $q->withCount('apprentices');
-            }
+            'scheduleSession.schedule.fichaTerm.ficha' => fn($q) => $q->withCount('apprentices')
         ]);
 
         $items = $realClasses->getCollection()->map(function ($rc) {
             $profile = $rc->instructor?->profile;
-
             $instructorName = $profile
                 ? trim(($profile->first_name ?? '') . ' ' . ($profile->last_name ?? ''))
                 : 'Sin instructor';
@@ -133,6 +120,10 @@ class RealClassService
                 'instructor_id' => $rc->instructor_id,
                 'instructor_name' => $instructorName,
 
+                'time_slot_id' => $rc->time_slot_id,
+                'time_slot_name' => $rc->timeSlot?->name ?? null,
+                'time_slot_code' => $rc->timeSlot?->code ?? null,
+
                 'attendances_count' => $attendancesCount,
                 'apprentices_count' => $apprenticesCount,
                 'attendance_ratio' => "{$attendancesCount}/{$apprenticesCount}",
@@ -143,11 +134,7 @@ class RealClassService
         });
 
         if ($items->isEmpty()) {
-            return [
-                "error" => false,
-                "code" => 200,
-                "message" => "No hay clases reales registradas",
-            ];
+            return ["error" => false, "code" => 200, "message" => "No hay clases reales registradas"];
         }
 
         return [
@@ -177,7 +164,7 @@ class RealClassService
                 'instructor_id',
                 'class_type_id',
                 'classroom_id',
-                'shift_id',
+                'time_slot_id',
                 'schedule_session_id',
                 'execution_date',
                 'start_hour',
@@ -190,14 +177,14 @@ class RealClassService
             ->with([
                 'classType:id,name',
                 'classroom:id,name',
-                'shift:id,name,start_time,end_time',
+                'timeSlot:id,name,code,start_time,end_time',
 
                 'instructor:id',
                 'instructor.profile:id,user_id,first_name,last_name',
 
-                'scheduleSession:id,schedule_id,day_id,shift_id,instructor_id,start_time,end_time',
+                'scheduleSession:id,schedule_id,day_id,time_slot_id,instructor_id,start_time,end_time',
                 'scheduleSession.day:id,name',
-                'scheduleSession.shift:id,name',
+                'scheduleSession.timeSlot:id,name,code,start_time,end_time',
 
                 'scheduleSession.schedule:id,ficha_term_id',
                 'scheduleSession.schedule.fichaTerm:id,ficha_id,term_id',
@@ -215,9 +202,7 @@ class RealClassService
             ]);
 
         if ($roleCode === 'GESTOR_FICHAS') {
-            $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', function ($q) use ($userId) {
-                $q->where('gestor_id', $userId);
-            });
+            $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('gestor_id', $userId));
         } elseif ($roleCode === 'INSTRUCTOR') {
             $query->where('instructor_id', $userId);
         }
@@ -233,9 +218,7 @@ class RealClassService
         }
 
         $realClass->load([
-            'scheduleSession.schedule.fichaTerm.ficha' => function ($q) {
-                $q->withCount('apprentices');
-            }
+            'scheduleSession.schedule.fichaTerm.ficha' => fn($q) => $q->withCount('apprentices')
         ]);
 
         $profile = $realClass->instructor?->profile;
@@ -251,7 +234,7 @@ class RealClassService
 
         $ss = $realClass->scheduleSession;
         $dayName = $ss?->day?->name ?? 'Sin día';
-        $shiftName = $ss?->shift?->name ?? 'Sin jornada';
+        $timeSlotName = $ss?->timeSlot?->name ?? 'Sin franja';
 
         $ssStart = $ss?->start_time ? substr($ss->start_time, 0, 5) : '--:--';
         $ssEnd   = $ss?->end_time ? substr($ss->end_time, 0, 5) : '--:--';
@@ -260,7 +243,7 @@ class RealClassService
         $ssLast  = $ss?->instructor?->profile?->last_name ?? '';
         $ssInstructorName = trim("$ssFirst $ssLast") !== '' ? trim("$ssFirst $ssLast") : 'Sin instructor';
 
-        $scheduleSessionLabel = "{$dayName} - {$shiftName} - {$ssStart} - {$ssEnd} - {$ssInstructorName}";
+        $scheduleSessionLabel = "{$dayName} - {$timeSlotName} - {$ssStart} - {$ssEnd} - {$ssInstructorName}";
 
         $classTypeId = (int) ($realClass->class_type_id ?? 0);
 
@@ -276,10 +259,14 @@ class RealClassService
                 ? (substr($realClass->start_hour, 0, 5) . ' - ' . substr($realClass->end_hour, 0, 5))
                 : null,
 
-            'shift' => [
-                'id' => $realClass->shift_id,
-                'name' => $realClass->shift?->name,
+            'time_slot' => [
+                'id' => $realClass->time_slot_id,
+                'name' => $realClass->timeSlot?->name,
+                'code' => $realClass->timeSlot?->code,
+                'start_time' => $realClass->timeSlot?->start_time ? substr($realClass->timeSlot->start_time, 0, 5) : null,
+                'end_time' => $realClass->timeSlot?->end_time ? substr($realClass->timeSlot->end_time, 0, 5) : null,
             ],
+
             'classroom' => [
                 'id' => $realClass->classroom_id,
                 'name' => $realClass->classroom?->name,
@@ -340,7 +327,7 @@ class RealClassService
                 'instructor_id',
                 'class_type_id',
                 'classroom_id',
-                'shift_id',
+                'time_slot_id',
                 'schedule_session_id',
                 'execution_date',
                 'start_hour',
@@ -353,7 +340,7 @@ class RealClassService
             ->with([
                 'classType:id,name',
                 'classroom:id,name',
-                'shift:id,name,start_time,end_time',
+                'timeSlot:id,name,code,start_time,end_time',
 
                 'instructor:id',
                 'instructor.profile:id,user_id,first_name,last_name',
@@ -377,6 +364,7 @@ class RealClassService
         if ($request->filled('ficha_id')) $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('id', $request->ficha_id));
         if ($request->filled('training_program_id')) $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('training_program_id', $request->training_program_id));
         if ($request->filled('term_id')) $query->whereHas('scheduleSession.schedule.fichaTerm', fn($q) => $q->where('term_id', $request->term_id));
+        if ($request->filled('time_slot_id')) $query->where('time_slot_id', $request->time_slot_id);
 
         $query->orderBy('execution_date', 'desc')->orderBy('start_hour', 'asc');
 
@@ -413,6 +401,10 @@ class RealClassService
 
                 'instructor_id' => $rc->instructor_id,
                 'instructor_name' => $instructorName,
+
+                'time_slot_id' => $rc->time_slot_id,
+                'time_slot_name' => $rc->timeSlot?->name ?? null,
+                'time_slot_code' => $rc->timeSlot?->code ?? null,
 
                 'attendances_count' => $attendancesCount,
                 'apprentices_count' => $apprenticesCount,
@@ -451,7 +443,7 @@ class RealClassService
                 'instructor_id',
                 'class_type_id',
                 'classroom_id',
-                'shift_id',
+                'time_slot_id',
                 'schedule_session_id',
                 'execution_date',
                 'start_hour',
@@ -464,7 +456,7 @@ class RealClassService
             ->with([
                 'classType:id,name',
                 'classroom:id,name',
-                'shift:id,name,start_time,end_time',
+                'timeSlot:id,name,code,start_time,end_time',
 
                 'instructor:id',
                 'instructor.profile:id,user_id,first_name,last_name',
@@ -490,6 +482,7 @@ class RealClassService
         if ($request->filled('ficha_id')) $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('id', $request->ficha_id));
         if ($request->filled('training_program_id')) $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('training_program_id', $request->training_program_id));
         if ($request->filled('term_id')) $query->whereHas('scheduleSession.schedule.fichaTerm', fn($q) => $q->where('term_id', $request->term_id));
+        if ($request->filled('time_slot_id')) $query->where('time_slot_id', $request->time_slot_id);
 
         $query->orderBy('execution_date', 'desc')->orderBy('start_hour', 'asc');
 
@@ -526,6 +519,10 @@ class RealClassService
 
                 'instructor_id' => $rc->instructor_id,
                 'instructor_name' => $instructorName,
+
+                'time_slot_id' => $rc->time_slot_id,
+                'time_slot_name' => $rc->timeSlot?->name ?? null,
+                'time_slot_code' => $rc->timeSlot?->code ?? null,
 
                 'attendances_count' => $attendancesCount,
                 'apprentices_count' => $apprenticesCount,
@@ -646,8 +643,10 @@ class RealClassService
         if (array_key_exists('instructor_id', $data)) $realClassData['instructor_id'] = $data['instructor_id'];
         if (array_key_exists('class_type_id', $data)) $realClassData['class_type_id'] = $data['class_type_id'];
         if (array_key_exists('classroom_id', $data)) $realClassData['classroom_id'] = $data['classroom_id'];
-        if (array_key_exists('shift_id', $data)) $realClassData['shift_id'] = $data['shift_id'];
+
+        if (array_key_exists('time_slot_id', $data)) $realClassData['time_slot_id'] = $data['time_slot_id'];
         if (array_key_exists('schedule_session_id', $data)) $realClassData['schedule_session_id'] = $data['schedule_session_id'];
+
         if (array_key_exists('execution_date', $data)) $realClassData['execution_date'] = $data['execution_date'];
         if (array_key_exists('start_hour', $data)) $realClassData['start_hour'] = $data['start_hour'];
         if (array_key_exists('end_hour', $data)) $realClassData['end_hour'] = $data['end_hour'];
@@ -660,6 +659,16 @@ class RealClassService
                 'code' => 400,
                 'message' => 'No hay datos para actualizar',
             ];
+        }
+
+        if (array_key_exists('schedule_session_id', $realClassData)) {
+            if (!ScheduleSession::whereKey($realClassData['schedule_session_id'])->exists()) {
+                return [
+                    'error' => true,
+                    'code' => 404,
+                    'message' => 'La sesión de horario no existe',
+                ];
+            }
         }
 
         $realClass->update($realClassData);
