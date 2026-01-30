@@ -4,17 +4,18 @@ namespace App\Http\Requests\ScheduleSession;
 
 use App\Models\ScheduleSession;
 use App\Models\TimeSlot;
+use App\Models\Schedule;
 use App\Rules\UserHasRole;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreScheduleSessionRequest extends FormRequest
 {
-    public function authorize(): bool
+    public function authorize()
     {
         return true;
     }
 
-    public function rules(): array
+    public function rules()
     {
         return [
             'instructor_id' => [
@@ -89,6 +90,31 @@ class StoreScheduleSessionRequest extends FormRequest
                 }
             }
 
+            $schedule = Schedule::with('fichaTerm.ficha:id,shift_id')
+                ->find($this->schedule_id);
+
+            if ($schedule && $schedule->fichaTerm && $schedule->fichaTerm->ficha) {
+                $fichaShiftId = $schedule->fichaTerm->ficha->shift_id;
+
+                if ($fichaShiftId == 1) {
+                    $allowedCodes = ['MORNING', 'AFTERNOON'];
+                    if (!in_array($timeSlot?->code, $allowedCodes, true)) {
+                        $validator->errors()->add(
+                            'time_slot_id',
+                            'La franja horaria seleccionada no es compatible con la jornada Diurna de la ficha. Solo se permiten franjas de Mañana o Tarde.'
+                        );
+                    }
+                } elseif ($fichaShiftId == 2) {
+                    $allowedCodes = ['AFTERNOON', 'NIGHT'];
+                    if (!in_array($timeSlot?->code, $allowedCodes, true)) {
+                        $validator->errors()->add(
+                            'time_slot_id',
+                            'La franja horaria seleccionada no es compatible con la jornada Nocturna de la ficha. Solo se permiten franjas de Tarde o Noche.'
+                        );
+                    }
+                }
+            }
+
             $classroomOverlap = ScheduleSession::query()
                 ->where('schedule_id', $this->schedule_id)
                 ->where('day_id', $this->day_id)
@@ -101,7 +127,7 @@ class StoreScheduleSessionRequest extends FormRequest
             if ($classroomOverlap) {
                 $validator->errors()->add(
                     'classroom_id',
-                    'El ambiente ya tiene una clase asignada en ese día y jornada que se cruza con el horario ingresado.'
+                    'El ambiente ya tiene una clase asignada en ese día y franja horaria que se cruza con el horario ingresado.'
                 );
             }
 
@@ -117,13 +143,13 @@ class StoreScheduleSessionRequest extends FormRequest
             if ($instructorOverlap) {
                 $validator->errors()->add(
                     'instructor_id',
-                    'El instructor ya tiene una clase asignada en ese día y jornada que se cruza con el horario ingresado.'
+                    'El instructor ya tiene una clase asignada en ese día y franja horaria que se cruza con el horario ingresado.'
                 );
             }
         });
     }
 
-    public function messages(): array
+    public function messages()
     {
         return [
             'instructor_id.required' => 'El :attribute es obligatorio.',
@@ -155,7 +181,7 @@ class StoreScheduleSessionRequest extends FormRequest
         ];
     }
 
-    public function attributes(): array
+    public function attributes()
     {
         return [
             'instructor_id' => 'instructor',
