@@ -10,7 +10,7 @@ class ShiftService
 {
     public function getAll(): array
     {
-        $shifts = Shift::orderBy('start_time')->get();
+        $shifts = Shift::orderBy('id')->get();
 
         return [
             'error' => false,

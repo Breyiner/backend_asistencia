@@ -207,10 +207,8 @@ class FichaService
             'training_program_id' => $ficha->training_program_id,
             'training_program_name' => $ficha->trainingProgram?->name ?? 'Sin programa',
 
-            'shift' => [
-                'id' => $ficha->shift_id,
-                'name' => $ficha->shift?->name ?? 'Sin jornada',
-            ],
+            'shift_id' => $ficha->shift_id,
+            'shift_name' => $ficha->shift?->name ?? 'Sin jornada',
 
             'apprentices_count' => (int) ($ficha->apprentices_count ?? 0),
 
