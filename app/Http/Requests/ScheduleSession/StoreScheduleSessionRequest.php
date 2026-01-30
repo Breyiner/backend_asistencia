@@ -5,7 +5,7 @@ namespace App\Http\Requests\ScheduleSession;
 use App\Models\ScheduleSession;
 use App\Models\TimeSlot;
 use App\Models\Schedule;
-use App\Rules\UserHasRole;
+use App\Rules\UserHasRoleCode;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreScheduleSessionRequest extends FormRequest
@@ -22,7 +22,7 @@ class StoreScheduleSessionRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:users,id',
-                new UserHasRole('Instructor'),
+                new UserHasRoleCode('INSTRUCTIOR'),
             ],
 
             'schedule_id' => [

@@ -112,4 +112,19 @@ class User extends Authenticatable implements MustVerifyEmail
             })->toArray()
         ];
     }
+
+    public function areas()
+    {
+        return $this->belongsToMany(Area::class, 'area_user')->withTimestamps();
+    }
+
+    public function hasAccessToArea($areaId): bool
+    {
+        return $this->areas()->where('areas.id', $areaId)->exists();
+    }
+
+    public function areaIds(): array
+    {
+        return $this->areas()->pluck('areas.id')->toArray();
+    }
 }

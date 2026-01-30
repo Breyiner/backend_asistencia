@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Ficha;
 
-use App\Rules\UserHasRole;
+use App\Rules\UserHasRoleCode;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreFichaRequest extends FormRequest
@@ -15,7 +15,7 @@ class StoreFichaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'gestor_id' => ['required', 'integer', 'exists:users,id', new UserHasRole('Gestor de Fichas')],
+            'gestor_id' => ['required', 'integer', 'exists:users,id', new UserHasRoleCode('GESTOR_FICHAS')],
             'ficha_number' => ['required', 'string', 'unique:fichas,ficha_number', 'digits_between:5,20'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],

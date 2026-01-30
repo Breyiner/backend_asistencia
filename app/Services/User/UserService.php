@@ -7,7 +7,6 @@ use App\Events\UserCreated;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserProfile;
-use App\Models\UserStatus;
 use Exception;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +16,8 @@ use Illuminate\Support\Str;
 
 class UserService
 {
+    private const ROLES_WITH_AREAS = ['ADMIN', 'COORDINADOR', 'GESTOR_FICHAS', 'INSTRUCTOR'];
+
     public function getAll($perPage = 10)
     {
         $query = User::select([
@@ -29,7 +30,8 @@ class UserService
             ->with([
                 'profile:id,user_id,first_name,last_name',
                 'status:id,name',
-                'roles:id,name'
+                'roles:id,name,code',
+                'areas:id,name',
             ]);
 
         if (request()->filled('email')) {
@@ -74,6 +76,12 @@ class UserService
             });
         }
 
+        if (request()->filled('area_id')) {
+            $query->whereHas('areas', function ($q) {
+                $q->where('areas.id', request('area_id'));
+            });
+        }
+
         $users = $query->paginate($perPage);
 
         $items = $users->getCollection()->map(function ($user) {
@@ -83,6 +91,7 @@ class UserService
                 'last_name' => $user->profile?->last_name ?? '',
                 'email' => $user->email,
                 'roles' => $user->roles->pluck('name'),
+                'areas' => $user->areas->pluck('name')->toArray(),
                 'status' => $user->status?->name ?? 'Sin estado',
                 'document_number' => $user->document_number
             ];
@@ -116,7 +125,7 @@ class UserService
             ->with([
                 'profile:id,user_id,first_name,last_name',
                 'status:id,name',
-                'roles:id,name'
+                'roles:id,name,code',
             ])
             ->whereHas('roles', function ($q) use ($roleId) {
                 $q->where('id', $roleId);
@@ -144,19 +153,59 @@ class UserService
         ];
     }
 
+    public function getAllByAreaId(int $areaId)
+    {
+        $users = User::select([
+            'id',
+            'email',
+            'document_number',
+            'status_id'
+        ])
+            ->whereNull('type')
+            ->with([
+                'profile:id,user_id,first_name,last_name',
+                'status:id,name',
+                'roles:id,name,code',
+            ])
+            ->whereHas('areas', function ($q) use ($areaId) {
+                $q->where('areas.id', $areaId);
+            })
+            ->get();
+
+        $items = $users->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'first_name' => $user->profile?->first_name ?? '',
+                'last_name' => $user->profile?->last_name ?? '',
+                'full_name' => "{$user->profile?->first_name} {$user->profile?->last_name}",
+                'email' => $user->email,
+                'roles' => $user->roles->pluck('name'),
+                'status' => $user->status?->name ?? 'Sin estado',
+                'document_number' => $user->document_number
+            ];
+        });
+
+        return [
+            "error" => false,
+            "code" => 200,
+            "message" => "Usuarios del área obtenidos con éxito",
+            "data" => $items
+        ];
+    }
+
     public function getById($id)
     {
-
         $user = User::whereNull('type')
-            ->with(['profile', 'status', 'roles'])
+            ->with(['profile', 'status', 'roles:id,name,code', 'areas:id,name'])
             ->find($id);
 
-        if (!$user)
+        if (!$user) {
             return [
                 "error" => true,
                 "code" => 404,
                 "message" => "Este usuario no existe",
             ];
+        }
 
         $items = [
             'id' => $user->id,
@@ -165,6 +214,8 @@ class UserService
             'email' => $user->email,
             'roles' => $user->roles->pluck('name')->toArray(),
             'role_ids' => $user->roles->pluck('id')->toArray(),
+            'areas' => $user->areas->pluck('name')->toArray(),
+            'area_ids' => $user->areas->pluck('id')->toArray(),
             'status_id' => $user->status?->id,
             'status' => $user->status?->name ?? 'Sin estado',
             'document_number' => $user->document_number,
@@ -173,7 +224,6 @@ class UserService
             'telephone_number' => $user->profile?->telephone_number ?? '',
             'created_at' => $user->created_at?->toDateString(),
             'updated_at' => $user->updated_at?->toDateString(),
-
         ];
 
         return [
@@ -189,27 +239,20 @@ class UserService
         try {
             DB::beginTransaction();
 
-            $firstName = $data['first_name'];
-            $lastName = $data['last_name'];
-            $telephoneNumber = $data['telephone_number'];
-            $email = $data['email'];
-            $documentNumber = $data['document_number'];
-            $documentTypeId = $data['document_type_id'];
-
             $password = Str::password(12);
 
             $user = User::create([
-                'email' => $email,
+                'email' => $data['email'],
                 'password' => Hash::make($password),
-                'document_number' => $documentNumber,
-                'document_type_id' => $documentTypeId,
+                'document_number' => $data['document_number'],
+                'document_type_id' => $data['document_type_id'],
             ]);
 
             $profile = UserProfile::create([
                 'user_id' => $user->id,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'telephone_number' => $telephoneNumber
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'telephone_number' => $data['telephone_number'],
             ]);
 
             if (array_key_exists('roles', $data)) {
@@ -218,12 +261,21 @@ class UserService
                 $user->assignRole('Pendiente');
             }
 
+            if (array_key_exists('area_ids', $data) && !empty($data['area_ids'])) {
+                $user->loadMissing('roles:id,code');
+                if ($this->userCanHaveAreas($user)) {
+                    $user->areas()->sync($data['area_ids']);
+                } else {
+                    $user->areas()->detach();
+                }
+            }
+
             DB::commit();
 
             event(new UserCreated([
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'email' => $email,
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'email' => $data['email'],
                 'password' => $password,
                 'created_at' => $user->created_at,
             ]));
@@ -254,19 +306,20 @@ class UserService
         }
     }
 
-    public function update(array $data, String $id)
+    public function update(array $data, string $id)
     {
         try {
             DB::beginTransaction();
 
             $user = User::find($id);
 
-            if (!$user)
+            if (!$user) {
                 return [
                     "error" => true,
                     "code" => 404,
                     "message" => "Este usuario no existe",
                 ];
+            }
 
             $userData = [];
 
@@ -312,6 +365,15 @@ class UserService
                 $user->assignRole('Pendiente');
             }
 
+            if (array_key_exists('area_ids', $data)) {
+                $user->loadMissing('roles:id,code');
+                if ($this->userCanHaveAreas($user)) {
+                    $user->areas()->sync($data['area_ids']);
+                } else {
+                    $user->areas()->detach();
+                }
+            }
+
             DB::commit();
 
             return [
@@ -337,14 +399,20 @@ class UserService
     {
         $user = User::find($id);
 
-        if (!$user)
+        if (!$user) {
             return [
                 "error" => true,
                 "code" => 404,
                 "message" => "Este usuario no existe",
             ];
+        }
 
         $this->syncUserRoles($user, $roleIds);
+
+        $user->loadMissing('roles:id,code');
+        if (!$this->userCanHaveAreas($user)) {
+            $user->areas()->detach();
+        }
 
         event(new ResourceChanged(
             'actualizar',
@@ -361,41 +429,8 @@ class UserService
         ];
     }
 
-    public function updatePassword(array $data, $id)
+    public function updateAreas(array $areaIds, $id)
     {
-
-        $user = User::find($id);
-
-        if (!$user)
-            return [
-                "error" => true,
-                "code" => 404,
-                "message" => "Este usuario no existe",
-            ];
-
-        if ($data['current_password'])
-            if (!Hash::check($data['current_password'], $user->password))
-                return [
-                    "error" => true,
-                    "code" => 401,
-                    "message" => "Contraseña incorrecta"
-                ];
-
-
-        $user->update([
-            "password" => Hash::make($data['new_password'])
-        ]);
-
-        return [
-            "error" => false,
-            "code" => 200,
-            "message" => "Contraseña actualizada con éxito",
-        ];
-    }
-
-    public function destroy($id)
-    {
-
         $user = User::find($id);
 
         if (!$user) {
@@ -406,10 +441,20 @@ class UserService
             ];
         }
 
-        $user->delete();
+        $user->loadMissing('roles:id,code');
+
+        if (!$this->userCanHaveAreas($user)) {
+            return [
+                "error" => true,
+                "code" => 403,
+                "message" => "Este usuario no puede tener áreas asignadas.",
+            ];
+        }
+
+        $user->areas()->sync($areaIds);
 
         event(new ResourceChanged(
-            'eliminar',
+            'actualizar',
             User::class,
             $user->id,
             Auth::id(),
@@ -419,7 +464,7 @@ class UserService
         return [
             "error" => false,
             "code" => 200,
-            "message" => "Usuario eliminado con éxito",
+            "message" => "Áreas del usuario actualizadas con éxito",
         ];
     }
 
@@ -427,5 +472,12 @@ class UserService
     {
         $roles = Role::whereIn('id', $roleIds)->get();
         $user->syncRoles($roles);
+    }
+
+    private function userCanHaveAreas(User $user): bool
+    {
+        $codes = $user->roles->pluck('code')->filter()->values()->toArray();
+
+        return !empty(array_intersect(self::ROLES_WITH_AREAS, $codes));
     }
 }

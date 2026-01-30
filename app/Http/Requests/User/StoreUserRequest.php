@@ -7,19 +7,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreUserRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -28,18 +20,15 @@ class StoreUserRequest extends FormRequest
             'telephone_number' => ['required', 'string', 'size:10', 'regex:/^\d+$/'],
             'document_type_id' => ['required', 'integer', 'exists:document_types,id'],
             'document_number' => ['required', 'string', 'min:6', 'max:20', 'unique:users,document_number'],
-            'email' => ['required', 'email', 'unique:users'],
+            'email' => ['required', 'email', 'unique:users,email'],
             'roles' => ['required', 'array', 'min:1'],
             'roles.*' => ['integer', 'distinct', 'exists:roles,id'],
+
+            'area_ids' => ['nullable', 'array'],
+            'area_ids.*' => ['integer', 'distinct', 'exists:areas,id'],
         ];
     }
 
-    /**
-
-     * Get the error messages for the defined validation rules.
-     *
-     * @return array
-     */
     public function messages()
     {
         return [
@@ -71,19 +60,17 @@ class StoreUserRequest extends FormRequest
             'roles.required' => 'Los :attribute son obligatorios.',
             'roles.array' => 'Los :attribute deben enviarse en formato de lista.',
             'roles.min' => 'Debes seleccionar al menos :min rol.',
-
             'roles.*.integer' => 'Cada :attribute seleccionado debe ser un identificador numérico.',
             'roles.*.distinct' => 'No puedes repetir roles en la selección.',
             'roles.*.exists' => 'Uno de los roles seleccionados no existe.',
 
+            'area_ids.array' => 'Las :attribute deben enviarse en formato de lista.',
+            'area_ids.*.integer' => 'Cada :attribute seleccionada debe ser un identificador numérico.',
+            'area_ids.*.distinct' => 'No puedes repetir áreas en la selección.',
+            'area_ids.*.exists' => 'Una de las áreas seleccionadas no existe.',
         ];
     }
 
-    /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
-     */
     public function attributes(): array
     {
         return [
@@ -95,6 +82,8 @@ class StoreUserRequest extends FormRequest
             'document_number' => 'número de documento',
             'roles' => 'roles',
             'roles.*' => 'rol',
+            'area_ids' => 'áreas',
+            'area_ids.*' => 'área',
         ];
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Area;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -11,69 +13,106 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $instructors = [];
-        
-        // Generar 15 instructores únicos
+        $allAreaIds = Area::query()->pluck('id')->toArray();
+
+        $adminRoleId       = Role::idByCode('ADMIN');
+        $coordinatorRoleId = Role::idByCode('COORDINADOR');
+        $gestorRoleId      = Role::idByCode('GESTOR_FICHAS');
+        $instructorRoleId  = Role::idByCode('INSTRUCTOR');
+
+        $areaId1 = $allAreaIds[0] ?? null;
+        $areaId2 = $allAreaIds[1] ?? null;
+        $areaId3 = $allAreaIds[2] ?? null;
+        $areaId4 = $allAreaIds[3] ?? null;
+        $areaId5 = $allAreaIds[4] ?? null;
+
         for ($i = 1; $i <= 15; $i++) {
-            $instructors[] = [
-                'first_name' => 'Instructor ' . $i,
-                'last_name' => 'Apellido ' . $i,
+            $user = User::create([
                 'document_type_id' => 1,
-                'document_number' => '800' . str_pad($i, 6, '0', STR_PAD_LEFT),  // 800000001 a 800000015
-                'telephone_number' => '30100000' . $i,
+                'document_number' => '800' . str_pad($i, 6, '0', STR_PAD_LEFT),
                 'email' => 'instructor' . $i . '@gmail.com',
                 'password' => Hash::make('Password.123'),
-                'roles' => [3],  // Solo rol instructor (ID 3)
                 'status_id' => 1,
-                'email_verified_at' => now()
-            ];
+                'email_verified_at' => now(),
+            ]);
+
+            $user->profile()->create([
+                'first_name' => 'Instructor ' . $i,
+                'last_name' => 'Apellido ' . $i,
+                'telephone_number' => '30100000' . str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+            ]);
+
+            $user->roles()->syncWithoutDetaching([$instructorRoleId]);
+
+            $areaIds = match ($i % 3) {
+                0 => array_values(array_filter([$areaId4])),
+                1 => array_values(array_filter([$areaId1])),
+                default => array_values(array_filter([$areaId3])),
+            };
+
+            $user->areas()->sync($areaIds);
         }
 
-        // Admin (rol 1,2,3)
-        $instructors[] = [
-            'first_name' => 'Admin',
-            'last_name' => 'User',
+        $admin = User::create([
             'document_type_id' => 1,
             'document_number' => '123456789',
-            'telephone_number' => '3010000000',
             'email' => 'admin@gmail.com',
             'password' => Hash::make('Password.123'),
-            'roles' => [1,2,3],
             'status_id' => 1,
-            'email_verified_at' => now()
-        ];
+            'email_verified_at' => now(),
+        ]);
 
-        // Gestor (rol 2)
-        $instructors[] = [
-            'first_name' => 'Gestor',
+        $admin->profile()->create([
+            'first_name' => 'Admin',
             'last_name' => 'User',
+            'telephone_number' => '3010000000',
+        ]);
+
+        $admin->roles()->syncWithoutDetaching([
+            $adminRoleId,
+            $gestorRoleId,
+            $instructorRoleId,
+            $coordinatorRoleId,
+        ]);
+
+        $admin->areas()->sync($allAreaIds);
+
+        $coordinator = User::create([
+            'document_type_id' => 1,
+            'document_number' => '1122334455',
+            'email' => 'coordinador@gmail.com',
+            'password' => Hash::make('Password.123'),
+            'status_id' => 1,
+            'email_verified_at' => now(),
+        ]);
+
+        $coordinator->profile()->create([
+            'first_name' => 'Coordinador',
+            'last_name' => 'User',
+            'telephone_number' => '3010000002',
+        ]);
+
+        $coordinator->roles()->syncWithoutDetaching([$coordinatorRoleId]);
+        $coordinator->areas()->sync($allAreaIds);
+
+        $gestor = User::create([
             'document_type_id' => 1,
             'document_number' => '987654321',
-            'telephone_number' => '3010000001',
             'email' => 'gestor@gmail.com',
             'password' => Hash::make('Password.123'),
-            'roles' => [2],
             'status_id' => 1,
-            'email_verified_at' => now()
-        ];
+            'email_verified_at' => now(),
+        ]);
 
-        foreach ($instructors as $userData) {
-            $user = User::create([
-                'document_type_id' => $userData['document_type_id'],
-                'document_number' => $userData['document_number'],
-                'email' => $userData['email'],
-                'password' => $userData['password'],
-                'status_id' => $userData['status_id'],
-                'email_verified_at' => $userData['email_verified_at'],
-            ]);
+        $gestor->profile()->create([
+            'first_name' => 'Gestor',
+            'last_name' => 'User',
+            'telephone_number' => '3010000001',
+        ]);
 
-            $profile = $user->profile()->create([
-                'first_name' => $userData['first_name'],
-                'last_name' => $userData['last_name'],
-                'telephone_number' => $userData['telephone_number'],
-            ]);
+        $gestor->roles()->syncWithoutDetaching([$gestorRoleId]);
 
-            $user->roles()->attach($userData['roles']);
-        }
+        $gestorAreaIds = array_values(array_filter([$areaId2, $areaId5]));
+        $gestor->areas()->sync($gestorAreaIds);
     }
 }

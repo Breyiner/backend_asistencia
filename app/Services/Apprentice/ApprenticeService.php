@@ -4,6 +4,7 @@ namespace App\Services\Apprentice;
 
 use App\Events\ResourceChanged;
 use App\Models\Apprentice;
+use App\Models\Role;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -184,7 +185,9 @@ class ApprenticeService
 
             ]);
 
-            $apprentice->roles()->attach(ids: [4]);
+            $apprenticeRoleId = Role::idByCode('APRENDIZ');
+
+            $apprentice->roles()->syncWithoutDetaching([$apprenticeRoleId]);
 
             DB::commit();
 

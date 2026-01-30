@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\Apprentice;
 use App\Models\DocumentType;
 use App\Models\Ficha;
+use App\Models\Role;
 use App\Rules\AlphaSpaces;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -144,7 +145,9 @@ class ApprenticesImport implements ToCollection, WithHeadingRow, WithValidation,
 
                 ]);
 
-                $apprentice->roles()->attach(4);
+                $apprenticeRoleId = Role::idByCode('APRENDIZ');
+
+                $apprentice->roles()->syncWithoutDetaching([$apprenticeRoleId]);
             });
         }
     }

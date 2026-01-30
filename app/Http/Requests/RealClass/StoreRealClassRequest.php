@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\RealClass;
 
-use App\Rules\UserHasRole;
+use App\Rules\UserHasRoleCode;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRealClassRequest extends FormRequest
@@ -23,7 +23,7 @@ class StoreRealClassRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'instructor_id' => ['required', 'exists:users,id', new UserHasRole('Instructor')],
+            'instructor_id' => ['required', 'exists:users,id', new UserHasRoleCode('INSTRUCTOR')],
             'class_type_id' => ['required', 'exists:class_types,id'],
             'classroom_id' => ['required', 'exists:classrooms,id'],
             'time_slot_id' => ['required', 'exists:time_slots,id'],

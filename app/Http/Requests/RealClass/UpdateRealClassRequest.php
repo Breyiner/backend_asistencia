@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\RealClass;
 
-use App\Rules\UserHasRole;
+use App\Rules\UserHasRoleCode;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRealClassRequest extends FormRequest
@@ -25,7 +25,7 @@ class UpdateRealClassRequest extends FormRequest
         $id = $this->route('real_class_id');
         
         return [
-            'instructor_id' => ['sometimes', 'required', 'exists:users,id', new UserHasRole('Instructor')],
+            'instructor_id' => ['sometimes', 'required', 'exists:users,id', new UserHasRoleCode('INSTRUCTOR')],
             'class_type_id' => ['sometimes', 'required', 'exists:class_types,id'],
             'classroom_id' => ['sometimes', 'required', 'exists:classrooms,id'],
             'time_slot_id' => ['sometimes', 'required', 'exists:time_slots,id'],
