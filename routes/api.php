@@ -62,6 +62,7 @@ Route::middleware('throttle:api')->group(function () {
         // Roles
         Route::prefix('roles')->group(function () {
             Route::get('/', [RoleController::class, 'index'])->middleware('permission:roles.viewAny');
+            Route::get('/selectable', [RoleController::class, 'selectable'])->middleware('permission:roles.viewAny');
             Route::get('/{role_id}', [RoleController::class, 'show'])->middleware('permission:roles.view');
             Route::post('/', [RoleController::class, 'store'])->middleware('permission:roles.create');
             Route::put('/{role_id}', [RoleController::class, 'update'])->middleware('permission:roles.update');

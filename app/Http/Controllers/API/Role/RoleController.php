@@ -22,8 +22,19 @@ class RoleController extends Controller
     {
         $response = $this->roleService->getAll();
 
-        if ($response['error']) 
+        if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
+
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+    }
+
+    public function selectable()
+    {
+        $response = $this->roleService->getSelectable();
+
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
@@ -32,7 +43,7 @@ class RoleController extends Controller
     {
         $response = $this->roleService->getRole($id);
 
-        if ($response['error']) 
+        if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
@@ -44,7 +55,7 @@ class RoleController extends Controller
 
         $response = $this->roleService->createRole($data);
 
-        if ($response['error']) 
+        if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
@@ -56,7 +67,7 @@ class RoleController extends Controller
 
         $response = $this->roleService->updateRole($data, $id);
 
-        if ($response['error']) 
+        if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
@@ -66,7 +77,7 @@ class RoleController extends Controller
     {
         $response = $this->roleService->deleteRole($id);
 
-        if ($response['error']) 
+        if ($response['error'])
             return ResponseFormatter::error($response['message'], $response['code']);
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);

@@ -30,6 +30,24 @@ class RoleService
     ];
   }
 
+  public function getSelectable()
+  {
+    $excludedCodes = ['PENDIENTE', 'APRENDIZ'];
+
+    $roles = Role::select(['id', 'name', 'code'])
+      ->whereNotIn('code', $excludedCodes)
+      ->orderBy('name')
+      ->get();
+
+    return [
+      "error" => false,
+      "code" => 200,
+      "message" => "Roles seleccionables obtenidos con éxito",
+      "data" => $roles,
+    ];
+  }
+
+
   public function getRole($id)
   {
     $role = Role::find($id);
