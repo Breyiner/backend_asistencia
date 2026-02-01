@@ -32,7 +32,7 @@ class RoleService
 
   public function getSelectable()
   {
-    $excludedCodes = ['PENDIENTE', 'APRENDIZ'];
+    $excludedCodes = ['PENDIENTE', 'APRENDIZ', 'SCANNER'];
 
     $roles = Role::select(['id', 'name', 'code'])
       ->whereNotIn('code', $excludedCodes)

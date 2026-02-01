@@ -27,6 +27,7 @@ class UserService
             'status_id'
         ])
             ->whereNull('type')
+            ->where('id', '!=', Auth::id())
             ->with([
                 'profile:id,user_id,first_name,last_name',
                 'status:id,name',
