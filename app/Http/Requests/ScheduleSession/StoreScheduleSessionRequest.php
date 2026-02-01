@@ -22,7 +22,7 @@ class StoreScheduleSessionRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:users,id',
-                new UserHasRoleCode('INSTRUCTIOR'),
+                new UserHasRoleCode('INSTRUCTOR'),
             ],
 
             'schedule_id' => [

@@ -54,7 +54,14 @@ class RoleSeeder extends Seeder
         Role::create([
             'code' => 'PENDIENTE',
             'name' => 'Pendiente',
-            'description' => 'Usuario sin aprobación; acceso mínimo (login/perfil/logout) sin acceso a módulos operativos.',
+            'description' => 'Usuario sin aprobación.',
+            'guard_name' => 'web',
+        ]);
+
+        Role::create([
+            'code' => 'SCANNER',
+            'name' => 'Escáner',
+            'description' => 'Usuario que escanea códigos de barras para registrar asistencia.',
             'guard_name' => 'web',
         ]);
     }

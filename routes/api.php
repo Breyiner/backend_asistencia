@@ -291,6 +291,7 @@ Route::middleware('throttle:api')->group(function () {
             Route::get('/{attendance_id}', [AttendanceController::class, 'show'])->middleware('permission:attendances.view');
             Route::post('/', [AttendanceController::class, 'store'])->middleware('permission:attendances.create');
             Route::patch('/{attendance_id}', [AttendanceController::class, 'update'])->middleware('permission:attendances.update');
+            Route::post('/scan', [AttendanceController::class, 'scan']);
             Route::delete('/{attendance_id}', [AttendanceController::class, 'destroy'])->middleware('permission:attendances.delete');
             Route::get('/class/{real_class_id}', [AttendanceController::class, 'byClassRealId'])->middleware('permission:attendances.byClassRealId');
         });

@@ -19,6 +19,7 @@ class UserSeeder extends Seeder
         $coordinatorRoleId = Role::idByCode('COORDINADOR');
         $gestorRoleId      = Role::idByCode('GESTOR_FICHAS');
         $instructorRoleId  = Role::idByCode('INSTRUCTOR');
+        $scannerRoleId     = Role::idByCode('SCANNER');
 
         $areaId1 = $allAreaIds[0] ?? null;
         $areaId2 = $allAreaIds[1] ?? null;
@@ -114,5 +115,22 @@ class UserSeeder extends Seeder
 
         $gestorAreaIds = array_values(array_filter([$areaId2, $areaId5]));
         $gestor->areas()->sync($gestorAreaIds);
+
+        $scanner = User::create([
+            'document_type_id' => 1,
+            'document_number' => '1111111111',
+            'email' => 'scanner@gmail.com',
+            'password' => Hash::make('Password.123'),
+            'status_id' => 1,
+            'email_verified_at' => now(),
+        ]);
+
+        $scanner->profile()->create([
+            'first_name' => 'Escáner',
+            'last_name' => 'User',
+            'telephone_number' => '3010000003',
+        ]);
+
+        $scanner->roles()->syncWithoutDetaching([$scannerRoleId]);
     }
 }

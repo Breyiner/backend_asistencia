@@ -22,7 +22,6 @@ class UpdateAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'checkout' => ['sometimes', 'boolean'],
 
             'attendance_status_id' => [
                 'required_unless:checkout,true',
@@ -33,13 +32,6 @@ class UpdateAttendanceRequest extends FormRequest
 
             'entry_hour' => [
                 'required_if:attendance_status_id,4',
-                'nullable',
-                'date_format:H:i',
-            ],
-            
-            'exit_hour' => [
-                // 'required_if:attendance_status_id,5',
-                'prohibited_unless:attendance_status_id,5',
                 'nullable',
                 'date_format:H:i',
             ],
@@ -60,10 +52,6 @@ class UpdateAttendanceRequest extends FormRequest
             'entry_hour.required_if' => 'La :attribute es obligatoria para tardanza.',
             'entry_hour.date_format' => 'La :attribute debe ser en formato HH:MM.',
 
-            'exit_hour.required_if' => 'La :attribute es obligatoria para salida anticipada.',
-            'exit_hour.prohibited_unless' => 'La :attribute solo se permite cuando el estado es salida anticipada.',
-            'exit_hour.date_format' => 'La :attribute debe ser en formato HH:MM.',
-
             'observations.string' => 'Las :attribute deben ser texto.',
             'observations.max' => 'Las :attribute no pueden exceder :max caracteres.',
         ];
@@ -75,7 +63,6 @@ class UpdateAttendanceRequest extends FormRequest
             'checkout' => 'checkout',
             'attendance_status_id' => 'estado de asistencia',
             'entry_hour' => 'hora de entrada',
-            'exit_hour' => 'hora de salida',
             'observations' => 'observaciones',
         ];
     }

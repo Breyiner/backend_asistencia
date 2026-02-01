@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Attendance;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Attendance\ScanAttendanceRequest;
 use App\Http\Requests\Attendance\StoreAttendanceRequest;
 use App\Http\Requests\Attendance\UpdateAttendanceRequest;
 use App\Services\Attendance\AttendanceService;
@@ -55,11 +56,12 @@ class AttendanceController extends Controller
             return ResponseFormatter::error($response['message'], $response['code']);
 
         return ResponseFormatter::success(
-            $response['message'], 
-            $response['code'], 
-            $response['data'] ?? [], 
-            $response['paginate'] ?? [], 
-            $response['summary']);
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? [],
+            $response['paginate'] ?? [],
+            $response['summary']
+        );
     }
 
     public function update(UpdateAttendanceRequest $request, $id)
@@ -82,6 +84,19 @@ class AttendanceController extends Controller
             $result['paginate'] ?? [],
             $result['summary'] ?? []
         );
+    }
+
+    public function scan(ScanAttendanceRequest $request)
+    {
+        $response = $this->attendanceService->scanCheckIn(
+            $request->validated()
+        );
+
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
+
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
     public function destroy(int $id)
