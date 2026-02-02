@@ -24,7 +24,7 @@ class FichaService
             'updated_at',
         ])->with([
             'gestor.profile:id,user_id,first_name,last_name',
-            'trainingProgram:id,name',
+            'trainingProgram:id,name,coordinator_id',
             'status:id,name',
             'shift:id,name',
             'currentFichaTerm:id,ficha_id,term_id,is_current',
@@ -38,6 +38,10 @@ class FichaService
                 });
         } elseif ($roleCode === 'GESTOR_FICHAS') {
             $query->where('gestor_id', $userId);
+        } elseif ($roleCode === 'COORDINADOR') {
+            $query->whereHas('trainingProgram', function ($q) use ($userId) {
+                $q->where('coordinator_id', $userId);
+            });
         }
 
         if (request()->filled('ficha_number')) {
@@ -149,7 +153,7 @@ class FichaService
         ])
             ->with([
                 'gestor.profile:id,user_id,first_name,last_name',
-                'trainingProgram:id,name',
+                'trainingProgram:id,name,coordinator_id',
                 'status:id,name',
                 'shift:id,name',
 
@@ -181,6 +185,10 @@ class FichaService
                 ->whereHas('currentFichaTerm.schedule.scheduleSessions', function ($q) use ($userId) {
                     $q->where('instructor_id', $userId);
                 });
+        } elseif ($roleCode === 'COORDINADOR') {
+            $query->whereHas('trainingProgram', function ($q) use ($userId) {
+                $q->where('coordinator_id', $userId);
+            });
         }
 
         $ficha = $query->find($id);

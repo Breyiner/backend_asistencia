@@ -20,6 +20,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 21,
                 'qualification_level_id' => 1,
                 'area_id' => 1,
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Análisis de Datos',
@@ -27,6 +28,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 21,
                 'qualification_level_id' => 2,
                 'area_id' => 2,
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Marketing Digital',
@@ -34,6 +36,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 21,
                 'qualification_level_id' => 1,
                 'area_id' => 3,
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Análisis y desarrollo de software',
@@ -41,6 +44,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 1,
+                'coordinator_id' => 16
             ]
         ];
 

@@ -12,6 +12,7 @@ class TrainingProgram extends Model
         'duration',
         'qualification_level_id',
         'area_id',
+        'coordinator_id'
     ];
 
     public function qualificationLevel()
@@ -22,6 +23,11 @@ class TrainingProgram extends Model
     public function area()
     {
         return $this->belongsTo(Area::class);
+    }
+
+    public function coordinator()
+    {
+        return $this->belongsTo(User::class, 'coordinator_id');
     }
 
     public function fichas()

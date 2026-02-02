@@ -45,6 +45,23 @@ class ApprenticeController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
+    public function downloadTemplate()
+    {
+        $path = storage_path('app/templates/plantilla_aprendices.xlsx');
+
+        if (!file_exists($path)) {
+            return ResponseFormatter::error('Plantilla no encontrada', 404);
+        }
+
+        return response()->download(
+            $path,
+            'plantilla_importacion_aprendices.xlsx',
+            [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            ]
+        );
+    }
+
     public function store(StoreApprenticeRequest $request)
     {
 

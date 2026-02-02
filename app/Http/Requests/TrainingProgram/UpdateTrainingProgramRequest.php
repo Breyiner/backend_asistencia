@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\TrainingProgram;
 
+use App\Rules\UserHasRoleCode;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTrainingProgramRequest extends FormRequest
@@ -27,6 +28,7 @@ class UpdateTrainingProgramRequest extends FormRequest
             'duration' => ['sometimes', 'required', 'integer', 'min:1'],
             'qualification_level_id' => ['sometimes', 'required', 'integer', 'exists:qualification_levels,id'],
             'area_id' => ['sometimes', 'required', 'integer', 'exists:areas,id'],
+            'coordinator_id' => ['nullable', 'integer', 'exists:users,id', new UserHasRoleCode('COORDINADOR')],
         ];
     }
 
@@ -52,6 +54,9 @@ class UpdateTrainingProgramRequest extends FormRequest
             'area_id.required' => 'El :attribute es obligatoria.',
             'area_id.integer' => 'El :attribute debe ser un número entero.',
             'area_id.exists' => 'El :attribute seleccionada no existe.',
+
+            'coordinator_id.integer' => 'El :attribute debe ser un número entero.',
+            'coordinator_id.exists' => 'El :attribute seleccionado no existe.',
         ];
     }
 
@@ -63,6 +68,7 @@ class UpdateTrainingProgramRequest extends FormRequest
             'duration' => 'duración del programa de formación',
             'qualification_level_id' => 'nivel de formación',
             'area_id' => 'área',
+            'coordinator_id' => 'coordinador',
         ];
     }
 }

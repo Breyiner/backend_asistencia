@@ -14,6 +14,9 @@ class ApprenticeService
 
     public function getAll($perPage = 10)
     {
+        $userId = Auth::id();
+        $roleCode = request()->attributes->get('acting_role_code');
+
         $query = Apprentice::select([
             'id',
             'email',
@@ -24,8 +27,23 @@ class ApprenticeService
             ->with([
                 'profile:id,user_id,first_name,last_name,telephone_number',
                 'status:id,name',
-                'ficha:id,ficha_number',
+                'ficha:id,ficha_number,gestor_id,training_program_id',
+                'ficha.trainingProgram:id,name,coordinator_id',
             ]);
+
+        if ($roleCode === 'COORDINADOR') {
+            $query->whereHas('ficha.trainingProgram', function ($q) use ($userId) {
+                $q->where('coordinator_id', $userId);
+            });
+        } elseif ($roleCode === 'GESTOR_FICHAS') {
+            $query->whereHas('ficha', function ($q) use ($userId) {
+                $q->where('gestor_id', $userId);
+            });
+        } elseif ($roleCode === 'INSTRUCTOR') {
+            $query->whereHas('ficha.currentFichaTerm.schedule.scheduleSessions', function ($q) use ($userId) {
+                $q->where('instructor_id', $userId);
+            });
+        }
 
         if (request()->filled('email')) {
             $query->where('email', 'like', '%' . request('email') . '%');
@@ -88,7 +106,16 @@ class ApprenticeService
             return [
                 'error' => false,
                 'code' => 200,
-                'message' => 'Aprendices obtenidos con éxito',
+                'message' => 'No hay aprendices registrados',
+                'data' => [],
+                'paginate' => [
+                    'current_page' => $apprentices->currentPage(),
+                    'per_page' => $apprentices->perPage(),
+                    'total' => $apprentices->total(),
+                    'last_page' => $apprentices->lastPage(),
+                    'from' => $apprentices->firstItem(),
+                    'to' => $apprentices->lastItem(),
+                ],
             ];
         }
 
@@ -108,16 +135,45 @@ class ApprenticeService
         ];
     }
 
-
     public function getById($id)
     {
-        $apprentice = Apprentice::with([
-                'profile',
+        $userId = Auth::id();
+        $roleCode = request()->attributes->get('acting_role_code');
+
+        $query = Apprentice::select([
+            'id',
+            'email',
+            'document_number',
+            'document_type_id',
+            'status_id',
+            'ficha_id',
+            'created_at',
+            'updated_at',
+        ])
+            ->with([
+                'profile:id,user_id,first_name,last_name,telephone_number,birth_date',
                 'status:id,name',
-                'ficha',
-                'ficha.trainingProgram',
-            ])
-            ->find($id);
+                'documentType:id,name',
+                'ficha:id,ficha_number,training_program_id,gestor_id',
+                'ficha.trainingProgram:id,name,coordinator_id',
+                'roles:id,name',
+            ]);
+
+        if ($roleCode === 'COORDINADOR') {
+            $query->whereHas('ficha.trainingProgram', function ($q) use ($userId) {
+                $q->where('coordinator_id', $userId);
+            });
+        } elseif ($roleCode === 'GESTOR_FICHAS') {
+            $query->whereHas('ficha', function ($q) use ($userId) {
+                $q->where('gestor_id', $userId);
+            });
+        } elseif ($roleCode === 'INSTRUCTOR') {
+            $query->whereHas('ficha.currentFichaTerm.schedule.scheduleSessions', function ($q) use ($userId) {
+                $q->where('instructor_id', $userId);
+            });
+        }
+
+        $apprentice = $query->find($id);
 
         if (!$apprentice) {
             return [
@@ -126,7 +182,7 @@ class ApprenticeService
                 "message" => "Este aprendiz no existe",
             ];
         }
-        
+
         $items = [
             'id' => $apprentice->id,
             'first_name' => $apprentice->profile?->first_name ?? '',

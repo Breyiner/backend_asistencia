@@ -163,6 +163,7 @@ Route::middleware('throttle:api')->group(function () {
         // Apprentices
         Route::prefix('apprentices')->group(function () {
             Route::get('/', [ApprenticeController::class, 'index'])->middleware('permission:apprentices.viewAny');
+            Route::get('/template/download', [ApprenticeController::class, 'downloadTemplate'])->middleware('permission:apprentices.import');
             Route::get('/{apprentice_id}', [ApprenticeController::class, 'show'])->middleware('permission:apprentices.view');
             Route::post('/', [ApprenticeController::class, 'store'])->middleware('permission:apprentices.create');
             Route::patch('/{apprentice_id}', [ApprenticeController::class, 'update'])->middleware('permission:apprentices.update');

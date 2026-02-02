@@ -23,6 +23,9 @@ class RealClassService
 
     public function getAll(Request $request, $perPage = 10)
     {
+        $userId = Auth::id();
+        $roleCode = request()->attributes->get('acting_role_code');
+
         $query = RealClass::query()
             ->select([
                 'id',
@@ -53,13 +56,19 @@ class RealClassService
                 'scheduleSession.schedule.fichaTerm.term:id,name',
 
                 'scheduleSession.schedule.fichaTerm.ficha:id,ficha_number,training_program_id',
-                'scheduleSession.schedule.fichaTerm.ficha.trainingProgram:id,name',
+                'scheduleSession.schedule.fichaTerm.ficha.trainingProgram:id,name,coordinator_id',
             ])
             ->withCount([
                 'attendances as attendances_count' => function ($q) {
                     $q->whereNotIn('attendance_status_id', [2, 3, 6]);
                 },
             ]);
+
+        if ($roleCode === 'COORDINADOR') {
+            $query->whereHas('scheduleSession.schedule.fichaTerm.ficha.trainingProgram', function ($q) use ($userId) {
+                $q->where('coordinator_id', $userId);
+            });
+        }
 
         if ($request->filled('date')) $query->whereDate('execution_date', $request->date);
         if ($request->filled('instructor_id')) $query->where('instructor_id', $request->instructor_id);
@@ -190,7 +199,7 @@ class RealClassService
                 'scheduleSession.schedule.fichaTerm:id,ficha_id,term_id',
                 'scheduleSession.schedule.fichaTerm.term:id,name',
                 'scheduleSession.schedule.fichaTerm.ficha:id,ficha_number,training_program_id,gestor_id',
-                'scheduleSession.schedule.fichaTerm.ficha.trainingProgram:id,name',
+                'scheduleSession.schedule.fichaTerm.ficha.trainingProgram:id,name,coordinator_id',
 
                 'scheduleSession.instructor:id',
                 'scheduleSession.instructor.profile:id,user_id,first_name,last_name',
@@ -205,6 +214,10 @@ class RealClassService
             $query->whereHas('scheduleSession.schedule.fichaTerm.ficha', fn($q) => $q->where('gestor_id', $userId));
         } elseif ($roleCode === 'INSTRUCTOR') {
             $query->where('instructor_id', $userId);
+        } elseif ($roleCode === 'COORDINADOR') {
+            $query->whereHas('scheduleSession.schedule.fichaTerm.ficha.trainingProgram', function ($q) use ($userId) {
+                $q->where('coordinator_id', $userId);
+            });
         }
 
         $realClass = $query->find($id);

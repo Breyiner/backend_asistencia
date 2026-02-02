@@ -10,20 +10,29 @@ class TrainingProgramService
 {
     public function getAll($perPage = 10)
     {
+        $userId = Auth::id();
+        $roleCode = request()->attributes->get('acting_role_code');
+
         $query = TrainingProgram::select([
             'id',
             'name',
             'duration',
             'area_id',
             'qualification_level_id',
+            'coordinator_id',
         ])
             ->with([
                 'area:id,name',
                 'qualificationLevel:id,name',
+                'coordinator:id',
+                'coordinator.profile:user_id,first_name,last_name',
             ])
             ->withCount('fichas');
 
-        // Filtros
+        if ($roleCode === 'COORDINADOR') {
+            $query->where('coordinator_id', $userId);
+        }
+
         if (request()->filled('program_name')) {
             $query->where('name', 'like', '%' . request('program_name') . '%');
         }
@@ -48,6 +57,9 @@ class TrainingProgramService
                 'name' => $program->name,
                 'area_name' => $program->area?->name ?? 'Sin área',
                 'qualification_level_name' => $program->qualificationLevel?->name ?? 'Sin titulación',
+                'coordinator_name' => $program->coordinator?->profile
+                    ? $program->coordinator->profile->first_name . ' ' . $program->coordinator->profile->last_name
+                    : 'Sin coordinador',
                 'fichas_count' => (int) ($program->fichas_count ?? 0),
                 'duration' => ($program->duration ?? 0) . ' meses',
             ];
@@ -59,6 +71,14 @@ class TrainingProgramService
                 "code" => 200,
                 "message" => "No hay programas de formación registrados",
                 "data" => $items,
+                "paginate" => [
+                    "current_page" => $programs->currentPage(),
+                    "per_page" => $programs->perPage(),
+                    "total" => $programs->total(),
+                    "last_page" => $programs->lastPage(),
+                    "from" => $programs->firstItem(),
+                    "to" => $programs->lastItem(),
+                ],
             ];
         }
 
@@ -78,15 +98,35 @@ class TrainingProgramService
         ];
     }
 
-
     public function getById($id)
     {
-        $program = TrainingProgram::with([
-            'area:id,name',
-            'qualificationLevel:id,name',
+        $userId = Auth::id();
+        $roleCode = request()->attributes->get('acting_role_code');
+
+        $query = TrainingProgram::select([
+            'id',
+            'name',
+            'description',
+            'duration',
+            'area_id',
+            'qualification_level_id',
+            'coordinator_id',
+            'created_at',
+            'updated_at',
         ])
-            ->withCount(['fichas', 'apprentices'])
-            ->find($id);
+            ->with([
+                'area:id,name',
+                'qualificationLevel:id,name',
+                'coordinator:id',
+                'coordinator.profile:user_id,first_name,last_name',
+            ])
+            ->withCount(['fichas', 'apprentices']);
+
+        if ($roleCode === 'COORDINADOR') {
+            $query->where('coordinator_id', $userId);
+        }
+
+        $program = $query->find($id);
 
         if (!$program) {
             return [
@@ -106,6 +146,10 @@ class TrainingProgramService
             'area_name' => $program->area?->name ?? 'Sin área',
             'qualification_level_id' => $program->qualification_level_id,
             'qualification_level_name' => $program->qualificationLevel?->name ?? 'Sin titulación',
+            'coordinator_id' => $program->coordinator_id,
+            'coordinator_name' => $program->coordinator?->profile
+                ? $program->coordinator->profile->first_name . ' ' . $program->coordinator->profile->last_name
+                : 'Sin coordinador',
             'description' => $program->description,
             'fichas_count' => (int) ($program->fichas_count ?? 0),
             'apprentices_count' => (int) ($program->apprentices_count ?? 0),
@@ -123,19 +167,16 @@ class TrainingProgramService
         ];
     }
 
-
-
     public function create(array $data)
     {
-        $program = TrainingProgram::create(
-            [
-                'name' => $data['name'],
-                'description' => $data['description'] ?? null,
-                'duration' => $data['duration'],
-                'qualification_level_id' => $data['qualification_level_id'],
-                'area_id' => $data['area_id'],
-            ]
-        );
+        $program = TrainingProgram::create([
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'duration' => $data['duration'],
+            'qualification_level_id' => $data['qualification_level_id'],
+            'area_id' => $data['area_id'],
+            'coordinator_id' => $data['coordinator_id'] ?? null,
+        ]);
 
         event(new ResourceChanged(
             'crear',
@@ -171,7 +212,6 @@ class TrainingProgramService
             $programData['name'] = $data['name'];
         }
         if (array_key_exists('description', $data)) {
-            echo $data['description'];
             $programData['description'] = $data['description'] ?? null;
         }
         if (array_key_exists('duration', $data)) {
@@ -182,6 +222,9 @@ class TrainingProgramService
         }
         if (array_key_exists('area_id', $data)) {
             $programData['area_id'] = $data['area_id'];
+        }
+        if (array_key_exists('coordinator_id', $data)) {
+            $programData['coordinator_id'] = $data['coordinator_id'] ?? null;
         }
 
         if (empty($programData)) {

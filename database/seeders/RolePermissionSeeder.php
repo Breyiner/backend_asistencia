@@ -15,12 +15,14 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         $adminRole = Role::findByName('Administrador');
+        $coordinatorRole = Role::findByName('Coordinador');
         $gestor = Role::findByName('Gestor de Fichas');
         $instructor = Role::findByName('Instructor');
 
         $permissions = Permission::all();
 
         $adminRole->syncPermissions($permissions);
+        $coordinatorRole->syncPermissions($permissions);
         $gestor->syncPermissions($permissions);
         $instructor->syncPermissions($permissions);
     }
