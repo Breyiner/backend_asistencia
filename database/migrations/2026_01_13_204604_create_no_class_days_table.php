@@ -15,10 +15,17 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('ficha_id');
+            $table->unsignedBigInteger('reason_id');
             $table->date('date');
-            $table->string('reason')->nullable();
+            $table->text('observations')->nullable();
 
-            $table->foreign('ficha_id')->references('id')->on('fichas');
+            $table->foreign('ficha_id')
+                ->references('id')
+                ->on('fichas');
+
+            $table->foreign('reason_id')
+                ->references('id')
+                ->on('no_class_reasons');
 
             $table->unique(['ficha_id', 'date']);
 

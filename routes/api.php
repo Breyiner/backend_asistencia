@@ -15,6 +15,7 @@ use App\Http\Controllers\API\Ficha\FichaController;
 use App\Http\Controllers\API\FichaStatus\FichaStatusController;
 use App\Http\Controllers\API\FichaTerm\FichaTermController;
 use App\Http\Controllers\API\NoClassDay\NoClassDayController;
+use App\Http\Controllers\API\NoClassReason\NoClassReasonController;
 use App\Http\Controllers\API\Notification\NotificationController;
 use App\Http\Controllers\API\NotificationType\NotificationTypeController;
 use App\Http\Controllers\API\Phase\PhaseController;
@@ -316,6 +317,14 @@ Route::middleware('throttle:api')->group(function () {
             Route::delete('/{notification_id}', [NotificationController::class, 'destroy'])->middleware('permission:notifications.delete');
         });
 
+        // Razon de Día sin clase
+        Route::prefix('no-class-reasons')->group(function () {
+            Route::get('/', [NoClassReasonController::class, 'index']);
+            Route::get('/{no_class_reason_id}', [NoClassReasonController::class, 'show']);
+            Route::post('/', [NoClassReasonController::class, 'store']);
+            Route::put('/{no_class_reason_id}', [NoClassReasonController::class, 'update']);
+            Route::delete('/{no_class_reason_id}', [NoClassReasonController::class, 'destroy']);
+        });
 
         // Dias sin clase
         Route::prefix('no_class_days')->group(function () {

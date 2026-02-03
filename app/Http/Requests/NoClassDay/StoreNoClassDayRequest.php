@@ -23,23 +23,28 @@ class StoreNoClassDayRequest extends FormRequest
     {
         return [
             'ficha_id' => ['required', 'integer', 'exists:fichas,id'],
+            'reason_id' => ['required', 'integer', 'exists:no_class_reasons,id'],
             'date' => ['required', 'date'],
-            'reason' => ['nullable', 'string', 'max:255'],
+            'observations' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'ficha_id.required' => 'La ficha es obligatoria.',
-            'ficha_id.integer' => 'La ficha debe ser un número.',
-            'ficha_id.exists' => 'La ficha seleccionada no existe.',
+            'ficha_id.required' => 'La :attribute es obligatoria.',
+            'ficha_id.integer' => 'La :attribute debe ser un número.',
+            'ficha_id.exists' => 'La :attribute seleccionada no existe.',
 
-            'date.required' => 'La fecha es obligatoria.',
-            'date.date' => 'La fecha no tiene un formato válido.',
+            'reason_id.required' => 'El :attribute es obligatorio.',
+            'reason_id.integer' => 'El :attribute debe ser un número.',
+            'reason_id.exists' => 'El :attribute seleccionado no existe.',
 
-            'reason.string' => 'El motivo debe ser un texto.',
-            'reason.max' => 'El motivo no puede superar los :max caracteres.',
+            'date.required' => 'La :attribute es obligatoria.',
+            'date.date' => 'La :attribute no tiene un formato válido.',
+
+            'observations.string' => 'Las :attribute deben ser un texto.',
+            'observations.max' => 'Las :attribute no pueden superar los :max caracteres.',
         ];
     }
 
@@ -47,8 +52,9 @@ class StoreNoClassDayRequest extends FormRequest
     {
         return [
             'ficha_id' => 'ficha',
+            'reason_id' => 'motivo',
             'date' => 'fecha',
-            'reason' => 'motivo',
+            'observations' => 'observaciones',
         ];
     }
 }

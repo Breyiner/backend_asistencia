@@ -78,7 +78,8 @@ class NoClassDayService
 
         if (array_key_exists('ficha_id', $data)) $dataToUpdate['ficha_id'] = $data['ficha_id'];
         if (array_key_exists('date', $data)) $dataToUpdate['date'] = $data['date'];
-        if (array_key_exists('reason', $data)) $dataToUpdate['reason'] = $data['reason'];
+        if (array_key_exists('reason_id', $data)) $dataToUpdate['reason_id'] = $data['reason_id'];
+        if (array_key_exists('observations', $data)) $dataToUpdate['observations'] = $data['observations'];
 
         if (!empty($dataToUpdate)) {
             $noClassDay->update($dataToUpdate);
