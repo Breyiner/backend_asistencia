@@ -684,6 +684,34 @@ class RealClassService
             }
         }
 
+        $scheduleSessionId = $realClassData['schedule_session_id'] ?? $realClass->schedule_session_id;
+
+        $scheduleSession = ScheduleSession::with('schedule.fichaTerm')
+            ->find($scheduleSessionId);
+
+        if (!$scheduleSession || !$scheduleSession->schedule || !$scheduleSession->schedule->fichaTerm) {
+            return [
+                'error' => true,
+                'code' => 404,
+                'message' => 'No se pudo resolver la ficha desde la sesión de horario.',
+            ];
+        }
+
+        $fichaId = $scheduleSession->schedule->fichaTerm->ficha_id;
+
+        $executionDate = $realClassData['execution_date'] ?? $realClass->execution_date;
+
+        $check = $this->noClassDayService->checkByFichaAndDate($fichaId, $executionDate);
+
+        if (!empty($check['data']['is_no_class_day'])) {
+            return [
+                'error' => true,
+                'code' => 409,
+                'message' => 'No se puede actualizar: el día está marcado como día sin clase para la ficha.',
+                'data' => $check['data'],
+            ];
+        }
+
         $realClass->update($realClassData);
 
         return [

@@ -13,8 +13,13 @@ class NoClassDay extends Model
         'observations'
     ];
 
-    public function noClassReason()
+    public function reason()
     {
         return $this->belongsTo(NoClassReason::class, 'reason_id');
+    }
+
+    public function ficha()
+    {
+        return $this->belongsTo(Ficha::class,'ficha_id');
     }
 }

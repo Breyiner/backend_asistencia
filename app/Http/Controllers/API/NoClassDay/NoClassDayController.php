@@ -19,15 +19,15 @@ class NoClassDayController extends Controller
         $this->noClassDayService = $noClassDayService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $response = $this->noClassDayService->getAll();
+        $response = $this->noClassDayService->getAll($request->get('per_page', 10));
 
         if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? [], $response['paginate']);
     }
 
     public function show(string $no_class_day_id)

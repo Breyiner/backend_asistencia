@@ -318,7 +318,7 @@ Route::middleware('throttle:api')->group(function () {
         });
 
         // Razon de Día sin clase
-        Route::prefix('no-class-reasons')->group(function () {
+        Route::prefix('no_class_reasons')->group(function () {
             Route::get('/', [NoClassReasonController::class, 'index']);
             Route::get('/{no_class_reason_id}', [NoClassReasonController::class, 'show']);
             Route::post('/', [NoClassReasonController::class, 'store']);
