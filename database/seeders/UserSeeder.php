@@ -64,8 +64,8 @@ class UserSeeder extends Seeder
         ]);
 
         $admin->profile()->create([
-            'first_name' => 'Admin',
-            'last_name' => 'User',
+            'first_name' => 'Enzy Zulay',
+            'last_name' => 'Angarita Bermudez',
             'telephone_number' => '3010000000',
         ]);
 

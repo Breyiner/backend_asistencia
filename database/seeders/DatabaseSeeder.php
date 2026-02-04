@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             AttendanceStatusSeeder::class,
             NotificationTypeSeeder::class,
             NoClassReasonSeeder::class,
+            NoClassDaySeeder::class,
             PermissionSeeder::class,
             RolePermissionSeeder::class,
         ]);
