@@ -98,6 +98,37 @@ class TrainingProgramService
         ];
     }
 
+    public function getAllForSelect()
+    {
+        $userId = Auth::id();
+        $roleCode = request()->attributes->get('acting_role_code');
+
+        $query = TrainingProgram::select('id', 'name')
+            ->orderBy('name', 'asc');
+
+        // Filtro por rol
+        if ($roleCode === 'COORDINADOR') {
+            $query->where('coordinator_id', $userId);
+        } elseif ($roleCode === 'GESTOR') {
+            $query->whereHas('fichas', function ($q) use ($userId) {
+                $q->where('gestor_id', $userId);
+            });
+        }
+
+        if (request()->filled('program_name')) {
+            $query->where('name', 'like', '%' . request('program_name') . '%');
+        }
+
+        $programs = $query->get();
+
+        return [
+            "error" => false,
+            "code" => 200,
+            "message" => "Programas de formación obtenidos exitosamente",
+            "data" => $programs,
+        ];
+    }
+
     public function getById($id)
     {
         $userId = Auth::id();

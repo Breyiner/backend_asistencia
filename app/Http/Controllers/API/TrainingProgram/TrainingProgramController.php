@@ -29,6 +29,16 @@ class TrainingProgramController extends Controller
         return ResponseFormatter::success($reponse['message'], $reponse['code'], $reponse['data'] ?? [], $reponse['paginate']);
     }
 
+    public function select(Request $request)
+    {
+        $response = $this->trainingProgramService->getAllForSelect();
+
+        if ($response['error'])
+            return ResponseFormatter::error($response['message'], $response['code']);
+
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+    }
+
     public function show(string $id)
     {
         $response = $this->trainingProgramService->getById($id);

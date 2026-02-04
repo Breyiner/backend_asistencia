@@ -133,6 +133,7 @@ Route::middleware('throttle:api')->group(function () {
         // Training Programs
         Route::prefix('training_programs')->group(function () {
             Route::get('/', [TrainingProgramController::class, 'index'])->middleware('permission:training_programs.viewAny');
+            Route::get('/select', [TrainingProgramController::class, 'select'])->middleware('permission:training_programs.viewAny');
             Route::get('/{training_program_id}', [TrainingProgramController::class, 'show'])->middleware('permission:training_programs.view');
             Route::post('/', [TrainingProgramController::class, 'store'])->middleware('permission:training_programs.create');
             Route::patch('/{training_program_id}', [TrainingProgramController::class, 'update'])->middleware('permission:training_programs.update');
