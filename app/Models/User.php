@@ -97,7 +97,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function notifications()
     {
         return $this->belongsToMany(Notification::class, 'notification_user')
-            ->withPivot(['read_at'])
+            ->withPivot(['read_at', 'role_code'])
             ->withTimestamps();
     }
 

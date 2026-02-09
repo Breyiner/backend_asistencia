@@ -20,4 +20,12 @@ class EventServiceProvider extends ServiceProvider
             NotifyGestorOnAttendanceOrRealClass::class,
         ],
     ];
+
+    public function boot(): void
+    {
+        static::disableEventDiscovery();
+    }
+
+    protected function configureEmailVerification(): void
+    {}
 }

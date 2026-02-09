@@ -53,7 +53,7 @@ class AuthService
 
             DB::commit();
 
-            event(new Registered($user));
+            $user->sendEmailVerificationNotification();
 
             return [
                 'error' => false,

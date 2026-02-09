@@ -10,4 +10,9 @@ class NotificationType extends Model
         'name',
         'key',
     ];
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

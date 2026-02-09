@@ -311,12 +311,15 @@ Route::middleware('throttle:api')->group(function () {
         // Notifications
         Route::prefix('notifications')->group(function () {
             Route::get('/all', [NotificationController::class, 'all'])->middleware('permission:notifications.all');
-            Route::get('/', [NotificationController::class, 'index'])->middleware('permission:notifications.viewAny');
-            Route::patch('/read-all', [NotificationController::class, 'markAllAsRead'])->middleware('permission:notifications.markAllAsRead');
+            Route::get('/me', [NotificationController::class, 'index'])->middleware('permission:notifications.viewAny');
+            Route::get('/latest', [NotificationController::class, 'latest'])->middleware('permission:notifications.viewAny');
+            Route::get('/unread_count', [NotificationController::class, 'unreadCount'])->middleware('permission:notifications.viewAny');
+            Route::patch('/read_all', [NotificationController::class, 'markAllAsRead'])->middleware('permission:notifications.markAllAsRead');
             Route::get('/{notification_id}', [NotificationController::class, 'show'])->middleware('permission:notifications.view');
             Route::patch('/{notification_id}/read', [NotificationController::class, 'markAsRead'])->middleware('permission:notifications.markAsRead');
             Route::delete('/{notification_id}', [NotificationController::class, 'destroy'])->middleware('permission:notifications.delete');
         });
+
 
         // Razon de Día sin clase
         Route::prefix('no_class_reasons')->group(function () {

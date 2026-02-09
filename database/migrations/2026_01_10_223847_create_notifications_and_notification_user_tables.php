@@ -42,6 +42,8 @@ return new class extends Migration
 
             $table->timestamp('read_at')->nullable();
 
+            $table->string('role_code');
+
             $table->timestamps();
 
             $table->unique(['notification_id', 'user_id'], 'uniq_notification_user');

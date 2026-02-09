@@ -87,12 +87,13 @@ class NotifyGestorOnAttendanceOrRealClass implements ShouldQueue
             'notification_type_id' => $notificationType->id,
             'title' => $title,
             'content' => $content,
+            'role_code' => 'GESTOR_FICHAS',
             'modelable_type' => $event->subjectType,
             'modelable_id' => $event->subjectId,
         ]);
 
         $notification->users()->syncWithoutDetaching([
-            $gestorId => ['read_at' => null],
+            $gestorId => ['read_at' => null, 'role_code' => "GESTOR_FICHAS",],
         ]);
     }
 }

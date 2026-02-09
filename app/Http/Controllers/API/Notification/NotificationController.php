@@ -17,30 +17,90 @@ class NotificationController extends Controller
         $this->notificationService = $notificationService;
     }
 
-    public function all()
+    /**
+     * Listado general de TODAS las notificaciones (solo paginado).
+     */
+    public function all(Request $request)
     {
-        $response = $this->notificationService->getAllNotifications();
+        $perPage = $request->get('perPage', 10);
+
+        $response = $this->notificationService->getAllNotifications($perPage);
 
         if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? [],
+            $response['paginate'] ?? []
+        );
     }
 
-    public function index()
+    /**
+     * Listado por usuario (para “Ver todas”): paginado, con status.
+     */
+    public function index(Request $request)
+    {
+        $userId = Auth::id();
+        $status = $request->query('status', 'all');
+        $perPage = $request->query('perPage', 10);
+
+        $response = $this->notificationService->getNotificationsByUser($userId, $status, $perPage);
+
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
+
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? [],
+            $response['paginate'] ?? []
+        );
+    }
+
+    /**
+     * Para el popover: últimas N (sin paginación).
+     */
+    public function latest(Request $request)
+    {
+        $userId = Auth::id();
+        $limit = (int) $request->query('limit', 10);
+        $status = $request->query('status', 'all');
+
+        $response = $this->notificationService->latestByUser($userId, $limit, $status);
+
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
+
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
+    }
+
+    /**
+     * Conteo de no leídas para la campanita.
+     */
+    public function unreadCount()
     {
         $userId = Auth::id();
 
-        $status = request()->query('status', 'all');
-
-        $response = $this->notificationService->getNotificationsByUser($userId, $status);
+        $response = $this->notificationService->unreadCount($userId);
 
         if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
     }
 
     public function show(string $notification_id)
@@ -53,7 +113,11 @@ class NotificationController extends Controller
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
     }
 
     public function markAsRead(string $notification_id)
@@ -66,7 +130,11 @@ class NotificationController extends Controller
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
     }
 
     public function markAllAsRead()
@@ -79,7 +147,11 @@ class NotificationController extends Controller
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
     }
 
     public function destroy(string $notification_id)
@@ -92,6 +164,10 @@ class NotificationController extends Controller
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
     }
 }

@@ -281,7 +281,7 @@ class UserService
                 'created_at' => $user->created_at,
             ]));
 
-            event(new Registered($user));
+            $user->sendEmailVerificationNotification();
 
             event(new ResourceChanged(
                 'crear',
