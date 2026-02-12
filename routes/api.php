@@ -8,6 +8,7 @@ use App\Http\Controllers\API\AttendanceStatus\AttendanceStatusController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Classroom\ClassroomController;
 use App\Http\Controllers\API\ClassType\ClassTypeController;
+use App\Http\Controllers\API\Dashboard\AttendanceDashboardController;
 use App\Http\Controllers\API\Day\DayController;
 use App\Http\Controllers\API\DocumentType\DocumentTypeController;
 use App\Http\Controllers\API\EmailVerification\EmailVerificationController;
@@ -338,6 +339,11 @@ Route::middleware('throttle:api')->group(function () {
             Route::post('/', [NoClassDayController::class, 'store'])->middleware('permission:no_class_days.create');
             Route::patch('/{no_class_day_id}', [NoClassDayController::class, 'update'])->middleware('permission:no_class_days.update');
             Route::delete('/{no_class_day_id}', [NoClassDayController::class, 'destroy'])->middleware('permission:no_class_days.delete');
+        });
+
+        // Dashboard
+        Route::prefix('dashboard')->group(function () {
+            Route::get('/attendance', AttendanceDashboardController::class)->middleware('permission:attendance_dashboard.view');
         });
     });
 });

@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Events\NotificationCreated;
 use App\Events\ResourceChanged;
 use App\Models\Apprentice;
 use App\Models\Attendance;
@@ -13,26 +14,27 @@ use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
-class NotifyGestorOnAttendanceOrRealClass implements ShouldQueue
+class NotifyGestorOnAttendanceOrRealClass
 {
-    use InteractsWithQueue;
-
     public function handle(ResourceChanged $event): void
     {
+        // Solo aplica para Attendance y RealClass
         if (!in_array($event->subjectType, [Attendance::class, RealClass::class], true)) {
             return;
         }
 
-        $allowed = ($event->subjectType === Attendance::class && $event->action === 'updated')
-            || ($event->subjectType === RealClass::class && $event->action === 'created');
+        // IMPORTANTE: tus acciones son 'crear' / 'actualizar' / 'eliminar'
+        $allowed =
+            ($event->subjectType === Attendance::class && $event->action === 'updated') ||
+            ($event->subjectType === RealClass::class && $event->action === 'created');
 
         if (!$allowed) {
             return;
         }
 
         $typeKey = match (true) {
-            $event->subjectType === Attendance::class && $event->action === 'updated' => 'attendance_recorded',
-            $event->subjectType === RealClass::class  && $event->action === 'created' => 'real_class_created',
+            $event->subjectType === Attendance::class && $event->action === 'updated' => 'resource_updated',
+            $event->subjectType === RealClass::class  && $event->action === 'created'      => 'resource_created',
         };
 
         $notificationType = NotificationType::where('key', $typeKey)->first();
@@ -40,26 +42,45 @@ class NotifyGestorOnAttendanceOrRealClass implements ShouldQueue
             return;
         }
 
-        $apprenticeId = null;
+        // Determinar ficha_id y (opcional) apprenticeName
+        $fichaId = null;
+        $apprenticeName = null;
 
         if ($event->subjectType === Attendance::class) {
-            $apprenticeId = Attendance::whereKey($event->subjectId)->value('apprentice_id');
-        } else {
-            $apprenticeId = Attendance::where('real_class_id', $event->subjectId)->value('apprentice_id');
+            $attendance = Attendance::select(['id', 'apprentice_id'])
+                ->whereKey($event->subjectId)
+                ->first();
+
+            if (!$attendance?->apprentice_id) {
+                return;
+            }
+
+            // CORRECCIÓN: Apprentice = users, NO existe user_id, carga profile directo
+            $apprentice = Apprentice::with(['profile'])
+                ->select(['id', 'ficha_id'])  // Solo campos que existen en users
+                ->find($attendance->apprentice_id);
+
+            if (!$apprentice?->ficha_id) {
+                return;
+            }
+
+            $fichaId = $apprentice->ficha_id;
+
+            $apprenticeName = $apprentice?->profile
+                ? trim($apprentice->profile->first_name . ' ' . $apprentice->profile->last_name)
+                : 'El aprendiz';
         }
 
-        if (!$apprenticeId) {
-            return;
-        }
+        if ($event->subjectType === RealClass::class) {
+            $realClass = RealClass::with([
+                'scheduleSession.schedule.fichaTerm'
+            ])->select(['id'])->find($event->subjectId);
 
-        $apprentice = Apprentice::with(['user.profile'])->find($apprenticeId);
-        $apprenticeName = $apprentice?->user?->profile
-            ? trim($apprentice->user->profile->first_name . ' ' . $apprentice->user->profile->last_name)
-            : 'El aprendiz';
+            $fichaId = $realClass?->scheduleSession?->schedule?->fichaTerm?->ficha_id;
 
-        $fichaId = Apprentice::whereKey($apprenticeId)->value('ficha_id');
-        if (!$fichaId) {
-            return;
+            if (!$fichaId) {
+                return;
+            }
         }
 
         $ficha = Ficha::select(['id', 'ficha_number', 'gestor_id'])->find($fichaId);
@@ -67,6 +88,7 @@ class NotifyGestorOnAttendanceOrRealClass implements ShouldQueue
             return;
         }
 
+        // Valida que el gestor tenga el rol esperado (si tu sistema lo usa así)
         $gestorId = User::role('Gestor de Fichas')
             ->whereKey($ficha->gestor_id)
             ->value('id');
@@ -93,7 +115,10 @@ class NotifyGestorOnAttendanceOrRealClass implements ShouldQueue
         ]);
 
         $notification->users()->syncWithoutDetaching([
-            $gestorId => ['read_at' => null, 'role_code' => "GESTOR_FICHAS",],
+            $gestorId => ['read_at' => null, 'role_code' => 'GESTOR_FICHAS'],
         ]);
+
+        // Broadcast SOLO al gestor
+        broadcast(new NotificationCreated($notification, [$gestorId], 'GESTOR_FICHAS'));
     }
 }

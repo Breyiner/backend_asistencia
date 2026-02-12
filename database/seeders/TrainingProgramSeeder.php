@@ -25,7 +25,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Soldadura de productos metálicos en platina',
@@ -33,7 +33,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Instrumentación industrial',
@@ -41,7 +41,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Mantenimiento y ensamble de equipos electrónicos',
@@ -49,7 +49,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Mantenimiento de automatismos industriales',
@@ -57,7 +57,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Operación en torno y fresadora',
@@ -65,7 +65,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Mantenimiento de equipos de aire acondicionado y refrigeración',
@@ -73,7 +73,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Mantenimiento e instalación de sistemas solares fotovoltaicos',
@@ -81,7 +81,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Mecánica de maquinaria industrial',
@@ -89,7 +89,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Electricista industrial',
@@ -97,7 +97,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Instalación de sistemas eléctricos residenciales y comerciales',
@@ -105,7 +105,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
 
             // TECNOLOGÍA DE LA INFORMACIÓN (area_id = 1)
@@ -115,7 +115,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Instalación y mantenimiento de redes inalámbricas',
@@ -123,7 +123,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Mantenimiento equipos de cómputo',
@@ -131,7 +131,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Sistemas teleinformáticos',
@@ -139,7 +139,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Control de la seguridad digital',
@@ -147,7 +147,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Programación de software',
@@ -155,7 +155,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Tratamiento de riesgos de ciberseguridad en MIPYMES',
@@ -163,7 +163,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
 
             // LOGÍSTICA Y TRANSPORTE (area_id = 9)
@@ -173,7 +173,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 9,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Mantenimiento de los motores diesel',
@@ -181,7 +181,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 9,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Mantenimiento de motocicletas y motocarros',
@@ -189,7 +189,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 9,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Control de movilidad, transporte y seguridad vial',
@@ -197,7 +197,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 9,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Mantenimiento de sistemas de propulsión eléctrica e híbrida automotriz',
@@ -205,7 +205,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 15,
                 'qualification_level_id' => 2,
                 'area_id' => 9,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
 
             // ========================================
@@ -220,7 +220,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 4,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
 
             // MANTENIMIENTO INDUSTRIAL (area_id = 5)
@@ -230,7 +230,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Mantenimiento electromecánico industrial',
@@ -238,7 +238,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Automatización de sistemas mecatrónicos',
@@ -246,7 +246,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Desarrollo de sistemas electrónicos industriales',
@@ -254,7 +254,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Electricidad industrial',
@@ -262,7 +262,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Producción de componentes mecánicos con máquinas CNC',
@@ -270,7 +270,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 5,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
 
             // TECNOLOGÍA DE LA INFORMACIÓN (area_id = 1)
@@ -280,7 +280,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Desarrollo de videojuegos y entornos interactivos',
@@ -288,7 +288,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Análisis y desarrollo de software',
@@ -296,7 +296,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Gestión de redes de datos',
@@ -304,7 +304,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 1,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
 
             // ADMINISTRACIÓN Y GESTIÓN EMPRESARIAL (area_id = 2)
@@ -314,7 +314,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 2,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
             [
                 'name' => 'Coordinación en sistemas integrados de gestión',
@@ -322,7 +322,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 2,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
 
             // LOGÍSTICA Y TRANSPORTE (area_id = 9)
@@ -332,7 +332,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 9,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
 
             // SEGURIDAD Y SALUD EN EL TRABAJO (area_id = 12)
@@ -342,7 +342,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 12,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
 
             // DISEÑO Y COMUNICACIONES (area_id = 11)
@@ -352,7 +352,7 @@ class TrainingProgramSeeder extends Seeder
                 'duration' => 27,
                 'qualification_level_id' => 3,
                 'area_id' => 11,
-                'coordinator_id' => 17
+                'coordinator_id' => 16
             ],
         ];
 

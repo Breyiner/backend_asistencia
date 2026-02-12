@@ -133,7 +133,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'shifts.create', 'guard_name' => 'web', 'display_name' => 'Crear Jornada', 'group' => 'Jornadas'],
             ['name' => 'shifts.update', 'guard_name' => 'web', 'display_name' => 'Editar Jornada', 'group' => 'Jornadas'],
             ['name' => 'shifts.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar Jornada', 'group' => 'Jornadas'],
-            
+
             ['name' => 'time_slots.viewAny', 'guard_name' => 'web', 'display_name' => 'Listar franjas horarias', 'group' => 'Franjas Horarias'],
             ['name' => 'time_slots.view',    'guard_name' => 'web', 'display_name' => 'Ver franja horaria',     'group' => 'Franjas Horarias'],
             ['name' => 'time_slots.create',  'guard_name' => 'web', 'display_name' => 'Crear franja horaria',   'group' => 'Franjas Horarias'],
@@ -203,6 +203,9 @@ class PermissionSeeder extends Seeder
             ['name' => 'no_class_days.create', 'guard_name' => 'web', 'display_name' => 'Crear día sin clase', 'group' => 'Días Sin Clase'],
             ['name' => 'no_class_days.update', 'guard_name' => 'web', 'display_name' => 'Editar día sin clase', 'group' => 'Días Sin Clase'],
             ['name' => 'no_class_days.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar día sin clase', 'group' => 'Días Sin Clase'],
+
+            // Dashboards
+            ['name' => 'attendance_dashboard.view', 'guard_name' => 'web', 'display_name' => 'Ver dashboard de asistencia', 'group' => 'Dashboards'],
 
         ];
 

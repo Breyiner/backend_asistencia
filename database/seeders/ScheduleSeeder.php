@@ -14,13 +14,15 @@ class ScheduleSeeder extends Seeder
     public function run(): void
     {
         $schedules = [
+    ["description" => "Horario ficha 1 - fase 1", "ficha_term_id" => 1],
+    ["description" => "Horario ficha 2 - fase 1", "ficha_term_id" => 2],
+    ["description" => "Horario ficha 3 - fase 1", "ficha_term_id" => 3],
+    ["description" => "Horario ficha 4 - fase 1", "ficha_term_id" => 4],
+    ["description" => "Horario ficha 1 - fase 2", "ficha_term_id" => 5],
+    ["description" => "Horario ficha 2 - fase 2", "ficha_term_id" => 6],
+    ["description" => "Horario ficha 3 - fase 2", "ficha_term_id" => 7],
+];
 
-            [
-                "description" => "Horario ficha 1 - trimestre 1 (fase 2)",
-                "ficha_term_id" => 1
-            ]
-
-        ];
 
         foreach ($schedules as $schedule) {
             Schedule::create($schedule);
