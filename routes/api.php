@@ -295,6 +295,7 @@ Route::middleware('throttle:api')->group(function () {
             Route::get('/', [AttendanceController::class, 'index'])->middleware('permission:attendances.viewAny');
             Route::get('/monthly_register', [MonthlyAttendanceRegisterController::class, 'show'])->middleware('permission:attendances.monthlyRegister');
             Route::get('/{attendance_id}', [AttendanceController::class, 'show'])->middleware('permission:attendances.view');
+            Route::get('/file/export', [AttendanceController::class, 'export']);
             Route::post('/', [AttendanceController::class, 'store'])->middleware('permission:attendances.create');
             Route::patch('/{attendance_id}', [AttendanceController::class, 'update'])->middleware('permission:attendances.update');
             Route::post('/scan', [AttendanceController::class, 'scan']);

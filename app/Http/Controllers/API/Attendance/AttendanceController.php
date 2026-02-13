@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\API\Attendance;
 
+use App\Exports\AttendancesExport;
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Attendance\ScanAttendanceRequest;
 use App\Http\Requests\Attendance\StoreAttendanceRequest;
 use App\Http\Requests\Attendance\UpdateAttendanceRequest;
 use App\Services\Attendance\AttendanceService;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
@@ -36,6 +39,20 @@ class AttendanceController extends Controller
             return ResponseFormatter::error($response['message'], $response['code']);
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+    }
+
+    public function export(Request $request)
+    {
+        $year = $request->integer('year', now()->year);
+        $month = $request->integer('month', now()->month);
+        $fichaId = $request->integer('ficha_id');
+
+        $fileName = "asistencias_{$year}_{$month}_ficha_{$fichaId}.xlsx";
+
+        return Excel::download(
+            new AttendancesExport($year, $month, $fichaId),
+            $fileName
+        );
     }
 
     public function show(int $id)
