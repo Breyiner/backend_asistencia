@@ -4,6 +4,7 @@ use App\Enums\TokenAbility;
 use App\Http\Controllers\API\Apprentice\ApprenticeController;
 use App\Http\Controllers\API\Area\AreaController;
 use App\Http\Controllers\API\Attendance\AttendanceController;
+use App\Http\Controllers\API\Attendance\MonthlyAttendanceRegisterController;
 use App\Http\Controllers\API\AttendanceStatus\AttendanceStatusController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Classroom\ClassroomController;
@@ -292,6 +293,7 @@ Route::middleware('throttle:api')->group(function () {
         // Attendances
         Route::prefix('attendances')->group(function () {
             Route::get('/', [AttendanceController::class, 'index'])->middleware('permission:attendances.viewAny');
+            Route::get('/monthly_register', [MonthlyAttendanceRegisterController::class, 'show'])->middleware('permission:attendances.monthlyRegister');
             Route::get('/{attendance_id}', [AttendanceController::class, 'show'])->middleware('permission:attendances.view');
             Route::post('/', [AttendanceController::class, 'store'])->middleware('permission:attendances.create');
             Route::patch('/{attendance_id}', [AttendanceController::class, 'update'])->middleware('permission:attendances.update');
