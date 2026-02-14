@@ -179,6 +179,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'attendances.monthlyRegister', 'guard_name' => 'web', 'display_name' => 'Ver registro mensual de asistencias', 'group' => 'Asistencias'],
             ['name' => 'attendances.byClassRealId', 'guard_name' => 'web', 'display_name' => 'Ver asistencias por clase', 'group' => 'Asistencias'],
             ['name' => 'attendances.create', 'guard_name' => 'web', 'display_name' => 'Tomar asistencia', 'group' => 'Asistencias'],
+            ['name' => 'attendances.export', 'guard_name' => 'web', 'display_name' => 'Exportar asistencias', 'group' => 'Asistencias'],
             ['name' => 'attendances.update', 'guard_name' => 'web', 'display_name' => 'Editar asistencia', 'group' => 'Asistencias'],
             ['name' => 'attendances.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar asistencia', 'group' => 'Asistencias'],
 

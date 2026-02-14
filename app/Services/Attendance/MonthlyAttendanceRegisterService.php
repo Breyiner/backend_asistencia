@@ -110,6 +110,25 @@ class MonthlyAttendanceRegisterService
             ];
         }
 
+        // 4.1) Aprendices inactivos (status_id = 2)
+        $inactiveApprentices = Apprentice::with('profile')
+            ->where('ficha_id', $fichaId)
+            ->where('status_id', 2)
+            ->orderBy('document_number')
+            ->get();
+
+        $inactiveApprenticeRows = [];
+        foreach ($inactiveApprentices as $ap) {
+            $p = $ap->profile;
+            $fullName = trim(($p->first_name ?? '') . ' ' . ($p->last_name ?? ''));
+
+            $inactiveApprenticeRows[] = [
+                'id' => (int)$ap->id,
+                'document_number' => $ap->document_number ?? null,
+                'full_name' => $fullName !== '' ? $fullName : "Aprendiz #{$ap->id}",
+            ];
+        }
+
         // 5) RealClass del mes (display_date = original_date ?? execution_date)
         $realClasses = RealClass::query()
             ->select([
@@ -251,13 +270,15 @@ class MonthlyAttendanceRegisterService
 
                 if (!$resolvedSlot || !isset($slotsIndex[$resolvedSlot])) continue;
 
-                $code = $a->attendanceStatus?->code ?? 'unknown';
-                if (isset($countsByCode[$code])) $countsByCode[$code]++;
+                $status = $a->attendanceStatus?->name ?? 'Sin Registrar';
+                $code = $a->attendanceStatus?->code ?? 'unknow';
+                if (isset($countsByCode[$status])) $countsByCode[$status]++;
 
                 $apprenticeRows[$apId]['marks_by_date_slot'][$displayDate][$resolvedSlot][] = [
                     'attendance_id' => (int)$a->id,
                     'real_class_id' => (int)$a->real_class_id,
                     'status' => $code,
+                    'status_name' => $status,
                     'observations' => $a->observations ?? null,
                     'entry_hour' => $a->entry_hour ? substr($a->entry_hour, 0, 5) : null,
                     'absent_hours' => (int)($a->absent_hours ?? 0),
@@ -300,10 +321,12 @@ class MonthlyAttendanceRegisterService
             'legend' => $legend,
             'classes_by_date_slot' => $classesByDateSlot,
             'apprentices' => array_values($apprenticeRows),
+            'inactive_apprentices' => $inactiveApprenticeRows, // AGREGADO
         ];
 
         $summary = [
             'total_apprentices' => count($apprenticeRows),
+            'total_inactive_apprentices' => count($inactiveApprenticeRows), // AGREGADO
             'total_marks' => array_sum($countsByCode),
             'counts_by_code' => $countsByCode,
         ];

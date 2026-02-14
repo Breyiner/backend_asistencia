@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\API\Attendance;
 
-use App\Exports\AttendancesExport;
+use App\Exports\MonthlyRegisterExport;
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Attendance\MonthlyAttendanceRegisterRequest;
 use App\Http\Requests\Attendance\ScanAttendanceRequest;
 use App\Http\Requests\Attendance\StoreAttendanceRequest;
 use App\Http\Requests\Attendance\UpdateAttendanceRequest;
 use App\Services\Attendance\AttendanceService;
+use App\Services\Attendance\MonthlyAttendanceRegisterService;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 
@@ -41,18 +43,20 @@ class AttendanceController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
-    public function export(Request $request)
+    public function exportMonthlyRegister(MonthlyAttendanceRegisterRequest $request, MonthlyAttendanceRegisterService $service)
     {
-        $year = $request->integer('year', now()->year);
-        $month = $request->integer('month', now()->month);
-        $fichaId = $request->integer('ficha_id');
+        $data = $request->validated();
 
-        $fileName = "asistencias_{$year}_{$month}_ficha_{$fichaId}.xlsx";
+        $result = $service->monthlyRegister($data);
 
-        return Excel::download(
-            new AttendancesExport($year, $month, $fichaId),
-            $fileName
-        );
+        if (!empty($result['error'])) {
+            return response()->json($result, $result['code'] ?? 400);
+        }
+
+        $payload = $result['data'];
+        $fileName = "registro_mensual_{$payload['period']['year']}_{$payload['period']['month']}_ficha_{$payload['ficha']['id']}.xlsx";
+
+        return Excel::download(new MonthlyRegisterExport($payload), $fileName);
     }
 
     public function show(int $id)
