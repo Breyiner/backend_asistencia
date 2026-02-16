@@ -20,6 +20,7 @@ use App\Http\Controllers\API\NoClassDay\NoClassDayController;
 use App\Http\Controllers\API\NoClassReason\NoClassReasonController;
 use App\Http\Controllers\API\Notification\NotificationController;
 use App\Http\Controllers\API\NotificationType\NotificationTypeController;
+use App\Http\Controllers\API\Permission\PermissionController;
 use App\Http\Controllers\API\Phase\PhaseController;
 use App\Http\Controllers\API\QualificationLevel\QualificationLevelController;
 use App\Http\Controllers\API\RealClass\RealClassController;
@@ -65,12 +66,14 @@ Route::middleware('throttle:api')->group(function () {
         // Roles
         Route::prefix('roles')->group(function () {
             Route::get('/', [RoleController::class, 'index'])->middleware('permission:roles.viewAny');
-            Route::get('/selectable', [RoleController::class, 'selectable'])->middleware('permission:roles.viewAny');
+            Route::get('/select', [RoleController::class, 'selectable'])->middleware('permission:roles.viewAny');
             Route::get('/{role_id}', [RoleController::class, 'show'])->middleware('permission:roles.view');
             Route::post('/', [RoleController::class, 'store'])->middleware('permission:roles.create');
-            Route::put('/{role_id}', [RoleController::class, 'update'])->middleware('permission:roles.update');
+            Route::patch('/{role_id}/sync_permissions', [RoleController::class, 'syncPermissions'])->middleware('permission:roles.update');
+            Route::patch('/{role_id}', [RoleController::class, 'update'])->middleware('permission:roles.update');
             Route::delete('/{role_id}', [RoleController::class, 'destroy'])->middleware('permission:roles.delete');
         });
+
 
         // User Status
         Route::prefix('user_statuses')->group(function () {
@@ -349,6 +352,10 @@ Route::middleware('throttle:api')->group(function () {
         // Dashboard
         Route::prefix('dashboard')->group(function () {
             Route::get('/attendance', AttendanceDashboardController::class)->middleware('permission:attendance_dashboard.view');
+        });
+
+        Route::prefix('permissions')->group(function () {
+            Route::get('/select', [PermissionController::class, 'select'])->middleware('permission:roles.update');
         });
     });
 });

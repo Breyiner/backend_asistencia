@@ -4,31 +4,46 @@ namespace App\Http\Requests\Role;
 
 use App\Rules\AlphaSpaces;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateRoleRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-
         $roleId = $this->route('role_id');
 
         return [
-            'name' => ['sometimes', 'required', 'string', 'min:3', 'max:50', new AlphaSpaces(), 'unique:roles,name,{role_id},id'],
-            'description' => ['sometimes', 'nullable', 'string', 'min:10', 'max:255', new AlphaSpaces()],
+            'name' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:3',
+                'max:50',
+                new AlphaSpaces(),
+                Rule::unique('roles', 'name')->ignore($roleId),
+            ],
 
+            'code' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:3',
+                'max:50',
+                Rule::unique('roles', 'code')->ignore($roleId),
+            ],
+
+            'description' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'min:10',
+                'max:255',
+            ],
         ];
     }
 
@@ -41,9 +56,15 @@ class UpdateRoleRequest extends FormRequest
             'name.max' => 'El :attribute no debe tener más de :max caracteres.',
             'name.unique' => 'El :attribute ya existe.',
 
+            'code.required' => 'El código del rol es obligatorio.',
+            'code.string' => 'El código del rol debe ser en formato de texto.',
+            'code.min' => 'El código del rol debe tener al menos :min caracteres.',
+            'code.max' => 'El código del rol no debe tener más de :max caracteres.',
+            'code.unique' => 'El código del rol ya existe.',
+
             'description.string' => 'La :attribute debe ser en formato de texto.',
             'description.min' => 'La :attribute debe tener al menos :min caracteres.',
-            'description.max'    => 'La :attribute no debe tener más de :max caracteres.',
+            'description.max' => 'La :attribute no debe tener más de :max caracteres.',
         ];
     }
 
@@ -51,6 +72,7 @@ class UpdateRoleRequest extends FormRequest
     {
         return [
             'name' => 'nombre del rol',
+            'code' => 'código del rol',
             'description' => 'descripción',
         ];
     }
