@@ -74,7 +74,8 @@ class NotifyGestorOnAttendanceOrRealClass
         if ($event->subjectType === RealClass::class) {
             $realClass = RealClass::with([
                 'scheduleSession.schedule.fichaTerm'
-            ])->select(['id'])->find($event->subjectId);
+            ])->select(['id', 'schedule_session_id'])
+                ->find($event->subjectId);
 
             $fichaId = $realClass?->scheduleSession?->schedule?->fichaTerm?->ficha_id;
 
@@ -83,12 +84,13 @@ class NotifyGestorOnAttendanceOrRealClass
             }
         }
 
+
         $ficha = Ficha::select(['id', 'ficha_number', 'gestor_id'])->find($fichaId);
         if (!$ficha?->gestor_id) {
             return;
         }
 
-        // Valida que el gestor tenga el rol esperado (si tu sistema lo usa así)
+        // Valida que el gestor tenga el rol esperado
         $gestorId = User::role('Gestor de Fichas')
             ->whereKey($ficha->gestor_id)
             ->value('id');

@@ -4,29 +4,36 @@ namespace App\Http\Requests\Area;
 
 use App\Rules\AlphaSpaces;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAreaRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         $areaId = $this->route('area_id');
 
         return [
-            'name' => ['sometimes', 'required', 'string', 'min:5', 'max:30', 'unique:areas,name,{area_id},id', new AlphaSpaces()],
-            'description' => ['sometimes', 'nullable', 'string', 'min:10', 'max:60', new AlphaSpaces()],
+            'name' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:5',
+                'max:100',
+                new AlphaSpaces(),
+                Rule::unique('areas', 'name')->ignore($areaId),
+            ],
+            'description' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'min:10',
+                'max:200',
+            ],
         ];
     }
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Area\StoreAreaRequest;
 use App\Http\Requests\Area\UpdateAreaRequest;
 use App\Services\Area\AreaService;
+use Illuminate\Http\Request;
 
 class AreaController extends Controller
 {
@@ -17,56 +18,73 @@ class AreaController extends Controller
         $this->areaService = $areaService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $response = $this->areaService->getAll();
+        $response = $this->areaService->getAll($request->get('per_page', 10));
 
-        if ($response['error'])
+        if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
+        }
+
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? [],
+            $response['paginate'] ?? null
+        );
+    }
+
+    public function select(Request $request)
+    {
+        $response = $this->areaService->getAllForSelect();
+
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
     public function show(string $id)
     {
-        $response = $this->areaService->getArea($id);
+        $response = $this->areaService->getById($id);
 
-        if ($response['error'])
+        if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
     public function store(StoreAreaRequest $request)
     {
-        $data = $request->validated();
+        $response = $this->areaService->create($request->validated());
 
-        $response = $this->areaService->createArea($data);
-
-        if ($response['error'])
+        if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
     public function update(UpdateAreaRequest $request, string $id)
     {
-        $data = $request->validated();
+        $response = $this->areaService->update($request->validated(), $id);
 
-        $response = $this->areaService->updateArea($data, $id);
-
-        if ($response['error'])
+        if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
     public function destroy(string $id)
     {
-        $response = $this->areaService->deleteArea($id);
+        $response = $this->areaService->delete($id);
 
-        if ($response['error'])
+        if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }

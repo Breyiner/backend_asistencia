@@ -117,11 +117,13 @@ Route::middleware('throttle:api')->group(function () {
         // Areas
         Route::prefix('areas')->group(function () {
             Route::get('/', [AreaController::class, 'index'])->middleware('permission:areas.viewAny');
+            Route::get('/select', [AreaController::class, 'select'])->middleware('permission:areas.viewAny');
             Route::get('/{area_id}', [AreaController::class, 'show'])->middleware('permission:areas.view');
             Route::post('/', [AreaController::class, 'store'])->middleware('permission:areas.create');
             Route::patch('/{area_id}', [AreaController::class, 'update'])->middleware('permission:areas.update');
             Route::delete('/{area_id}', [AreaController::class, 'destroy'])->middleware('permission:areas.delete');
         });
+
 
         // Qualification Levels
         Route::prefix('qualification_levels')->group(function () {
