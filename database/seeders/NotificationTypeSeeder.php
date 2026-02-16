@@ -3,14 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\NotificationType;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class NotificationTypeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $rows = [
@@ -20,6 +16,8 @@ class NotificationTypeSeeder extends Seeder
 
             ['name' => 'Alerta de deserción (límite alcanzado)', 'key' => 'dropout_limit_reached'],
             ['name' => 'Cambio de tipo de documento', 'key' => 'document_type_changed'],
+
+            ['name' => 'Aprendiz cumple mayoría de edad', 'key' => 'apprentice_became_adult'],
         ];
 
         foreach ($rows as $row) {

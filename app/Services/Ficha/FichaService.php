@@ -134,6 +134,54 @@ class FichaService
         ];
     }
 
+    public function select()
+    {
+        $userId = Auth::id();
+        $roleCode = request()->attributes->get('acting_role_code');
+
+        $query = Ficha::select([
+            'id',
+            'ficha_number',
+            'training_program_id',
+            'shift_id',
+        ])->with([
+            'trainingProgram:id,name',
+            'shift:id,name',
+        ]);
+
+        // Aplicar filtros por rol
+        if ($roleCode === 'INSTRUCTOR') {
+            $query->whereHas('currentFichaTerm', fn($q) => $q->where('is_current', 1))
+                ->whereHas('currentFichaTerm.schedule.scheduleSessions', function ($q) use ($userId) {
+                    $q->where('instructor_id', $userId);
+                });
+        } elseif ($roleCode === 'GESTOR_FICHAS') {
+            $query->where('gestor_id', $userId);
+        } elseif ($roleCode === 'COORDINADOR') {
+            $query->whereHas('trainingProgram', function ($q) use ($userId) {
+                $q->where('coordinator_id', $userId);
+            });
+        }
+
+        $fichas = $query->orderBy('ficha_number', 'asc')->get();
+
+        $items = $fichas->map(function ($ficha) {
+            return [
+                'id' => $ficha->id,
+                'ficha_number' => $ficha->ficha_number,
+                'training_program_name' => $ficha->trainingProgram?->name ?? 'Sin programa',
+                'shift_name' => $ficha->shift?->name ?? 'Sin jornada',
+            ];
+        })->values();
+
+        return [
+            'error' => false,
+            'code' => 200,
+            'message' => 'Fichas obtenidas con éxito',
+            'data' => $items
+        ];
+    }
+
     public function getById($id)
     {
         $userId = Auth::id();

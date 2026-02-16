@@ -28,6 +28,16 @@ class FichaController extends Controller
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? [], $response['paginate']);
     }
 
+    public function select()
+    {
+        $response = $this->fichaService->select();
+
+        if ($response['error'])
+            return ResponseFormatter::error($response['message'], $response['code']);
+
+        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+    }
+
     public function show(string $id)
     {
         $response = $this->fichaService->getById($id);
@@ -52,7 +62,9 @@ class FichaController extends Controller
     {
         $response = $this->fichaService->availableForRealClass();
 
-        if ($response['error']) return ResponseFormatter::error($response['message'], $response['code']);
+        if ($response['error']) 
+            return ResponseFormatter::error($response['message'], $response['code']);
+        
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 

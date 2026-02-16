@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Attendance\AttendanceController;
 use App\Http\Controllers\API\Attendance\MonthlyAttendanceRegisterController;
 use App\Http\Controllers\API\AttendanceStatus\AttendanceStatusController;
 use App\Http\Controllers\API\Auth\AuthController;
+use App\Http\Controllers\API\Auth\PasswordResetController;
 use App\Http\Controllers\API\Classroom\ClassroomController;
 use App\Http\Controllers\API\ClassType\ClassTypeController;
 use App\Http\Controllers\API\Dashboard\AttendanceDashboardController;
@@ -50,6 +51,9 @@ Route::middleware('throttle:api')->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/refresh_token', [AuthController::class, 'refreshToken'])
             ->middleware(['auth:sanctum', 'verified', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value]);
+
+        Route::post('/forgot-password', [PasswordResetController::class, 'forgot']);
+        Route::post('/reset-password', [PasswordResetController::class, 'reset']);
 
         Route::post('/logout', [AuthController::class, 'logOut'])
             ->middleware(['auth:sanctum', 'verified', 'auth:sanctum']);
@@ -159,10 +163,10 @@ Route::middleware('throttle:api')->group(function () {
         // Fichas
         Route::prefix('fichas')->group(function () {
             Route::get('/', [FichaController::class, 'index'])->middleware('permission:fichas.viewAny');
-            Route::get('/{ficha_id}', [FichaController::class, 'show'])->middleware('permission:fichas.view');
-            Route::get('/training_program/{training_program_id}', [FichaController::class, 'showByTrainingProgram'])->middleware('permission:fichas.viewAny');
-
+            Route::get('/select', [FichaController::class, 'select'])->middleware('permission:fichas.viewAny');
             Route::get('/available_for_real_class', [FichaController::class, 'availableForRealClass'])->middleware('permission:fichas.availableForRealClass');
+            Route::get('/training_program/{training_program_id}', [FichaController::class, 'showByTrainingProgram'])->middleware('permission:fichas.viewAny');
+            Route::get('/{ficha_id}', [FichaController::class, 'show'])->middleware('permission:fichas.view');
 
             Route::post('/', [FichaController::class, 'store'])->middleware('permission:fichas.create');
             Route::patch('/{ficha_id}', [FichaController::class, 'update'])->middleware('permission:fichas.update');
