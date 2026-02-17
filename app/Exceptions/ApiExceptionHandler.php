@@ -6,6 +6,7 @@ use App\Helpers\ResponseFormatter;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
@@ -17,11 +18,11 @@ class ApiExceptionHandler
     public static function handle(Throwable $e)
     {
         if ($e instanceof AuthenticationException || $e instanceof UnauthorizedHttpException) {
-            return ResponseFormatter::error('No autenticado', 401);
+            return ResponseFormatter::error('No autenticado', 401, [], 'not_authenticated');
         }
 
         if ($e instanceof AuthorizationException) {
-            return ResponseFormatter::error('No autorizado', 403);
+            return ResponseFormatter::error('No autorizado', 403, [], 'not_authorized');
         }
 
         if ($e instanceof ModelNotFoundException || $e instanceof NotFoundHttpException) {
@@ -43,6 +44,16 @@ class ApiExceptionHandler
                 $e->getStatusCode()
             );
         }
+
+        if ($e instanceof ThrottleRequestsException) {
+            return ResponseFormatter::error(
+                'Demasiadas solicitudes. Por favor, inténtalo de nuevo más tarde.',
+                429,
+                [],
+                'throttle_requests'
+            );
+        }
+
 
         // Error desconocido
         return ResponseFormatter::error(
