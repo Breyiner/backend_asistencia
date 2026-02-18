@@ -208,10 +208,8 @@ Route::middleware('throttle:api')->group(function () {
                 ->middleware('permission:document_types.view');
             Route::post('/', [DocumentTypeController::class, 'store'])
                 ->middleware('permission:document_types.create');
-            Route::put('/{document_type_id}', [DocumentTypeController::class, 'update'])
+            Route::patch('/{document_type_id}', [DocumentTypeController::class, 'update'])
                 ->middleware('permission:document_types.update');
-            Route::patch('/{document_type_id}', [DocumentTypeController::class, 'partialUpdate'])
-                ->middleware('permission:document_types.partialUpdate');
             Route::delete('/{document_type_id}', [DocumentTypeController::class, 'destroy'])
                 ->middleware('permission:document_types.delete');
         });
@@ -519,13 +517,15 @@ Route::middleware('throttle:api')->group(function () {
         Route::prefix('classrooms')->group(function () {
             Route::get('/', [ClassroomController::class, 'index'])
                 ->middleware('permission:classrooms.viewAny');
-            Route::get('/{classroom_id}', [ClassroomController::class, 'show'])
+            Route::get('/select', [ClassroomController::class, 'select'])
+                ->middleware('permission:classrooms.viewAny');
+            Route::get('/{classroom:id}', [ClassroomController::class, 'show'])
                 ->middleware('permission:classrooms.view');
             Route::post('/', [ClassroomController::class, 'store'])
                 ->middleware('permission:classrooms.create');
-            Route::patch('/{classroom_id}', [ClassroomController::class, 'update'])
+            Route::patch('/{classroom:id}', [ClassroomController::class, 'update'])
                 ->middleware('permission:classrooms.update');
-            Route::delete('/{classroom_id}', [ClassroomController::class, 'destroy'])
+            Route::delete('/{classroom:id}', [ClassroomController::class, 'destroy'])
                 ->middleware('permission:classrooms.delete');
         });
 

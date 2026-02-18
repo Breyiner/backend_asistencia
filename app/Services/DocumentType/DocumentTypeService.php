@@ -16,60 +16,122 @@ use Illuminate\Support\Facades\Auth;
 class DocumentTypeService
 {
     /**
-     * Retorna todos los tipos de documento.
+     * Retorna una lista paginada de tipos de documento con filtros opcionales.
      *
-     * Método estático porque no requiere estado de instancia; se puede llamar
-     * directamente desde el controlador sin instanciar el servicio.
-     * Diferencia en el mensaje si el catálogo está vacío o tiene registros.
-     *
+     * @param  int  $perPage  Cantidad de registros por página (default: 10).
      * @return array
      */
-    public static function getAll()
+    public function getAll($perPage = 10)
     {
-        $documentType = DocumentType::all();
+        $query = DocumentType::query()
+            ->select(['id', 'name', 'acronym', 'created_at', 'updated_at']);
 
-        // Retorna un mensaje diferenciado si el catálogo está vacío,
-        // sin lanzar error ya que es un estado válido del sistema.
-        if ($documentType->isEmpty()) {
+        if (request()->filled('name')) {
+            $query->where('name', 'like', '%' . request('name') . '%');
+        }
+
+        if (request()->filled('acronym')) {
+            $query->where('acronym', 'like', '%' . request('acronym') . '%');
+        }
+
+        $documentTypes = $query->orderBy('name', 'asc')->paginate($perPage);
+
+        $items = $documentTypes->getCollection()->map(function ($documentType) {
             return [
-                "error" => false,
-                "code" => 200,
-                "message" => "No hay tipos de documento registrados",
-                "data" => $documentType,
+                'id'         => $documentType->id,
+                'name'       => $documentType->name,
+                'acronym'    => $documentType->acronym,
+                'created_at' => $documentType->created_at?->toDateString(),
+                'updated_at' => $documentType->updated_at?->toDateString(),
+            ];
+        });
+
+        $paginate = [
+            'current_page' => $documentTypes->currentPage(),
+            'per_page'     => $documentTypes->perPage(),
+            'total'        => $documentTypes->total(),
+            'last_page'    => $documentTypes->lastPage(),
+            'from'         => $documentTypes->firstItem(),
+            'to'           => $documentTypes->lastItem(),
+        ];
+
+        if ($items->isEmpty()) {
+            return [
+                'error'    => false,
+                'code'     => 200,
+                'message'  => 'No hay tipos de documento registrados',
+                'data'     => $items,
+                'paginate' => $paginate,
             ];
         }
 
         return [
-            "error" => false,
-            "code" => 200,
-            "message" => "Tipos de documento obtenidos exitosamente",
-            "data" => $documentType,
+            'error'    => false,
+            'code'     => 200,
+            'message'  => 'Tipos de documento obtenidos exitosamente',
+            'data'     => $items,
+            'paginate' => $paginate,
+        ];
+    }
+
+    /**
+     * Retorna todos los tipos de documento en formato simplificado para selects/dropdowns.
+     *
+     * @return array
+     */
+    public function getAllForSelect()
+    {
+        $query = DocumentType::query()
+            ->select(['id', 'name', 'acronym'])
+            ->orderBy('name', 'asc');
+
+        if (request()->filled('name')) {
+            $query->where('name', 'like', '%' . request('name') . '%');
+        }
+
+        $documentTypes = $query->get();
+
+        return [
+            'error'   => false,
+            'code'    => 200,
+            'message' => 'Tipos de documento obtenidos exitosamente',
+            'data'    => $documentTypes,
         ];
     }
 
     /**
      * Retorna un tipo de documento por su ID.
      *
-     * @param  mixed  $id  ID del tipo de documento.
+     * @param  mixed  $id
      * @return array
      */
     public function getById($id)
     {
-        $documentType = DocumentType::find($id);
+        $documentType = DocumentType::query()
+            ->select(['id', 'name', 'acronym', 'created_at', 'updated_at'])
+            ->find($id);
 
         if (!$documentType) {
             return [
-                "error" => true,
-                "code" => 404,
-                "message" => "Tipo de documento no encontrado",
+                'error'   => true,
+                'code'    => 404,
+                'message' => 'Tipo de documento no encontrado',
             ];
         }
 
+        $item = [
+            'id'         => $documentType->id,
+            'name'       => $documentType->name,
+            'acronym'    => $documentType->acronym,
+            'created_at' => $documentType->created_at?->toDateString(),
+            'updated_at' => $documentType->updated_at?->toDateString(),
+        ];
+
         return [
-            "error" => false,
-            "code" => 200,
-            "message" => "Tipo de documento obtenido exitosamente",
-            "data" => $documentType,
+            'error'   => false,
+            'code'    => 200,
+            'message' => 'Tipo de documento obtenido exitosamente',
+            'data'    => $item,
         ];
     }
 
@@ -81,9 +143,11 @@ class DocumentTypeService
      */
     public function create(array $data)
     {
-        $documentType = DocumentType::create($data);
+        $documentType = DocumentType::create([
+            'name'    => $data['name'],
+            'acronym' => $data['acronym'],
+        ]);
 
-        // Dispara el evento después de la creación para auditoría o notificaciones.
         event(new ResourceChanged(
             'crear',
             DocumentType::class,
@@ -93,22 +157,20 @@ class DocumentTypeService
         ));
 
         return [
-            "error" => false,
-            "code" => 201,
-            "message" => "Tipo de documento creado exitosamente",
-            "data" => $documentType,
+            'error'   => false,
+            'code'    => 201,
+            'message' => 'Tipo de documento creado exitosamente',
+            'data'    => $documentType,
         ];
     }
 
     /**
-     * Actualiza completamente un tipo de documento (PUT).
+     * Actualiza un tipo de documento existente.
      *
-     * Reemplaza todos los campos del registro con los valores enviados.
-     * A diferencia de partialUpdate(), aquí se espera que $data contenga
-     * todos los campos requeridos del modelo.
+     * Solo actualiza los campos presentes en $data.
      *
-     * @param  array  $data  Todos los campos del tipo de documento.
-     * @param  mixed  $id    ID del tipo de documento.
+     * @param  array  $data
+     * @param  mixed  $id
      * @return array
      */
     public function update(array $data, $id)
@@ -117,59 +179,32 @@ class DocumentTypeService
 
         if (!$documentType) {
             return [
-                "error" => true,
-                "code" => 404,
-                "message" => "Tipo de documento no encontrado",
+                'error'   => true,
+                'code'    => 404,
+                'message' => 'Tipo de documento no encontrado',
             ];
         }
 
-        // Actualiza todos los campos enviados sin construcción dinámica,
-        // porque en un PUT se asume que llegan todos los campos.
-        $documentType->update($data);
+        $documentTypeData = [];
 
-        // Dispara el evento después de confirmar la actualización.
-        event(new ResourceChanged(
-            'actualizar',
-            DocumentType::class,
-            $documentType->id,
-            Auth::id(),
-            'Tipo de documento'
-        ));
+        if (array_key_exists('name', $data)) {
+            $documentTypeData['name'] = $data['name'];
+        }
 
-        return [
-            "error" => false,
-            "code" => 200,
-            "message" => "Tipo de documento actualizado exitosamente",
-            // fresh() recarga el modelo desde BD para devolver los datos ya persistidos.
-            "data" => $documentType->fresh(),
-        ];
-    }
+        if (array_key_exists('acronym', $data)) {
+            $documentTypeData['acronym'] = $data['acronym'];
+        }
 
-    /**
-     * Actualiza parcialmente un tipo de documento (PATCH).
-     *
-     * Solo actualiza los campos presentes en $data, sin afectar los demás.
-     * La validación de qué campos son opcionales la maneja el FormRequest.
-     *
-     * @param  array  $data  Campos a actualizar (pueden ser uno o varios).
-     * @param  mixed  $id    ID del tipo de documento.
-     * @return array
-     */
-    public function partialUpdate(array $data, $id)
-    {
-        $documentType = DocumentType::find($id);
-
-        if (!$documentType) {
+        if (empty($documentTypeData)) {
             return [
-                "error" => true,
-                "code" => 404,
-                "message" => "Tipo de documento no encontrado",
+                'error'   => false,
+                'code'    => 200,
+                'message' => 'No hay datos para actualizar',
+                'data'    => $documentType,
             ];
         }
 
-        // Eloquent solo actualiza los campos presentes en $data,
-        // dejando los demás campos del modelo sin cambios.
-        $documentType->update($data);
+        $documentType->update($documentTypeData);
 
         event(new ResourceChanged(
             'actualizar',
@@ -180,20 +215,20 @@ class DocumentTypeService
         ));
 
         return [
-            "error" => false,
-            "code" => 200,
-            "message" => "Tipo de documento actualizado parcialmente exitosamente",
-            "data" => $documentType->fresh(),
+            'error'   => false,
+            'code'    => 200,
+            'message' => 'Tipo de documento actualizado exitosamente',
+            'data'    => $documentType->fresh(),
         ];
     }
 
     /**
      * Elimina un tipo de documento por su ID.
      *
-     * Verifica que no haya usuarios usando este tipo de documento antes de eliminar,
+     * Verifica que no haya usuarios usando este tipo antes de eliminar,
      * protegiendo la integridad referencial. Retorna 409 si está en uso.
      *
-     * @param  mixed  $id  ID del tipo de documento.
+     * @param  mixed  $id
      * @return array
      */
     public function delete($id)
@@ -202,20 +237,19 @@ class DocumentTypeService
 
         if (!$documentType) {
             return [
-                "error" => true,
-                "code" => 404,
-                "message" => "Tipo de documento no encontrado",
+                'error'   => true,
+                'code'    => 404,
+                'message' => 'Tipo de documento no encontrado',
             ];
         }
 
-        // exists() es más eficiente que count() porque detiene la consulta al encontrar
-        // el primer usuario relacionado, sin traer ni contar todos los resultados.
-        // 409 Conflict indica que el recurso no puede eliminarse por dependencias activas.
+        // exists() es más eficiente que count() porque detiene la consulta
+        // al encontrar el primer usuario relacionado.
         if ($documentType->users()->exists()) {
             return [
-                "error" => true,
-                "code" => 409,
-                "message" => "No se puede eliminar el Tipo de documento porque tiene registros relacionados",
+                'error'   => true,
+                'code'    => 409,
+                'message' => 'No se puede eliminar el tipo de documento porque tiene registros relacionados',
             ];
         }
 
@@ -231,9 +265,9 @@ class DocumentTypeService
         ));
 
         return [
-            "error" => false,
-            "code" => 200,
-            "message" => "Tipo de documento eliminado exitosamente",
+            'error'   => false,
+            'code'    => 200,
+            'message' => 'Tipo de documento eliminado exitosamente',
         ];
     }
 }

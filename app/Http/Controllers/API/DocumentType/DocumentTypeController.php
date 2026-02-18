@@ -5,9 +5,9 @@ namespace App\Http\Controllers\API\DocumentType;
 use App\Helpers\ResponseFormatter;
 use App\Http\Requests\DocumentType\StoreDocumentTypeRequest;
 use App\Http\Requests\DocumentType\UpdateDocumentTypeRequest;
-use App\Http\Requests\DocumentType\PartialUpdateDocumentTypeRequest;
 use App\Http\Controllers\Controller;
 use App\Services\DocumentType\DocumentTypeService;
+use Illuminate\Http\Request;
 
 /**
  * Controlador REST para la gestión de tipos de documento.
@@ -31,28 +31,47 @@ class DocumentTypeController extends Controller
      */
     public function __construct(DocumentTypeService $service)
     {
-        // Asigna el servicio para usarlo en los métodos del controlador.
         $this->service = $service;
     }
 
     /**
-     * Lista todos los tipos de documento.
+     * Lista los tipos de documento de forma paginada con filtros opcionales.
      *
      * GET /api/document-types
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Obtiene todos los tipos desde el servicio.
-        $response = $this->service->getAll();
+        $response = $this->service->getAll($request->get('per_page', 10));
 
-        // Si hay error, responde con el formato estándar.
         if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        // Devuelve listado de tipos de documento.
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? [],
+            $response['paginate'] ?? []
+        );
+    }
+
+    /**
+     * Lista todos los tipos de documento en formato simplificado para selects/dropdowns.
+     *
+     * GET /api/document-types/select
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function select()
+    {
+        $response = $this->service->getAllForSelect();
+
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
+
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
@@ -61,20 +80,17 @@ class DocumentTypeController extends Controller
      *
      * GET /api/document-types/{id}
      *
-     * @param  string  $id  ID del tipo de documento.
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function show(string $id)
     {
-        // Busca el tipo por ID usando el servicio.
         $response = $this->service->getById($id);
 
-        // Si no existe o hubo problema, responde con error.
         if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        // Devuelve datos completos del tipo de documento.
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
@@ -83,97 +99,57 @@ class DocumentTypeController extends Controller
      *
      * POST /api/document-types
      *
-     * @param  StoreDocumentTypeRequest  $request  Datos validados del tipo.
+     * @param  StoreDocumentTypeRequest  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(StoreDocumentTypeRequest $request)
     {
-        // Datos ya validados por el FormRequest.
-        $data = $request->validated();
+        $response = $this->service->create($request->validated());
 
-        // Crea el tipo usando el servicio (incluye validación de regex, unicidad, etc.).
-        $response = $this->service->create($data);
-
-        // Si el servicio devuelve error, responde en formato estándar.
         if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        // Devuelve el tipo de documento creado.
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
     /**
-     * Actualiza completamente un tipo de documento (PUT).
+     * Actualiza un tipo de documento (PUT/PATCH).
      *
-     * PUT /api/document-types/{id}
+     * PUT   /api/document-types/{id}
+     * PATCH /api/document-types/{id}
      *
-     * @param  UpdateDocumentTypeRequest  $request  Datos completos validados.
-     * @param  string                     $id       ID del tipo.
+     * @param  UpdateDocumentTypeRequest  $request
+     * @param  string                     $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function update(UpdateDocumentTypeRequest $request, string $id)
     {
-        // Datos validados para actualización completa.
-        $data = $request->validated();
+        $response = $this->service->update($request->validated(), $id);
 
-        // Delega la actualización al servicio.
-        $response = $this->service->update($data, $id);
-
-        // Si hay conflicto o error de validación, responde con error.
         if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        // Devuelve el tipo de documento actualizado.
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
 
     /**
-     * Actualiza parcialmente un tipo de documento (PATCH).
-     *
-     * PATCH /api/document-types/{id}
-     *
-     * @param  PartialUpdateDocumentTypeRequest  $request  Campos parciales validados.
-     * @param  string                            $id       ID del tipo.
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function partialUpdate(PartialUpdateDocumentTypeRequest $request, string $id)
-    {
-        // Solo campos enviados y validados.
-        $data = $request->validated();
-
-        // Actualización parcial delegada al servicio.
-        $response = $this->service->partialUpdate($data, $id);
-
-        // Si hay error, responde con el formato estándar.
-        if ($response['error']) {
-            return ResponseFormatter::error($response['message'], $response['code']);
-        }
-
-        // Devuelve el tipo de documento actualizado.
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
-    }
-
-    /**
-     * Elimina (normalmente soft-delete) un tipo de documento.
+     * Elimina un tipo de documento.
      *
      * DELETE /api/document-types/{id}
      *
-     * @param  string  $id  ID del tipo a eliminar.
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(string $id)
     {
-        // Solicita al servicio eliminar el tipo (con sus validaciones).
         $response = $this->service->delete($id);
 
-        // Si no puede eliminarse (usuarios asociados, tipo protegido, etc.), devuelve error.
         if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
         }
 
-        // Devuelve confirmación de eliminación.
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
     }
-}
+} 
