@@ -81,6 +81,10 @@ Route::middleware('throttle:api')->group(function () {
         return Response::json(['message' => 'La API está funcionando correctamente.'], 200);
     });
 
+    Route::prefix('document_types')->group(function () {
+        Route::get('/', [DocumentTypeController::class, 'index']);
+    });
+
     /**
      * GRUPO: Autenticación pública.
      *
@@ -200,8 +204,6 @@ Route::middleware('throttle:api')->group(function () {
          * TIPOS DE DOCUMENTO: CRUD completo.
          */
         Route::prefix('document_types')->group(function () {
-            Route::get('/', [DocumentTypeController::class, 'index'])
-                ->middleware('permission:document_types.viewAny');
             Route::get('/{document_type_id}', [DocumentTypeController::class, 'show'])
                 ->middleware('permission:document_types.view');
             Route::post('/', [DocumentTypeController::class, 'store'])
@@ -693,11 +695,16 @@ Route::middleware('throttle:api')->group(function () {
          * Heredan solo los middlewares del grupo padre (auth, verified, acting.role).
          */
         Route::prefix('no_class_reasons')->group(function () {
-            Route::get('/', [NoClassReasonController::class, 'index']);
-            Route::get('/{no_class_reason_id}', [NoClassReasonController::class, 'show']);
-            Route::post('/', [NoClassReasonController::class, 'store']);
-            Route::put('/{no_class_reason_id}', [NoClassReasonController::class, 'update']);
-            Route::delete('/{no_class_reason_id}', [NoClassReasonController::class, 'destroy']);
+            Route::get('/', [NoClassReasonController::class, 'index'])
+                ->middleware('permission:no_class_reasons.viewAny');
+            Route::get('/{no_class_reason_id}', [NoClassReasonController::class, 'show'])
+                ->middleware('permission:no_class_reasons.view');
+            Route::post('/', [NoClassReasonController::class, 'store'])
+                ->middleware('permission:no_class_reasons.create');
+            Route::put('/{no_class_reason_id}', [NoClassReasonController::class, 'update'])
+                ->middleware('permission:no_class_reasons.update');
+            Route::delete('/{no_class_reason_id}', [NoClassReasonController::class, 'destroy'])
+                ->middleware('permission:no_class_reasons.delete');
         });
 
         /**

@@ -8,7 +8,7 @@ use App\Http\Requests\NoClassDay\CheckNoClassDayRequest;
 use App\Http\Requests\NoClassDay\StoreNoClassDayRequest;
 use App\Http\Requests\NoClassDay\UpdateNoClassDayRequest;
 use App\Services\NoclassDay\NoClassDayService;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 
 /**
  * Controlador REST API para **Días sin Clase** (festivos, vacaciones, eventos).
