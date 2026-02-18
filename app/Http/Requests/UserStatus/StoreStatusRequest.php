@@ -4,10 +4,15 @@ namespace App\Http\Requests\UserStatus;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreStatusRequest extends FormRequest
+
+/**
+ * Validación **ACTUALIZACIÓN COMPLETA** de estado usuario.
+ *
+ */
+class UpdateStatusRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,8 @@ class StoreStatusRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas de validación (UPDATE COMPLETO).
+     * 
      */
     public function rules(): array
     {
@@ -27,25 +31,26 @@ class StoreStatusRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes de error personalizados.
+     */
     public function messages(): array
     {
         return [
             'name.required' => 'El :attribute es obligatorio.',
-            'name.string' => 'El :attribute debe ser en formato de texto.',
+            'name.string' => 'El :attribute debe ser texto.',
             'name.min' => 'El :attribute debe tener al menos :min caracteres.',
             'name.max' => 'El :attribute no debe tener más de :max caracteres.',
 
             'description.required' => 'La :attribute es obligatoria.',
-            'description.string' => 'La :attribute debe ser en formato de texto.',
+            'description.string' => 'La :attribute debe ser texto.',
             'description.min' => 'La :attribute debe tener al menos :min caracteres.',
             'description.max' => 'La :attribute no debe tener más de :max caracteres.',
         ];
     }
 
     /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
+     * Atributos legibles.
      */
     public function attributes(): array
     {

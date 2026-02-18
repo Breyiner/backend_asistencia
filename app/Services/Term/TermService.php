@@ -6,133 +6,192 @@ use App\Events\ResourceChanged;
 use App\Models\Term;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Servicio de lógica de negocio para la gestión de trimestres.
+ *
+ * Los trimestres (Trimestre 1, Trimestre 2, etc.) son un catálogo global
+ * que estructura los períodos académicos de las fichas. No aplica RBAC
+ * ya que son datos de configuración administrados únicamente por ADMIN.
+ */
 class TermService
 {
-    public static function getAll()
-  {
-    $terms = Term::all();
+    /**
+     * Retorna todos los trimestres ordenados alfabéticamente.
+     *
+     * Sin paginación porque es un catálogo pequeño y estático que el frontend
+     * necesita completo para poblar selects de FichaTerm y filtros de reportes.
+     *
+     * @return array
+     */
+    public function getAll()
+    {
+        // orderBy para consistencia visual en selects del frontend.
+        $terms = Term::orderBy('name')->get();
 
-    if (count($terms) == 0) {
-      return [
-        "error" => false,
-        "code" => 200,
-        "message" => "No hay trimestres registrados",
-        "data" => $terms,
-      ];
+        // isEmpty() es más idiomático en Laravel que count() == 0.
+        if ($terms->isEmpty()) {
+            return [
+                'error'   => false,
+                'code'    => 200,
+                'message' => 'No hay trimestres registrados',
+                'data'    => [],
+            ];
+        }
+
+        return [
+            'error'   => false,
+            'code'    => 200,
+            'message' => 'Trimestres obtenidos con éxito',
+            'data'    => $terms,
+        ];
     }
 
-    return [
-      "error" => false,
-      "code" => 200,
-      "message" => "Trimestres obtenidos con éxito",
-      "data" => $terms,
-    ];
-  }
+    /**
+     * Retorna el detalle de un trimestre por su ID.
+     *
+     * @param  mixed  $id  ID del trimestre.
+     * @return array
+     */
+    public function getById($id)
+    {
+        $term = Term::find($id);
 
-  public function getById($id)
-  {
-    $term = Term::find($id);
+        if (!$term) {
+            return [
+                'error'   => true,
+                'code'    => 404,
+                'message' => 'Este trimestre no existe',
+                'data'    => [],
+            ];
+        }
 
-    if (!$term) {
-      return [
-        "error" => true,
-        "code" => 404,
-        "message" => "Este trimestre no existe",
-      ];
+        return [
+            'error'   => false,
+            'code'    => 200,
+            'message' => 'Trimestre obtenido con éxito',
+            'data'    => $term,
+        ];
     }
 
-    return [
-      "error" => false,
-      "code" => 200,
-      "message" => "Trimestre obtenido con éxito",
-      "data" => $term,
-    ];
-  }
-
-  public function create(array $data)
-  {
-    $term = Term::create([
-      'name' => $data['name'],
-    ]);
-
-    event(new ResourceChanged(
-      'crear',
-      Term::class,
-      $term->id,
-      Auth::id(),
-      'Trimestre',
-    ));
-
-    return [
-      "error" => false,
-      "code" => 201,
-      "message" => "Trimestre creado con éxito",
-    ];
-  }
-
-  public function update(array $data, $id)
-  {
-    $term = Term::find($id);
-
-    if (!$term) {
-      return [
-        "error" => true,
-        "code" => 404,
-        "message" => "Este trimestre no existe",
-      ];
-    }
-
-    $termData = [];
-
-    if(array_key_exists('name', $data)) {
-      $termData['name'] = $data['name'];
-    }
-
-    if(!empty($termData)) {
-        $term->update($termData);
+    /**
+     * Crea un nuevo trimestre.
+     *
+     * Extrae explícitamente solo 'name' del array validado para proteger
+     * contra mass assignment inesperado si el Request cambia en el futuro.
+     *
+     * @param  array  $data  Datos validados (name requerido).
+     * @return array
+     */
+    public function create(array $data)
+    {
+        $term = Term::create([
+            'name' => $data['name'],
+        ]);
 
         event(new ResourceChanged(
-          'actualizar',
-          Term::class,
-          $term->id,
-          Auth::id(),
-          'Trimestre',
+            'crear',
+            Term::class,
+            $term->id,
+            Auth::id(),
+            'Trimestre',
         ));
+
+        return [
+            'error'   => false,
+            'code'    => 201,
+            'message' => 'Trimestre creado con éxito',
+            // Devuelve el modelo creado para que el frontend obtenga el ID sin segunda petición.
+            'data'    => $term,
+        ];
     }
 
-    return [
-      "error" => false,
-      "code" => 200,
-      "message" => "Trimestre actualizado con éxito",
-    ];
-  }
+    /**
+     * Actualiza un trimestre existente.
+     *
+     * Solo actualiza los campos presentes en $data. El evento se dispara
+     * únicamente si hay campos que efectivamente cambiar.
+     *
+     * @param  array  $data  Campos a actualizar (name).
+     * @param  mixed  $id    ID del trimestre.
+     * @return array
+     */
+    public function update(array $data, $id)
+    {
+        $term = Term::find($id);
 
-  public function delete($id)
-  {
-    $term = Term::find($id);
+        if (!$term) {
+            return [
+                'error'   => true,
+                'code'    => 404,
+                'message' => 'Este trimestre no existe',
+                'data'    => [],
+            ];
+        }
 
-    if (!$term) {
-      return [
-        "error" => true,
-        "code" => 404,
-        "message" => "Este trimestre no existe",
-      ];
+        // Construye el array solo con los campos enviados en el request.
+        $termData = [];
+
+        if (array_key_exists('name', $data)) $termData['name'] = $data['name'];
+
+        // Solo ejecuta el update y el evento si hay campos que cambiar.
+        if (!empty($termData)) {
+            $term->update($termData);
+
+            event(new ResourceChanged(
+                'actualizar',
+                Term::class,
+                $term->id,
+                Auth::id(),
+                'Trimestre',
+            ));
+        }
+
+        return [
+            'error'   => false,
+            'code'    => 200,
+            'message' => 'Trimestre actualizado con éxito',
+            // fresh() recarga desde BD para devolver los datos ya persistidos.
+            'data'    => $term->fresh(),
+        ];
     }
 
-    $term->delete();
+    /**
+     * Elimina un trimestre por su ID.
+     *
+     * ⚠️ Precaución: eliminar un trimestre en uso puede afectar FichaTerms que
+     * referencien term_id si no hay FK con restricción en la migración.
+     *
+     * @param  mixed  $id  ID del trimestre.
+     * @return array
+     */
+    public function delete($id)
+    {
+        $term = Term::find($id);
 
-    event(new ResourceChanged(
-      'eliminar',
-      Term::class,
-      $term->id,
-      Auth::id(),
-      'Trimestre',
-    ));
+        if (!$term) {
+            return [
+                'error'   => true,
+                'code'    => 404,
+                'message' => 'Este trimestre no existe',
+                'data'    => [],
+            ];
+        }
 
-    return [
-      "error" => false,
-      "code" => 200,
-      "message" => "Trimestre eliminado con éxito",
-    ];
-  }
+        $term->delete();
+
+        event(new ResourceChanged(
+            'eliminar',
+            Term::class,
+            $term->id,
+            Auth::id(),
+            'Trimestre',
+        ));
+
+        return [
+            'error'   => false,
+            'code'    => 200,
+            'message' => 'Trimestre eliminado con éxito',
+            'data'    => [],
+        ];
+    }
 }

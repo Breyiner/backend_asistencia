@@ -4,6 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Migración **Ficha + Trimestre** (FichaTerm).
+ * 
+ * Tabla: `ficha_terms` combina Ficha+Trimestre+Fase
+ */
 return new class extends Migration
 {
     /**
@@ -12,18 +17,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ficha_terms', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('term_id');
-            $table->unsignedBigInteger('ficha_id');
-            $table->unsignedBigInteger('phase_id');
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->boolean('is_current')->default(false);
-            $table->unique(['ficha_id', 'term_id'], 'unique_ficha_term');
+            $table->id();                                    // ID FichaTerm
+            $table->unsignedBigInteger('term_id');           // Trimestre (1,2,3,4)
+            $table->unsignedBigInteger('ficha_id');          // Ficha SENA
+            $table->unsignedBigInteger('phase_id');          // Fase del trimestre
+            $table->date('start_date');                      // Inicio periodo
+            $table->date('end_date');                        // Fin periodo
+            $table->boolean('is_current')->default(false);   // Trimestre activo
+            $table->unique(['ficha_id', 'term_id'], 'unique_ficha_term'); // Compuesta
             $table->foreign('term_id')->references('id')->on('terms');
             $table->foreign('ficha_id')->references('id')->on('fichas');
             $table->foreign('phase_id')->references('id')->on('phases');
-            $table->timestamps();
+            $table->timestamps();                            // created_at, updated_at
         });
     }
 

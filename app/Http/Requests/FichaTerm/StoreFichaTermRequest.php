@@ -4,10 +4,15 @@ namespace App\Http\Requests\FichaTerm;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** término de ficha SENA.
+ *
+ * Reglas: ficha + term único por ficha + fechas coherentes + fase.
+ */
 class StoreFichaTermRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,7 @@ class StoreFichaTermRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (CREATE).
      */
     public function rules(): array
     {
@@ -38,31 +41,32 @@ class StoreFichaTermRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
             'ficha_id.required' => 'El :attribute es obligatorio.',
             'ficha_id.exists' => 'El :attribute seleccionado no existe.',
-
             'term_id.required' => 'El :attribute es obligatorio.',
             'term_id.exists' => 'El :attribute seleccionado no existe.',
             'term_id.unique' => 'Esta ficha ya tiene asignado este :attribute.',
-
             'phase_id.required' => 'El :attribute es obligatorio.',
             'phase_id.exists' => 'El :attribute seleccionado no existe.',
-
             'start_date.required' => 'El :attribute es obligatorio.',
             'start_date.date' => 'El :attribute debe ser una fecha válida.',
             'start_date.before' => 'El :attribute debe ser anterior a la fecha fin.',
-
             'end_date.required' => 'El :attribute es obligatorio.',
             'end_date.date' => 'El :attribute debe ser una fecha válida.',
             'end_date.after' => 'El :attribute debe ser posterior a la fecha inicio.',
-
             'is_current.boolean' => 'El :attribute debe ser verdadero o falso.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

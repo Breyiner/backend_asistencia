@@ -5,10 +5,15 @@ namespace App\Http\Requests\NoClassReason;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validación **ACTUALIZACIÓN** motivo día sin clase SENA.
+ *
+ * Reglas: sometimes + nombre único ignorando registro actual.
+ */
 class UpdateNoClassReasonRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -16,9 +21,7 @@ class UpdateNoClassReasonRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (UPDATE).
      */
     public function rules(): array
     {
@@ -36,19 +39,24 @@ class UpdateNoClassReasonRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
             'name.required' => 'El :attribute es obligatorio.',
-            'name.string' => 'El nombre del motivo debe ser un texto.',
+            'name.string' => 'El :attribute debe ser un texto.',
             'name.max' => 'El :attribute no puede superar los :max caracteres.',
             'name.unique' => 'Este motivo ya existe.',
-
             'description.string' => 'La :attribute debe ser un texto.',
             'description.max' => 'La :attribute no puede superar los :max caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

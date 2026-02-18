@@ -4,10 +4,15 @@ namespace App\Http\Requests\NoClassDay;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** día sin clase SENA.
+ *
+ * Reglas: ficha + motivo + fecha + observaciones opcionales.
+ */
 class StoreNoClassDayRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,7 @@ class StoreNoClassDayRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (CREATE).
      */
     public function rules(): array
     {
@@ -29,25 +32,28 @@ class StoreNoClassDayRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
             'ficha_id.required' => 'La :attribute es obligatoria.',
             'ficha_id.integer' => 'La :attribute debe ser un número.',
             'ficha_id.exists' => 'La :attribute seleccionada no existe.',
-
             'reason_id.required' => 'El :attribute es obligatorio.',
             'reason_id.integer' => 'El :attribute debe ser un número.',
             'reason_id.exists' => 'El :attribute seleccionado no existe.',
-
             'date.required' => 'La :attribute es obligatoria.',
             'date.date' => 'La :attribute no tiene un formato válido.',
-
             'observations.string' => 'Las :attribute deben ser un texto.',
             'observations.max' => 'Las :attribute no pueden superar los :max caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

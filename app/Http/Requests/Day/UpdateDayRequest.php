@@ -4,10 +4,15 @@ namespace App\Http\Requests\Day;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **ACTUALIZACIÓN** día semana (parcial).
+ *
+ * Reglas: sometimes (NO unique, permite reutilizar).
+ */
 class UpdateDayRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,7 @@ class UpdateDayRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación parcial (UPDATE).
      */
     public function rules(): array
     {
@@ -27,17 +30,22 @@ class UpdateDayRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
             'name.string' => 'El :attribute debe ser texto.',
             'name.max' => 'El :attribute no puede exceder :max caracteres.',
-            
             'day_number.integer' => 'El :attribute debe ser número.',
             'day_number.between' => 'El :attribute debe estar entre 1 y 7.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

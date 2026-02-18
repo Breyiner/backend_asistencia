@@ -5,10 +5,15 @@ namespace App\Http\Requests\QualificationLevel;
 use App\Rules\AlphaSpaces;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **ACTUALIZACIÓN** nivel de calificación SENA.
+ *
+ * Reglas: sometimes + nombre único ignorando registro actual.
+ */
 class UpdateQualificationLevelRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -16,14 +21,11 @@ class UpdateQualificationLevelRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (UPDATE).
      */
     public function rules(): array
     {
-
-        $qualificationLevelId = $this->route('qualification_level')->id;
+        $qualificationLevelId = $this->route('qualification_level');
 
         return [
             'name' => ['sometimes', 'required', 'string', 'min:3', 'max:80', "unique:qualification_levels,name,{$qualificationLevelId},id", new AlphaSpaces()],
@@ -31,20 +33,25 @@ class UpdateQualificationLevelRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
             'name.required' => 'El :attribute es obligatorio.',
-            'name.string' => 'El :attribute debe ser una cadena de texto.',
+            'name.string' => 'El :attribute debe ser texto.',
             'name.min' => 'El :attribute debe tener mínimo :min caracteres.',
-            'name.max' => 'El :attribute debe tener máximo :max caracteres.',
+            'name.max' => 'El :attribute no puede exceder :max caracteres.',
             'name.unique' => 'El :attribute ya está en uso.',
-
-            'description.string' => 'La :attribute debe ser una cadena de texto.',
-            'description.max' => 'La :attribute debe tener máximo :max caracteres.',
+            'description.string' => 'La :attribute debe ser texto.',
+            'description.max' => 'La :attribute no puede exceder :max caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

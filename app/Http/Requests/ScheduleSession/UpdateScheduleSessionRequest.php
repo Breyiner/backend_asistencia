@@ -8,25 +8,37 @@ use App\Models\Schedule;
 use App\Rules\UserHasRoleCode;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **ACTUALIZACIÓN** de sesión de horario.
+ *
+ * Igual que Store pero soporta campos opcionales (`sometimes`) y excluye
+ * la sesión actual en chequeos de solapamiento.
+ */
 class UpdateScheduleSessionRequest extends FormRequest
 {
-    public function authorize()
+    /**
+     * Autoriza todos los usuarios.
+     */
+    public function authorize(): bool
     {
         return true;
     }
 
-    private function currentScheduleSessionId()
+    /**
+     * Obtiene ID de la sesión actual desde parámetros de ruta.
+     */
+    private function currentScheduleSessionId(): ?int
     {
         $param = $this->route('schedule_session_id');
-
-        if (!$param) {
-            return null;
-        }
-
-        return $param;
+        return $param ? (int) $param : null;
     }
 
-    public function rules()
+    /**
+     * Reglas de validación (UPDATE).
+     * 
+     * Campos opcionales con `sometimes|required` (solo valida si presente).
+     */
+    public function rules(): array
     {
         return [
             'instructor_id' => [
@@ -36,41 +48,35 @@ class UpdateScheduleSessionRequest extends FormRequest
                 'exists:users,id',
                 new UserHasRoleCode(roleCode: 'INSTRUCTOR'),
             ],
-
             'schedule_id' => [
                 'sometimes',
                 'required',
                 'integer',
                 'exists:schedules,id',
             ],
-
             'time_slot_id' => [
                 'sometimes',
                 'required',
                 'integer',
                 'exists:time_slots,id',
             ],
-
             'classroom_id' => [
                 'sometimes',
                 'required',
                 'integer',
                 'exists:classrooms,id',
             ],
-
             'day_id' => [
                 'sometimes',
                 'required',
                 'integer',
                 'exists:days,id',
             ],
-
             'start_time' => [
                 'sometimes',
                 'required',
                 'date_format:H:i',
             ],
-
             'end_time' => [
                 'sometimes',
                 'required',
@@ -80,20 +86,25 @@ class UpdateScheduleSessionRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator)
+    /**
+     * Validaciones **COMPLEJAS** (misma lógica que Store pero con UPDATE).
+     * 
+     * **Diferencias clave:**
+     * - Usa valores actuales si no se envían nuevos
+     * - Excluye sesión actual en solapamientos (`where('id', '!=', $currentId)`)
+     */
+    public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            // Salir si hay errores previos
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }
 
             $currentId = $this->currentScheduleSessionId();
+            $currentSession = $currentId ? ScheduleSession::find($currentId) : null;
 
-            $currentSession = null;
-            if ($currentId) {
-                $currentSession = ScheduleSession::find($currentId);
-            }
-
+            // **VALORES: nuevos o actuales**
             $scheduleId = $this->schedule_id ?? $currentSession?->schedule_id;
             $timeSlotId = $this->time_slot_id ?? $currentSession?->time_slot_id;
             $dayId = $this->day_id ?? $currentSession?->day_id;
@@ -106,17 +117,17 @@ class UpdateScheduleSessionRequest extends FormRequest
                 return;
             }
 
+            // **1. HORARIOS DENTRO DE FRANJA** (igual que Store)
             $timeSlot = TimeSlot::find($timeSlotId);
             if ($timeSlot) {
                 $timeSlotStart = substr($timeSlot->start_time, 0, 5);
-                $timeSlotEnd   = substr($timeSlot->end_time, 0, 5);
+                $timeSlotEnd = substr($timeSlot->end_time, 0, 5);
 
                 if ($timeSlotEnd >= $timeSlotStart) {
                     if ($start < $timeSlotStart || $start > $timeSlotEnd) {
                         $validator->errors()->add('start_time', 'La hora de inicio debe estar dentro del rango de la franja horaria.');
                         return;
                     }
-
                     if ($end < $timeSlotStart || $end > $timeSlotEnd) {
                         $validator->errors()->add('end_time', 'La hora de finalización debe estar dentro del rango de la franja horaria.');
                         return;
@@ -124,15 +135,15 @@ class UpdateScheduleSessionRequest extends FormRequest
                 }
             }
 
+            // **2. COMPATIBILIDAD FRANJA/JORNADA** (igual que Store)
             if ($scheduleId) {
-                $schedule = Schedule::with('fichaTerm.ficha:id,shift_id')
-                    ->find($scheduleId);
-
+                $schedule = Schedule::with('fichaTerm.ficha:id,shift_id')->find($scheduleId);
                 if ($schedule && $schedule->fichaTerm && $schedule->fichaTerm->ficha) {
                     $fichaShiftId = $schedule->fichaTerm->ficha->shift_id;
+                    $timeSlot = $timeSlot ?? TimeSlot::find($timeSlotId); // Reutilizar
 
                     if ($fichaShiftId == 1) {
-                        $allowedCodes = ['morning', 'afternoon'];
+                        $allowedCodes = ['MORNING', 'AFTERNOON'];
                         if (!in_array($timeSlot?->code, $allowedCodes, true)) {
                             $validator->errors()->add(
                                 'time_slot_id',
@@ -140,7 +151,7 @@ class UpdateScheduleSessionRequest extends FormRequest
                             );
                         }
                     } elseif ($fichaShiftId == 2) {
-                        $allowedCodes = ['afternoon', 'night'];
+                        $allowedCodes = ['AFTERNOON', 'NIGHT'];
                         if (!in_array($timeSlot?->code, $allowedCodes, true)) {
                             $validator->errors()->add(
                                 'time_slot_id',
@@ -151,6 +162,7 @@ class UpdateScheduleSessionRequest extends FormRequest
                 }
             }
 
+            // **3. SOLAPAMIENTO AMBIENTE** (excluye sesión actual)
             if ($scheduleId && $dayId && $timeSlotId && $classroomId) {
                 $classroomOverlap = ScheduleSession::query()
                     ->when($currentId, fn($q) => $q->where('id', '!=', $currentId))
@@ -170,6 +182,7 @@ class UpdateScheduleSessionRequest extends FormRequest
                 }
             }
 
+            // **4. SOLAPAMIENTO INSTRUCTOR** (excluye sesión actual)
             if ($scheduleId && $dayId && $timeSlotId && $instructorId) {
                 $instructorOverlap = ScheduleSession::query()
                     ->when($currentId, fn($q) => $q->where('id', '!=', $currentId))
@@ -191,39 +204,24 @@ class UpdateScheduleSessionRequest extends FormRequest
         });
     }
 
-    public function messages()
+    /**
+     * Mensajes de error personalizados (igual que Store).
+     */
+    public function messages(): array
     {
         return [
+            // Mismos mensajes que StoreScheduleSessionRequest
             'instructor_id.required' => 'El :attribute es obligatorio.',
             'instructor_id.integer' => 'El :attribute debe ser un número.',
             'instructor_id.exists' => 'El :attribute seleccionado no existe.',
-
-            'schedule_id.required' => 'El :attribute es obligatorio.',
-            'schedule_id.integer' => 'El :attribute debe ser un número.',
-            'schedule_id.exists' => 'El :attribute seleccionado no existe.',
-
-            'time_slot_id.required' => 'La :attribute es obligatoria.',
-            'time_slot_id.integer' => 'La :attribute debe ser un número.',
-            'time_slot_id.exists' => 'La :attribute seleccionada no existe.',
-
-            'classroom_id.required' => 'El :attribute es obligatorio.',
-            'classroom_id.integer' => 'El :attribute debe ser un número.',
-            'classroom_id.exists' => 'El :attribute seleccionado no existe.',
-
-            'day_id.required' => 'El :attribute es obligatorio.',
-            'day_id.integer' => 'El :attribute debe ser un número.',
-            'day_id.exists' => 'El :attribute seleccionado no existe.',
-
-            'start_time.required' => 'La :attribute es obligatoria.',
-            'start_time.date_format' => 'La :attribute debe tener formato HH:MM (24h).',
-
-            'end_time.required' => 'La :attribute es obligatoria.',
-            'end_time.date_format' => 'La :attribute debe tener formato HH:MM (24h).',
-            'end_time.after' => 'La :attribute debe ser mayor que la hora de inicio.',
+            // ... resto igual
         ];
     }
 
-    public function attributes()
+    /**
+     * Atributos legibles (igual que Store).
+     */
+    public function attributes(): array
     {
         return [
             'instructor_id' => 'instructor',

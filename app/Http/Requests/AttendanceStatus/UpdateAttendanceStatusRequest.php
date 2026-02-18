@@ -4,13 +4,24 @@ namespace App\Http\Requests\AttendanceStatus;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **ACTUALIZACIÓN** estado asistencia.
+ *
+ * Reglas: unique ignore ID para code/name.
+ */
 class UpdateAttendanceStatusRequest extends FormRequest
 {
+    /**
+     * Autoriza todos los usuarios.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Reglas validación + ignore ID (UPDATE).
+     */
     public function rules(): array
     {
         $id = $this->route('attendance_status_id');
@@ -22,6 +33,9 @@ class UpdateAttendanceStatusRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
@@ -29,17 +43,18 @@ class UpdateAttendanceStatusRequest extends FormRequest
             'code.string' => 'El :attribute debe ser texto.',
             'code.max' => 'El :attribute no puede exceder :max caracteres.',
             'code.unique' => 'El :attribute ya existe.',
-
             'name.required' => 'El :attribute es obligatorio.',
             'name.string' => 'El :attribute debe ser texto.',
             'name.max' => 'El :attribute no puede exceder :max caracteres.',
             'name.unique' => 'El :attribute ya existe.',
-
             'description.string' => 'La :attribute debe ser texto.',
             'description.max' => 'La :attribute no puede exceder :max caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

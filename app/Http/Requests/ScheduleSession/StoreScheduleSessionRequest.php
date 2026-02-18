@@ -8,14 +8,28 @@ use App\Models\Schedule;
 use App\Rules\UserHasRoleCode;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** de sesión de horario.
+ *
+ * Valida instructor válido, horario existente, franja horaria compatible,
+ * ambiente disponible, sin solapamientos de instructor/ambiente y horarios coherentes.
+ */
 class StoreScheduleSessionRequest extends FormRequest
 {
-    public function authorize()
+    /**
+     * Autoriza todos los usuarios.
+     */
+    public function authorize(): bool
     {
         return true;
     }
 
-    public function rules()
+    /**
+     * Reglas de validación básica (CREATE).
+     * 
+     * Todos los campos son obligatorios con verificación de existencia.
+     */
+    public function rules(): array
     {
         return [
             'instructor_id' => [
@@ -24,36 +38,30 @@ class StoreScheduleSessionRequest extends FormRequest
                 'exists:users,id',
                 new UserHasRoleCode('INSTRUCTOR'),
             ],
-
             'schedule_id' => [
                 'required',
                 'integer',
                 'exists:schedules,id',
             ],
-
             'time_slot_id' => [
                 'required',
                 'integer',
                 'exists:time_slots,id',
             ],
-
             'classroom_id' => [
                 'required',
                 'integer',
                 'exists:classrooms,id',
             ],
-
             'day_id' => [
                 'required',
                 'integer',
                 'exists:days,id',
             ],
-
             'start_time' => [
                 'required',
                 'date_format:H:i',
             ],
-
             'end_time' => [
                 'required',
                 'date_format:H:i',
@@ -62,27 +70,36 @@ class StoreScheduleSessionRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator)
+    /**
+     * Validaciones **COMPLEJAS** ejecutadas DESPUÉS de rules().
+     * 
+     * 1. Horarios dentro de franja horaria
+     * 2. Compatibilidad franja/jornada ficha SENA
+     * 3. Sin solapamiento de ambiente
+     * 4. Sin solapamiento de instructor
+     */
+    public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            // Salir si hay errores previos
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }
 
             $start = $this->start_time;
-            $end   = $this->end_time;
+            $end = $this->end_time;
 
+            // **1. HORARIOS DENTRO DE FRANJA HORARIA**
             $timeSlot = TimeSlot::find($this->time_slot_id);
             if ($timeSlot) {
                 $timeSlotStart = substr($timeSlot->start_time, 0, 5);
-                $timeSlotEnd   = substr($timeSlot->end_time, 0, 5);
+                $timeSlotEnd = substr($timeSlot->end_time, 0, 5);
 
                 if ($timeSlotEnd >= $timeSlotStart) {
                     if ($start < $timeSlotStart || $start > $timeSlotEnd) {
                         $validator->errors()->add('start_time', 'La hora de inicio debe estar dentro del rango de la franja horaria.');
                         return;
                     }
-
                     if ($end < $timeSlotStart || $end > $timeSlotEnd) {
                         $validator->errors()->add('end_time', 'La hora de finalización debe estar dentro del rango de la franja horaria.');
                         return;
@@ -90,13 +107,12 @@ class StoreScheduleSessionRequest extends FormRequest
                 }
             }
 
-            $schedule = Schedule::with('fichaTerm.ficha:id,shift_id')
-                ->find($this->schedule_id);
-
+            // **2. COMPATIBILIDAD FRANJA/JORNADA FICHA SENA**
+            $schedule = Schedule::with('fichaTerm.ficha:id,shift_id')->find($this->schedule_id);
             if ($schedule && $schedule->fichaTerm && $schedule->fichaTerm->ficha) {
                 $fichaShiftId = $schedule->fichaTerm->ficha->shift_id;
 
-                if ($fichaShiftId == 1) {
+                if ($fichaShiftId == 1) { // Diurna
                     $allowedCodes = ['MORNING', 'AFTERNOON'];
                     if (!in_array($timeSlot?->code, $allowedCodes, true)) {
                         $validator->errors()->add(
@@ -104,7 +120,7 @@ class StoreScheduleSessionRequest extends FormRequest
                             'La franja horaria seleccionada no es compatible con la jornada Diurna de la ficha. Solo se permiten franjas de Mañana o Tarde.'
                         );
                     }
-                } elseif ($fichaShiftId == 2) {
+                } elseif ($fichaShiftId == 2) { // Nocturna
                     $allowedCodes = ['AFTERNOON', 'NIGHT'];
                     if (!in_array($timeSlot?->code, $allowedCodes, true)) {
                         $validator->errors()->add(
@@ -115,6 +131,7 @@ class StoreScheduleSessionRequest extends FormRequest
                 }
             }
 
+            // **3. SOLAPAMIENTO AMBIENTE** (mismo horario/día/franja)
             $classroomOverlap = ScheduleSession::query()
                 ->where('schedule_id', $this->schedule_id)
                 ->where('day_id', $this->day_id)
@@ -131,6 +148,7 @@ class StoreScheduleSessionRequest extends FormRequest
                 );
             }
 
+            // **4. SOLAPAMIENTO INSTRUCTOR** (mismo horario/día/franja)
             $instructorOverlap = ScheduleSession::query()
                 ->where('schedule_id', $this->schedule_id)
                 ->where('day_id', $this->day_id)
@@ -149,7 +167,10 @@ class StoreScheduleSessionRequest extends FormRequest
         });
     }
 
-    public function messages()
+    /**
+     * Mensajes de error personalizados (español).
+     */
+    public function messages(): array
     {
         return [
             'instructor_id.required' => 'El :attribute es obligatorio.',
@@ -181,7 +202,10 @@ class StoreScheduleSessionRequest extends FormRequest
         ];
     }
 
-    public function attributes()
+    /**
+     * Atributos legibles en mensajes de error.
+     */
+    public function attributes(): array
     {
         return [
             'instructor_id' => 'instructor',

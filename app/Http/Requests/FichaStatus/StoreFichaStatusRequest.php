@@ -4,10 +4,15 @@ namespace App\Http\Requests\FichaStatus;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** estado de ficha SENA.
+ *
+ * Reglas: name + description con límites de caracteres.
+ */
 class StoreFichaStatusRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,7 @@ class StoreFichaStatusRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (CREATE).
      */
     public function rules(): array
     {
@@ -27,6 +30,9 @@ class StoreFichaStatusRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
@@ -34,7 +40,6 @@ class StoreFichaStatusRequest extends FormRequest
             'name.string' => 'El :attribute debe ser en formato de texto.',
             'name.min' => 'El :attribute debe tener al menos :min caracteres.',
             'name.max' => 'El :attribute no debe tener más de :max caracteres.',
-
             'description.required' => 'La :attribute es obligatoria.',
             'description.string' => 'La :attribute debe ser en formato de texto.',
             'description.min' => 'La :attribute debe tener al menos :min caracteres.',
@@ -43,9 +48,7 @@ class StoreFichaStatusRequest extends FormRequest
     }
 
     /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
+     * Atributos legibles en errores.
      */
     public function attributes(): array
     {

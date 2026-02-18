@@ -4,10 +4,15 @@ namespace App\Http\Requests\NoClassDay;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CONSULTA** día sin clase por ficha/fecha.
+ *
+ * Reglas: ficha existente + fecha válida.
+ */
 class CheckNoClassDayRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,7 @@ class CheckNoClassDayRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (CHECK).
      */
     public function rules(): array
     {
@@ -27,18 +30,23 @@ class CheckNoClassDayRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
-            'ficha_id.required' => 'La ficha es obligatoria.',
-            'ficha_id.integer' => 'La ficha debe ser un número.',
-            'ficha_id.exists' => 'La ficha seleccionada no existe.',
-
-            'date.required' => 'La fecha es obligatoria.',
-            'date.date' => 'La fecha no tiene un formato válido.',
+            'ficha_id.required' => 'La :attribute es obligatoria.',
+            'ficha_id.integer' => 'La :attribute debe ser un número.',
+            'ficha_id.exists' => 'La :attribute seleccionada no existe.',
+            'date.required' => 'La :attribute es obligatoria.',
+            'date.date' => 'La :attribute no tiene un formato válido.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [
