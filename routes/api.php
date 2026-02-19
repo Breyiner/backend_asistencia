@@ -82,7 +82,7 @@ Route::middleware('throttle:api')->group(function () {
     });
 
     Route::prefix('document_types')->group(function () {
-        Route::get('/', [DocumentTypeController::class, 'index']);
+        Route::get('/select', [DocumentTypeController::class, 'select']);
     });
 
     /**
@@ -204,6 +204,8 @@ Route::middleware('throttle:api')->group(function () {
          * TIPOS DE DOCUMENTO: CRUD completo.
          */
         Route::prefix('document_types')->group(function () {
+            Route::get('/', [DocumentTypeController::class, 'select'])
+                ->middleware('permission:document_types.viewAny');
             Route::get('/{document_type_id}', [DocumentTypeController::class, 'show'])
                 ->middleware('permission:document_types.view');
             Route::post('/', [DocumentTypeController::class, 'store'])
