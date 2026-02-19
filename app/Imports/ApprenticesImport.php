@@ -182,8 +182,8 @@ class ApprenticesImport implements
             // Email: obligatorio, formato válido, único en users
             'email'            => ['required', 'email', 'unique:users,email'],
 
-            // Fecha nacimiento: obligatoria, formato fecha, debe ser anterior a hoy
-            'fecha_nacimiento' => ['required', 'date', 'before:today'],
+            // Fecha nacimiento: opcional, formato fecha, debe ser anterior a hoy
+            'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
 
             // Número de ficha: obligatorio, numérico, debe existir en fichas
             'numero_ficha'     => ['required', 'numeric', 'exists:fichas,ficha_number'],
