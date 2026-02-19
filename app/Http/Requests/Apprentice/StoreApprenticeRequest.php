@@ -29,11 +29,11 @@ class StoreApprenticeRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', new AlphaSpaces()],
             'last_name' => ['required', 'string', new AlphaSpaces()],
-            'telephone_number' => ['required', 'string', 'size:10', 'regex:/^\d+$/'],
+            'telephone_number' => ['sometimes', 'required', 'string', 'size:10', 'regex:/^\d+$/'],
             'document_type_id' => ['required', 'integer', 'exists:document_types,id'],
             'document_number' => ['required', 'string', 'min:6', 'max:20', 'unique:users,document_number'],
             'email' => ['required', 'email', 'unique:users'],
-            'birth_date' => ['required', 'date', 'before:today'],
+            'birth_date' => ['sometimes', 'required', 'date', 'before:today'],
             'ficha_id' => ['required', 'integer', 'exists:fichas,id'],
         ];
     }
