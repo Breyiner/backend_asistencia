@@ -4,10 +4,15 @@ namespace App\Http\Requests\ClassType;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** tipo de clase (TEÓRICA, PRÁCTICA, PROYECTO).
+ *
+ * Reglas: name único en class_types.
+ */
 class StoreClassTypeRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,7 @@ class StoreClassTypeRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (CREATE).
      */
     public function rules(): array
     {
@@ -27,18 +30,24 @@ class StoreClassTypeRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
             'name.required' => 'El :attribute es obligatorio.',
             'name.string' => 'El :attribute debe ser texto.',
-            'name.max' => 'El :attribute no puede exceder 50 caracteres.',
-            'name.unique' => 'Este :attribute de tipo de clase ya existe.',
+            'name.max' => 'El :attribute no puede exceder :max caracteres.',
+            'name.unique' => 'Este :attribute ya existe.',
             'description.string' => 'La :attribute debe ser texto.',
             'description.max' => 'La :attribute no puede exceder :max caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

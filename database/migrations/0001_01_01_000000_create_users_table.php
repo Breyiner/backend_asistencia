@@ -4,6 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Migración **Usuarios** principal + tablas auth Laravel.
+ * 
+ * Tablas: `users`, `password_reset_tokens`, `sessions`
+ */
 return new class extends Migration
 {
     /**
@@ -12,26 +17,32 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('document_number')->unique();
-            $table->string('email')->unique();
-            $table->string('password')->nullable();
-            $table->unsignedBigInteger('document_type_id');
+            $table->id();                                    // ID principal
+            $table->string('document_number')->unique();     // Documento único
+            $table->string('email')->unique();               // Email único
+            $table->string('password')->nullable();          // Hash password
+            $table->unsignedBigInteger('document_type_id');  // FK tipo documento
             $table->foreign('document_type_id')->references('id')->on('document_types');
-            $table->unsignedBigInteger('status_id')->default(2);
+            $table->unsignedBigInteger('status_id')->default(2); // Estado (2=Inactivo?)
             $table->foreign('status_id')->references('id')->on('user_statuses');
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('type')->nullable();
-            $table->softDeletes();
-            $table->timestamps();
+            $table->timestamp('email_verified_at')->nullable(); // Verificación email
+            $table->string('type')->nullable();              // Parental: 'apprentice'
+            $table->softDeletes();                           // Eliminación suave
+            $table->timestamps();                            // created_at, updated_at
         });
 
+        /**
+         * Tabla **Reset Password** tokens.
+         */
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
+        /**
+         * Tabla **Sesiones** Laravel (cookies).
+         */
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();

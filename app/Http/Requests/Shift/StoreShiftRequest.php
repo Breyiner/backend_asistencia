@@ -4,10 +4,15 @@ namespace App\Http\Requests\Shift;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** de jornada (Shift).
+ *
+ * Reglas: nombre único, texto máximo 50 caracteres.
+ */
 class StoreShiftRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,9 @@ class StoreShiftRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas de validación básica (CREATE).
+     * 
+     * Nombre obligatorio y único en tabla `shifts`.
      */
     public function rules(): array
     {
@@ -31,6 +36,9 @@ class StoreShiftRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes de error personalizados (español).
+     */
     public function messages(): array
     {
         return [
@@ -41,6 +49,9 @@ class StoreShiftRequest extends FormRequest
         ];
     }
 
+    /**
+     * Atributos legibles en mensajes de error.
+     */
     public function attributes(): array
     {
         return [

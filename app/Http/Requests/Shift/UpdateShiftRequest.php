@@ -4,10 +4,15 @@ namespace App\Http\Requests\Shift;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **ACTUALIZACIÓN** de jornada (Shift).
+ *
+ * Reglas: nombre opcional (`sometimes`), único EXCLUYENDO registro actual.
+ */
 class UpdateShiftRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,13 +20,23 @@ class UpdateShiftRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Obtiene ID del shift desde parámetros de ruta.
+     */
+    private function currentShiftId(): ?int
+    {
+        $param = $this->route('shift_id');
+        return $param ? (int) $param : null;
+    }
+
+    /**
+     * Reglas de validación (UPDATE).
+     * 
+     * `sometimes|required`: valida solo si se envía el campo.
+     * `unique:tabla,columna,except_id,id_columna`: excluye registro actual.
      */
     public function rules(): array
     {
-        $time_slot_id = $this->route('time_slot_id');
+        $shiftId = $this->currentShiftId();
 
         return [
             'name' => [
@@ -29,11 +44,14 @@ class UpdateShiftRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                "unique:time_slots,name,{$time_slot_id},id" ,
+                "unique:shifts,name,{$shiftId},id",
             ],
         ];
     }
 
+    /**
+     * Mensajes de error personalizados (español).
+     */
     public function messages(): array
     {
         return [
@@ -44,6 +62,9 @@ class UpdateShiftRequest extends FormRequest
         ];
     }
 
+    /**
+     * Atributos legibles en mensajes de error.
+     */
     public function attributes(): array
     {
         return [

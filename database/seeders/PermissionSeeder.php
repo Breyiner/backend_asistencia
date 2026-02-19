@@ -197,6 +197,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'notifications.markAllAsRead', 'guard_name' => 'web', 'display_name' => 'Marcar todas como leídas', 'group' => 'Notificaciones'],
             ['name' => 'notifications.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar notificación', 'group' => 'Notificaciones'],
 
+            // Motivos Días Sin Clase
+            ['name' => 'no_class_reasons.viewAny', 'guard_name' => 'web', 'display_name' => 'Listar motivos días sin clase', 'group' => 'Motivos Días Sin Clase'],
+            ['name' => 'no_class_reasons.view', 'guard_name' => 'web', 'display_name' => 'Ver motivo día sin clase', 'group' => 'Motivos Días Sin Clase'],
+            ['name' => 'no_class_reasons.create', 'guard_name' => 'web', 'display_name' => 'Crear motivo día sin clase', 'group' => 'Motivos Días Sin Clase'],
+            ['name' => 'no_class_reasons.update', 'guard_name' => 'web', 'display_name' => 'Editar motivo día sin clase', 'group' => 'Motivos Días Sin Clase'],
+            ['name' => 'no_class_reasons.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar motivo día sin clase', 'group' => 'Motivos Días Sin Clase'],
 
             // Días sin clase
             ['name' => 'no_class_days.viewAny', 'guard_name' => 'web', 'display_name' => 'Listar días sin clase', 'group' => 'Días Sin Clase'],

@@ -4,10 +4,15 @@ namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **LOGIN** usuario (email + password).
+ *
+ * Autenticación Sanctum API.
+ */
 class LoginRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,7 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación login básico.
      */
     public function rules(): array
     {
@@ -28,32 +31,25 @@ class LoginRequest extends FormRequest
     }
 
     /**
-
-     * Get the error messages for the defined validation rules.
-     *
-     * @return array
+     * Mensajes error personalizados (español).
      */
-    public function messages()
+    public function messages(): array
     {
         return [
-            'email.required' => 'El :attribute es obligatorio',
-            'email.email' => 'El :attribute debe tener formato válido',
-
-            'password.required' => 'La :attribute es obligatoria',
-
+            'email.required' => 'El :attribute es obligatorio.',
+            'email.email' => 'El :attribute debe tener formato válido.',
+            'password.required' => 'La :attribute es obligatoria.',
         ];
     }
 
     /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
+     * Atributos legibles en errores.
      */
     public function attributes(): array
     {
         return [
             'email' => 'correo',
-            'password' => 'contraseña'
+            'password' => 'contraseña',
         ];
     }
 }

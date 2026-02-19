@@ -9,101 +9,166 @@ use App\Http\Requests\UserStatus\StoreStatusRequest;
 use App\Http\Requests\UserStatus\UpdateStatusRequest;
 use App\Services\UserStatus\UserStatusService;
 
+/**
+ * Controlador REST API para **UserStatus** (Estados de usuario).
+ *
+ * Catálogo: ACTIVO, INACTIVO, SUSPENDIDO. belongsTo User (many-to-one).
+ * 
+ * **Endpoints clave**: CRUD completo + PATCH parcial (is_active).
+ * 
+ * @see UserStatusService Validaciones uso/usuarios_asignados
+ */
 class UserStatusController extends Controller
 {
+    /**
+     * Servicio de estados de usuario.
+     */
+    protected UserStatusService $service;
 
-  protected $statusService;
+    public function __construct(UserStatusService $service)
+    {
+        $this->service = $service;
+    }
 
-  public function __construct(UserStatusService $statusService)
-  {
+    /**
+     * Lista todos los estados (para selects).
+     * GET /api/user-status
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index()
+    {
+        $response = $this->service->getAll();
 
-    $this->statusService = $statusService;
-  }
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-  /**
-   * Display a listing of the resource.
-   */
-  public function index()
-  {
-    $response = $this->statusService->getAll();
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
+    }
 
-    if ($response['error'])
-      return ResponseFormatter::error($response['message'], $response['code']);
+    /**
+     * Detalle estado por ID.
+     * GET /api/user-status/{id}
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show(string $id)
+    {
+        $response = $this->service->getStatus($id);
 
-    return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
-  }
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-  /**
-   * Display the specified resource.
-   */
-  public function show(string $id)
-  {
-    $response = $this->statusService->getStatus($id);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
+    }
 
-    if ($response['error'])
-      return ResponseFormatter::error($response['message'], $response['code']);
+    /**
+     * Crea nuevo estado.
+     * POST /api/user-status
+     *
+     * Valida: name único, code único.
+     *
+     * @param StoreStatusRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function store(StoreStatusRequest $request)
+    {
+        $data = $request->validated();
+        $response = $this->service->createStatus($data);
 
-    return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
-  }
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-  /**
-   * Store a newly created resource in storage.
-   */
-  public function store(StoreStatusRequest $request)
-  {
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
+    }
 
-    $data = $request->validated();
+    /**
+     * Actualiza estado completo.
+     * PUT /api/user-status/{id}
+     *
+     * @param UpdateStatusRequest $request
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(UpdateStatusRequest $request, string $id)
+    {
+        $data = $request->validated();
+        $response = $this->service->updateStatus($data, $id);
 
-    $response = $this->statusService->createStatus($data);
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-    if ($response['error'])
-      return ResponseFormatter::error($response['message'], $response['code']);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
+    }
 
-    return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
-  }
+    /**
+     * Actualización parcial (solo is_active).
+     * PATCH /api/user-status/{id}
+     *
+     * Útil: activar/desactivar sin cambiar name/code.
+     *
+     * @param PartialUpdateStatusRequest $request
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function partialUpdate(PartialUpdateStatusRequest $request, string $id)
+    {
+        $data = $request->validated();
+        $response = $this->service->partialUpdateStatus($data, $id);
 
-  /**
-   * Update the specified resource in storage.
-   */
-  public function update(UpdateStatusRequest $request, string $id)
-  {
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-    $data = $request->validated();
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
+    }
 
-    $response = $this->statusService->updateStatus($data, $id);
+    /**
+     * Elimina estado (bloquea si usuarios_asignados>0).
+     * DELETE /api/user-status/{id}
+     *
+     * Error 409 con usuarios_count/sugerencia reasignar.
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroy(string $id)
+    {
+        $response = $this->service->deleteStatus($id);
 
-    if ($response['error'])
-      return ResponseFormatter::error($response['message'], $response['code']);
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-    return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
-  }
-
-  /**
-   * Update the specified resource in storage.
-   */
-  public function partialUpdate(PartialUpdateStatusRequest $request, string $id)
-  {
-
-    $data = $request->validated();
-
-    $response = $this->statusService->partialUpdateStatus($data, $id);
-
-    if ($response['error'])
-      return ResponseFormatter::error($response['message'], $response['code']);
-
-    return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
-  }
-
-  /**
-   * Remove the specified resource from storage.
-   */
-  public function destroy(string $id)
-  {
-    $response = $this->statusService->deleteStatus($id);
-
-    if ($response['error'])
-      return ResponseFormatter::error($response['message'], $response['code']);
-
-    return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
-  }
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
+    }
 }

@@ -4,10 +4,15 @@ namespace App\Http\Requests\Schedule;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** horario por trimestre de ficha SENA.
+ *
+ * Reglas: ficha_term único + descripción opcional.
+ */
 class StoreScheduleRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,7 @@ class StoreScheduleRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (CREATE).
      */
     public function rules(): array
     {
@@ -27,18 +30,23 @@ class StoreScheduleRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
-            'description.string' => 'El :attribute debe ser texto.',
-            'description.max' => 'El :attribute no puede exceder :max caracteres.',
-            
+            'description.string' => 'La :attribute debe ser texto.',
+            'description.max' => 'La :attribute no puede exceder :max caracteres.',
             'ficha_term_id.required' => 'El :attribute es obligatorio.',
             'ficha_term_id.exists' => 'El :attribute seleccionado no existe.',
             'ficha_term_id.unique' => 'Ya existe un horario para este :attribute.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

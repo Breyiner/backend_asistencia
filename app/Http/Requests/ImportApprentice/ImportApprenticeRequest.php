@@ -4,10 +4,15 @@ namespace App\Http\Requests\ImportApprentice;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **IMPORTACIÓN** aprendices desde Excel.
+ *
+ * Reglas: archivo Excel máximo 5MB.
+ */
 class ImportApprenticeRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,7 @@ class ImportApprenticeRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (IMPORT).
      */
     public function rules(): array
     {
@@ -26,20 +29,26 @@ class ImportApprenticeRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
-            'file.required' => 'El :attribute es obligatorio',
-            'file.file' => 'Debe ser archivo',
-            'file.mimes' => 'El :attribute debe ser formato Excel',
-            'file.max' => 'El :attribute debe pesar máximo 5MB'
+            'file.required' => 'El :attribute es obligatorio.',
+            'file.file' => 'Debe ser archivo.',
+            'file.mimes' => 'El :attribute debe ser formato Excel.',
+            'file.max' => 'El :attribute debe pesar máximo 5MB.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [
-            'file' => 'archivo'
+            'file' => 'archivo',
         ];
-    }    
+    }
 }

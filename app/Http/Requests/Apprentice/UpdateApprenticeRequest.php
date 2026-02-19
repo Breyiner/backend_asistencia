@@ -5,10 +5,15 @@ namespace App\Http\Requests\Apprentice;
 use App\Rules\AlphaSpaces;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **ACTUALIZACIÓN** aprendiz (parcial).
+ *
+ * Reglas: sometimes|unique excluyendo ID, TYPO corregido 'birth_date'.
+ */
 class UpdateApprenticeRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -16,9 +21,7 @@ class UpdateApprenticeRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación parcial + unique ignore ID.
      */
     public function rules(): array
     {
@@ -31,63 +34,50 @@ class UpdateApprenticeRequest extends FormRequest
             'document_type_id' => ['sometimes', 'required', 'integer', 'exists:document_types,id'],
             'document_number' => ['sometimes', 'required', 'string', 'min:6', 'max:20', 'unique:users,document_number,' . $id . ',id'],
             'email' => ['sometimes', 'required', 'email', 'unique:users,email,' . $id . ',id'],
-            'birt_date' => ['sometimes', 'required', 'date', 'before:today'],
-            'ficha_id' => ['sometimes', 'required', 'integer', 'exists:fichas,ficha_id'],
+            'birth_date' => ['sometimes', 'required', 'date', 'before:today'],
+            'ficha_id' => ['sometimes', 'required', 'integer', 'exists:fichas,id'],
             'status_id' => ['sometimes', 'integer', 'exists:user_statuses,id'],
         ];
     }
 
     /**
-
-     * Get the error messages for the defined validation rules.
-     *
-     * @return array
+     * Mensajes de error personalizados (español).
      */
-    public function messages()
+    public function messages(): array
     {
         return [
             'first_name.required' => 'El :attribute es obligatorio.',
             'first_name.string' => 'El :attribute debe ser texto.',
-
             'last_name.required' => 'El :attribute es obligatorio.',
             'last_name.string' => 'El :attribute debe ser texto.',
-
             'telephone_number.required' => 'El :attribute es obligatorio.',
             'telephone_number.string' => 'El :attribute debe ser texto.',
             'telephone_number.size' => 'El :attribute debe tener exactamente :size dígitos.',
             'telephone_number.regex' => 'El :attribute solo puede contener números.',
-
             'document_type_id.required' => 'El :attribute es obligatorio',
             'document_type_id.integer' => 'El :attribute debe ser un número entero',
             'document_type_id.exists' => 'El :attribute no existe',
-
             'document_number.required' => 'El :attribute es obligatorio',
             'document_number.string' => 'El :attribute debe ser texto',
             'document_number.min' => 'El :attribute debe tener al menos :min caracteres',
             'document_number.max' => 'El :attribute no debe tener más de :max caracteres',
             'document_number.unique' => 'Este :attribute ya está registrado en el sistema',
-
             'email.required' => 'El :attribute es obligatorio',
             'email.email' => 'El :attribute debe tener formato válido',
             'email.unique' => 'Este :attribute ya está registrado en el sistema',
-
             'birth_date.required' => 'La :attribute es obligatoria',
             'birth_date.date' => 'Formato de fecha inválido',
             'birth_date.before' => 'La :attribute no puede ser futura',
-
             'ficha_id.required' => 'El :attribute es obligatorio',
             'ficha_id.integer' => 'El :attribute debe ser un número entero',
             'ficha_id.exists' => 'Ficha :input no existe',
-
             'status_id.integer' => 'El :attribute debe ser un número entero',
             'status_id.exists' => 'El :attribute no existe',
         ];
     }
 
     /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
+     * Atributos legibles en errores.
      */
     public function attributes(): array
     {

@@ -6,13 +6,35 @@ use App\Events\ResourceChanged;
 use App\Models\NoClassDay;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Servicio de lógica de negocio para la gestión de días sin clase.
+ *
+ * Un día sin clase representa una fecha en la que una ficha no tiene actividad académica
+ * (festivos, paros, actividades institucionales, etc.). Aplica filtros de visibilidad
+ * por rol en los métodos de consulta, igual que en FichaService y ApprenticeService.
+ */
 class NoClassDayService
 {
+    /**
+     * Retorna una lista paginada de días sin clase con filtros opcionales.
+     *
+     * Aplica restricciones de visibilidad según el rol activo:
+     * - COORDINADOR: solo días de fichas en programas donde es coordinador.
+     * - GESTOR_FICHAS: solo días de fichas donde es gestor.
+     * - INSTRUCTOR: solo días de fichas con término activo donde tiene sesiones.
+     * - ADMIN u otros: ve todos los registros sin restricción.
+     *
+     * Soporta filtros por fecha exacta, rango de fechas, ficha y motivo.
+     *
+     * @param  int  $perPage  Registros por página (default: 10).
+     * @return array
+     */
     public function getAll($perPage = 10)
     {
         $userId = Auth::id();
         $roleCode = request()->attributes->get('acting_role_code');
 
+        // Selecciona campos necesarios para el listado e incluye relaciones.
         $query = NoClassDay::select([
             'id',
             'ficha_id',
@@ -27,7 +49,7 @@ class NoClassDayService
             'reason:id,name,description',
         ]);
 
-        // Aplicar alcances según el rol
+        // Restricciones de visibilidad según el rol activo.
         if ($roleCode === 'COORDINADOR') {
             $query->whereHas('ficha.trainingProgram', function ($q) use ($userId) {
                 $q->where('coordinator_id', $userId);
@@ -37,6 +59,7 @@ class NoClassDayService
                 $q->where('gestor_id', $userId);
             });
         } elseif ($roleCode === 'INSTRUCTOR') {
+            // El instructor solo ve días de fichas con término activo donde tiene sesiones asignadas.
             $query->whereHas('ficha.currentFichaTerm', function ($q) use ($userId) {
                 $q->where('is_current', 1)
                     ->whereHas('schedule.scheduleSessions', function ($subQ) use ($userId) {
@@ -44,38 +67,38 @@ class NoClassDayService
                     });
             });
         }
-        // Si es ADMIN, no se aplica ningún filtro de alcance
+        // ADMIN no tiene restricción de alcance; ve todos los registros.
 
-        // Filtro por ficha_id
+        // Filtro exacto por ID de ficha.
         if (request()->filled('ficha_id')) {
             $query->where('ficha_id', request('ficha_id'));
         }
 
-        // Filtro por número de ficha
+        // Filtro por número de ficha (búsqueda parcial).
         if (request()->filled('ficha_number')) {
             $query->whereHas('ficha', function ($q) {
                 $q->where('ficha_number', 'like', '%' . request('ficha_number') . '%');
             });
         }
 
-        // Filtro por motivo
+        // Filtro exacto por ID de motivo.
         if (request()->filled('reason_id')) {
             $query->where('reason_id', request('reason_id'));
         }
 
-        // Filtro por nombre del motivo
+        // Filtro por nombre de motivo (búsqueda parcial).
         if (request()->filled('reason_name')) {
             $query->whereHas('reason', function ($q) {
                 $q->where('name', 'like', '%' . request('reason_name') . '%');
             });
         }
 
-        // Filtro por fecha específica
+        // Filtro por fecha exacta; whereDate ignora la parte de hora si la columna es datetime.
         if (request()->filled('date')) {
             $query->whereDate('date', request('date'));
         }
 
-        // Filtro por rango de fechas
+        // Filtros de rango de fechas; pueden usarse juntos o por separado.
         if (request()->filled('date_from')) {
             $query->whereDate('date', '>=', request('date_from'));
         }
@@ -84,15 +107,17 @@ class NoClassDayService
             $query->whereDate('date', '<=', request('date_to'));
         }
 
-        // Filtro por programa de formación
+        // Filtro por programa de formación al que pertenece la ficha.
         if (request()->filled('training_program_id')) {
             $query->whereHas('ficha', function ($q) {
                 $q->where('training_program_id', request('training_program_id'));
             });
         }
 
+        // Ordena por fecha descendente para mostrar los más recientes primero.
         $noClassDays = $query->orderBy('date', 'desc')->paginate($perPage);
 
+        // Mapea cada registro a un array plano con los campos necesarios para la respuesta.
         $items = $noClassDays->getCollection()->map(function ($noClassDay) {
             return [
                 'id' => $noClassDay->id,
@@ -115,6 +140,7 @@ class NoClassDayService
             ];
         })->values();
 
+        // Si no hay resultados, retorna mensaje informativo con paginación vacía.
         if ($items->isEmpty()) {
             return [
                 'error' => false,
@@ -148,11 +174,22 @@ class NoClassDayService
         ];
     }
 
+    /**
+     * Retorna el detalle completo de un día sin clase por su ID.
+     *
+     * Incluye más relaciones que getAll() (gestor, jornada) para mostrar
+     * el contexto completo de la ficha a la que pertenece.
+     * Aplica las mismas restricciones de visibilidad por rol.
+     *
+     * @param  mixed  $noClassDayId  ID del día sin clase.
+     * @return array
+     */
     public function getById($noClassDayId)
     {
         $userId = Auth::id();
         $roleCode = request()->attributes->get('acting_role_code');
 
+        // Carga más relaciones que getAll() para el detalle completo.
         $query = NoClassDay::select([
             'id',
             'ficha_id',
@@ -169,7 +206,7 @@ class NoClassDayService
             'reason:id,name,description',
         ]);
 
-        // Aplicar alcances según el rol
+        // Aplica las mismas restricciones de visibilidad por rol que en getAll().
         if ($roleCode === 'COORDINADOR') {
             $query->whereHas('ficha.trainingProgram', function ($q) use ($userId) {
                 $q->where('coordinator_id', $userId);
@@ -186,8 +223,9 @@ class NoClassDayService
                     });
             });
         }
-        // Si es ADMIN, no se aplica ningún filtro de alcance
+        // ADMIN no tiene restricción de alcance.
 
+        // Si no existe o el rol no tiene acceso, retorna 404.
         $noClassDay = $query->find($noClassDayId);
 
         if (!$noClassDay) {
@@ -199,6 +237,7 @@ class NoClassDayService
             ];
         }
 
+        // Construye el nombre del gestor fuera del array de respuesta para mayor legibilidad.
         $gestorName = $noClassDay->ficha?->gestor?->profile
             ? trim($noClassDay->ficha->gestor->profile->first_name . ' ' . $noClassDay->ficha->gestor->profile->last_name)
             : 'Sin gestor';
@@ -237,10 +276,17 @@ class NoClassDayService
         ];
     }
 
+    /**
+     * Crea un nuevo día sin clase.
+     *
+     * @param  array  $data  Datos validados desde el request.
+     * @return array
+     */
     public function store($data)
     {
         $created = NoClassDay::create($data);
 
+        // Dispara el evento después de la creación para auditoría o notificaciones.
         event(new ResourceChanged(
             'crear',
             NoClassDay::class,
@@ -257,6 +303,17 @@ class NoClassDayService
         ];
     }
 
+    /**
+     * Actualiza un día sin clase existente.
+     *
+     * Solo actualiza si hay campos válidos en $data. A diferencia de otros servicios,
+     * si no hay campos para actualizar retorna éxito silencioso en lugar de error 400,
+     * y el evento solo se dispara si efectivamente hubo cambios.
+     *
+     * @param  mixed  $noClassDayId  ID del día sin clase.
+     * @param  array  $data          Campos a actualizar.
+     * @return array
+     */
     public function update($noClassDayId, $data)
     {
         $noClassDay = NoClassDay::find($noClassDayId);
@@ -270,6 +327,7 @@ class NoClassDayService
             ];
         }
 
+        // Construye el array de campos a actualizar solo con los valores enviados.
         $dataToUpdate = [];
 
         if (array_key_exists('ficha_id', $data)) $dataToUpdate['ficha_id'] = $data['ficha_id'];
@@ -277,6 +335,8 @@ class NoClassDayService
         if (array_key_exists('reason_id', $data)) $dataToUpdate['reason_id'] = $data['reason_id'];
         if (array_key_exists('observations', $data)) $dataToUpdate['observations'] = $data['observations'];
 
+        // Solo ejecuta el update y el evento si hay campos que cambiar.
+        // Si no hay campos, retorna éxito con el registro sin modificar.
         if (!empty($dataToUpdate)) {
             $noClassDay->update($dataToUpdate);
 
@@ -293,10 +353,20 @@ class NoClassDayService
             'error' => false,
             'code' => 200,
             'message' => 'Día sin clase actualizado correctamente',
+            // fresh() recarga el modelo desde BD para devolver los datos ya persistidos.
             'data' => $noClassDay->fresh(),
         ];
     }
 
+    /**
+     * Elimina un día sin clase por su ID.
+     *
+     * A diferencia de otros servicios, aquí se usa $noClassDay->id en el evento
+     * porque el ID se guarda en variable local antes del delete().
+     *
+     * @param  mixed  $noClassDayId  ID del día sin clase.
+     * @return array
+     */
     public function destroy($noClassDayId)
     {
         $noClassDay = NoClassDay::find($noClassDayId);
@@ -312,6 +382,8 @@ class NoClassDayService
 
         $noClassDay->delete();
 
+        // Nota: aquí se usa $noClassDay->id (no $noClassDayId) porque el modelo
+        // fue cargado antes del delete y el ID sigue disponible en el objeto en memoria.
         event(new ResourceChanged(
             'eliminar',
             NoClassDay::class,
@@ -328,8 +400,19 @@ class NoClassDayService
         ];
     }
 
+    /**
+     * Verifica si una fecha está marcada como día sin clase para una ficha específica.
+     *
+     * Útil para validar antes de crear una clase real en una fecha determinada.
+     * Siempre retorna éxito; la información se devuelve en el campo is_no_class_day.
+     *
+     * @param  mixed   $fichaId  ID de la ficha.
+     * @param  string  $date     Fecha a verificar en formato Y-m-d.
+     * @return array
+     */
     public function checkByFichaAndDate($fichaId, $date)
     {
+        // exists() es eficiente para verificaciones booleanas; no trae el registro completo.
         $exists = NoClassDay::query()
             ->where('ficha_id', $fichaId)
             ->whereDate('date', $date)
@@ -344,6 +427,7 @@ class NoClassDayService
             'data' => [
                 'ficha_id' => (int) $fichaId,
                 'date' => $date,
+                // El frontend puede evaluar este booleano directamente para bloquear acciones.
                 'is_no_class_day' => $exists,
             ],
         ];

@@ -5,10 +5,15 @@ namespace App\Http\Requests\DocumentType;
 use App\Rules\AlphaSpaces;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **ACTUALIZACIÓN PARCIAL** tipo documento (CC, TI, CE).
+ *
+ * Reglas: sometimes name + acronym required/uppercase/unique ignore ID.
+ */
 class PartialUpdateDocumentTypeRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -16,9 +21,7 @@ class PartialUpdateDocumentTypeRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación parcial + ignore ID.
      */
     public function rules(): array
     {
@@ -30,26 +33,34 @@ class PartialUpdateDocumentTypeRequest extends FormRequest
         ];
     }
 
-    public function messages()
+    /**
+     * Mensajes error personalizados (español).
+     */
+    public function messages(): array
     {
         return [
-            'name.string' => 'El :attribute debe tener solo caracteres de tipo texto.',
+            'name.string' => 'El :attribute debe ser texto.',
+            'name.min' => 'El :attribute debe tener mínimo :min caracteres.',
+            'name.max' => 'El :attribute no puede exceder :max caracteres.',
             'name.unique' => 'El :attribute ya existe.',
-            'name.max' => 'El :attribute tiene maximo :max caracteres.',
-            
+            'acronym.required' => 'El :attribute es obligatorio.',
             'acronym.alpha' => 'El :attribute debe tener solo letras.',
-            'acronym.uppercase' => 'El :attribute debe estar en mayusculas.',
-            'acronym.string' => 'El :attribute debe tener solo caracteres de tipo texto.',
+            'acronym.uppercase' => 'El :attribute debe estar en mayúsculas.',
+            'acronym.string' => 'El :attribute debe ser texto.',
+            'acronym.min' => 'El :attribute debe tener mínimo :min caracteres.',
+            'acronym.max' => 'El :attribute no puede exceder :max caracteres.',
             'acronym.unique' => 'El :attribute ya existe.',
-            'acronym.max' => 'El :attribute tiene maximo :max caracteres.',
-            'acronym.min' => 'El :attribute tiene minimo :min caracteres.'
         ];
     }
-    public function attributes()
+
+    /**
+     * Atributos legibles en errores.
+     */
+    public function attributes(): array
     {
         return [
             'name' => 'nombre del tipo de documento',
-            'acronym' => 'acronimo del tipo de documento'
+            'acronym' => 'acrónimo del tipo de documento',
         ];
     }
 }

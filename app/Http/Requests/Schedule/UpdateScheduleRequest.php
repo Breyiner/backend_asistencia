@@ -4,10 +4,15 @@ namespace App\Http\Requests\Schedule;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **ACTUALIZACIÓN** horario SENA.
+ *
+ * Reglas: sometimes + descripción opcional.
+ */
 class UpdateScheduleRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,29 +20,34 @@ class UpdateScheduleRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (UPDATE).
      */
     public function rules(): array
     {
         return [
             'description' => [
                 'sometimes',
+                'nullable',
                 'string',
-                'max:255'
+                'max:255',
             ],
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
-            'description.string' => 'El :attribute debe ser texto.',
-            'description.max' => 'El :attribute no puede exceder :max caracteres.',
+            'description.string' => 'La :attribute debe ser texto.',
+            'description.max' => 'La :attribute no puede exceder :max caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

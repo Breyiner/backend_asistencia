@@ -9,77 +9,171 @@ use App\Http\Requests\TrainingProgram\UpdateTrainingProgramRequest;
 use App\Services\TrainingProgram\TrainingProgramService;
 use Illuminate\Http\Request;
 
+/**
+ * Controlador REST API para **TrainingProgram** (Programa de Formación).
+ *
+ * Fillable: name, description, duration, qualification_level_id, area_id, coordinator_id.
+ * Relaciones: qualificationLevel, area, coordinator (User), fichas (hasMany), apprentices (hasManyThrough).
+ * 
+ * **Endpoints clave**: index (paginación/filtros), select (dropdowns), CRUD (bloquea fichas>0).
+ * 
+ * @see TrainingProgramService Conteos/validaciones coordinator/jerarquías
+ */
 class TrainingProgramController extends Controller
 {
+    /**
+     * Servicio de training programs.
+     */
+    protected TrainingProgramService $service;
 
-    protected $trainingProgramService;
-
-    public function __construct(TrainingProgramService $trainingProgramService)
+    public function __construct(TrainingProgramService $service)
     {
-        $this->trainingProgramService = $trainingProgramService;
+        $this->service = $service;
     }
 
+    /**
+     * Lista programas (fichas_count, apprentices).
+     * GET /api/training-programs
+     *
+     * Query: per_page, area_id, coordinator_id, search. Con paginación.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
-        $reponse = $this->trainingProgramService->getAll($request->get('per_page', 10));
+        $response = $this->service->getAll($request->get('per_page', 10));
 
-        if ($reponse['error'])
-            return ResponseFormatter::error($reponse['message'], $reponse['code']);
+        if ($response['error']) {
+            return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-        return ResponseFormatter::success($reponse['message'], $reponse['code'], $reponse['data'] ?? [], $reponse['paginate']);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? [],
+            $response['paginate']
+        );
     }
 
+    /**
+     * Lista simplificada para selects/dropdowns.
+     * GET /api/training-programs/select
+     *
+     * Formato: value/label/fichas_count. Sin paginación.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function select(Request $request)
     {
-        $response = $this->trainingProgramService->getAllForSelect();
+        $response = $this->service->getAllForSelect();
 
-        if ($response['error'])
+        if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
     }
 
+    /**
+     * Detalle programa + relaciones completas.
+     * GET /api/training-programs/{id}
+     *
+     * Incluye: qualification_level, area, coordinator, fichas[], estadísticas.
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(string $id)
     {
-        $response = $this->trainingProgramService->getById($id);
+        $response = $this->service->getById($id);
 
-        if ($response['error'])
+        if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
     }
 
+    /**
+     * Crea programa (valida coordinator/unicidad).
+     * POST /api/training-programs
+     *
+     * Valida: campos required, FKs existen, coordinator=COORDINADOR, name único.
+     *
+     * @param StoreTrainingProgramRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(StoreTrainingProgramRequest $request)
     {
-        $data = $request->validated();
+        $response = $this->service->create($request->validated());
 
-        $response = $this->trainingProgramService->create($data);
-
-        if ($response['error'])
+        if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
     }
 
+    /**
+     * Actualiza programa (cascade a fichas).
+     * PUT /api/training-programs/{id}
+     *
+     * Impacta TODAS fichas. Valida name único (excepto id), coordinator válido.
+     *
+     * @param UpdateTrainingProgramRequest $request
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update(UpdateTrainingProgramRequest $request, string $id)
     {
-        $data = $request->validated();
+        $response = $this->service->update($request->validated(), $id);
 
-        $response = $this->trainingProgramService->update($data, $id);
-
-        if ($response['error'])
+        if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
     }
 
+    /**
+     * Elimina programa (bloquea fichas_count>0).
+     * DELETE /api/training-programs/{id}
+     *
+     * Error 409 con fichas_count/apprentices_count/sugerencia archivar.
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy(string $id)
     {
-        $response = $this->trainingProgramService->delete($id);
+        $response = $this->service->delete($id);
 
-        if ($response['error'])
+        if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);
+        }
 
-        return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+        return ResponseFormatter::success(
+            $response['message'],
+            $response['code'],
+            $response['data'] ?? []
+        );
     }
 }

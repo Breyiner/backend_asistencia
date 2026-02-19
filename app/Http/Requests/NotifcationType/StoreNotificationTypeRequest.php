@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Http\Requests\Day;
+namespace App\Http\Requests\NotificationType;
 
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validación **CREACIÓN** día semana (LUNES=1, DOMINGO=7).
+ * Validación **CREACIÓN** tipo de notificación.
  *
- * Reglas: day_number único 1-7.
+ * Reglas: name + key único.
  */
-class StoreDayRequest extends FormRequest
+class StoreNotificationTypeRequest extends FormRequest
 {
     /**
      * Autoriza todos los usuarios.
@@ -25,8 +25,8 @@ class StoreDayRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:20'],
-            'day_number' => ['required', 'integer', 'between:1,7', 'unique:days'],
+            'name' => ['required', 'string', 'max:255'],
+            'key' => ['required', 'string', 'max:255', 'unique:notification_types,key'],
         ];
     }
 
@@ -39,10 +39,10 @@ class StoreDayRequest extends FormRequest
             'name.required' => 'El :attribute es obligatorio.',
             'name.string' => 'El :attribute debe ser texto.',
             'name.max' => 'El :attribute no puede exceder :max caracteres.',
-            'day_number.required' => 'El :attribute es obligatorio.',
-            'day_number.integer' => 'El :attribute debe ser número.',
-            'day_number.between' => 'El :attribute debe estar entre 1 y 7.',
-            'day_number.unique' => 'El :attribute ya está registrado.',
+            'key.required' => 'El :attribute es obligatorio.',
+            'key.string' => 'El :attribute debe ser texto.',
+            'key.max' => 'El :attribute no puede exceder :max caracteres.',
+            'key.unique' => 'El :attribute ya existe.',
         ];
     }
 
@@ -52,8 +52,8 @@ class StoreDayRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'name' => 'nombre del día',
-            'day_number' => 'número del día',
+            'name' => 'nombre del tipo de notificación',
+            'key' => 'clave del tipo de notificación',
         ];
     }
 }

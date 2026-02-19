@@ -4,10 +4,15 @@ namespace App\Http\Requests\NoClassReason;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** motivo día sin clase SENA.
+ *
+ * Reglas: nombre único + descripción opcional.
+ */
 class StoreNoClassReasonRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,9 +20,7 @@ class StoreNoClassReasonRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (CREATE).
      */
     public function rules(): array
     {
@@ -27,6 +30,9 @@ class StoreNoClassReasonRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
@@ -34,12 +40,14 @@ class StoreNoClassReasonRequest extends FormRequest
             'name.string' => 'El :attribute debe ser un texto.',
             'name.max' => 'El :attribute no puede superar los :max caracteres.',
             'name.unique' => 'Este motivo ya existe.',
-
             'description.string' => 'La :attribute debe ser un texto.',
             'description.max' => 'La :attribute no puede superar los :max caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [
