@@ -3,68 +3,92 @@
 namespace App\Notifications;
 
 use Illuminate\Auth\Notifications\VerifyEmail as VerifyEmailBase;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Log;
 
 /**
- * Notificación personalizada para verificación de email.
+ * Notificación personalizada para verificación de email en cola.
  *
- * Extiende la notificación base de Laravel (VerifyEmail) para:
- * - Redirigir al frontend en lugar de usar rutas del backend
- * - Usar una vista Blade personalizada en lugar del template por defecto
- * - Personalizar el asunto del email
+ * Implementa ShouldQueue: se ejecuta asíncronamente en cola 'default'
+ * 
+ * Extiende VerifyEmailBase con:
+ * - Redirección al frontend (/verificar-email?verify_url=...)
+ * - Vista Blade personalizada (emails.verify-email)
+ * - Procesamiento asíncrono (no bloquea registro)
  *
- * Diferencia con VerifyEmail base de Laravel:
- * - La URL apunta al frontend: /verificar-email?verify_url=...
- * - El frontend recibe la URL de verificación real y la procesa
- * - Usa vista Blade personalizada (emails.verify-email)
+ * Ventajas de cola:
+ * - Registro instantáneo (email en background)
+ * - Alta disponibilidad (no falla si SMTP offline)
+ * - Escalable (múltiples workers procesan emails)
+ * - Retry automático (3 intentos si SMTP falla)
  *
- * Flujo de verificación:
- * 1. Usuario se registra → sistema envía este email
- * 2. Usuario hace click en el enlace del email
- * 3. Frontend recibe verify_url en query param
- * 4. Frontend hace petición al backend con verify_url
- * 5. Backend procesa la verificación y activa el usuario
- * 6. Listener ActivateUserAfterVerified cambia status_id a 1
+ * Configuración cola (.env):
+ * QUEUE_CONNECTION=database/redis
+ * MAIL_MAILER=smtp/mailgun/ses
+ *
+ * Flujo con cola:
+ * 1. Usuario registra → $user->notify() → JOB en cola
+ * 2. Worker: php artisan queue:work procesa email
+ * 3. Usuario hace click → frontend → backend verifica
  *
  * Registro en User model:
  * public function sendEmailVerificationNotification(): void {
  *     $this->notify(new CustomVerifyEmail());
  * }
  */
-class CustomVerifyEmail extends VerifyEmailBase
+class CustomVerifyEmail extends VerifyEmailBase implements ShouldQueue
 {
+    use Queueable, InteractsWithQueue, SerializesModels;
+
+    public $tries = 3;
+    public $timeout = 60;
+    public $backoff = [30, 60, 120];
+
     /**
-     * Construye el mensaje de email para verificación.
-     *
-     * Sobrescribe el método de la clase base para personalizar:
-     * - La URL: redirige al frontend con la URL de verificación como query param
-     * - La vista: usa template Blade personalizado
-     * - El asunto
-     *
-     * @param mixed $notifiable Usuario que debe verificar su email
-     * @return MailMessage Mensaje de email configurado
+     * Construye mensaje de email para verificación.
+     * 
+     * Sobrescribe VerifyEmailBase para:
+     * - URL frontend con verify_url encodada
+     * - Vista Blade personalizada
+     * - Asunto localizado
+     * 
+     * @param mixed $notifiable Usuario receptor (User model)
+     * @return MailMessage Email listo para enviar
      */
     public function toMail($notifiable)
     {
-        // Genera la URL de verificación firmada de Laravel
-        // Este método está en VerifyEmailBase y genera una URL con firma y expiración
         $verificationUrl = $this->verificationUrl($notifiable);
 
         return (new MailMessage)
-            // Asunto personalizado en español con nombre del sistema
             ->subject('Verifica tu correo - Sistema de Asistencias')
-
-            // Renderiza vista Blade personalizada en lugar del template por defecto
-            // La vista recibe:
-            // - $url: URL del frontend que procesará la verificación
-            // - $user: modelo del usuario para personalizar el email
             ->view('emails.verify-email', [
-                // URL del frontend con la URL de verificación de Laravel encodada
-                // El frontend extrae verify_url y hace la petición al backend
-                'url'  => "http://localhost:5173/verificar-email?verify_url=" . urlencode($verificationUrl),
-
-                // Modelo del usuario para personalizar el email (nombre, etc.)
+                'url' => config('app.frontend_url') . "/verificar-email?verify_url=" . urlencode($verificationUrl),
                 'user' => $notifiable,
             ]);
+    }
+
+    /**
+     * Personalización: cola específica (opcional)
+     * 
+     * Por defecto usa 'default'. Puedes crear cola dedicada:
+     * QUEUE_CONNECTION=redis → emails: alta prioridad
+     */
+    public function queue($queue = 'default')
+    {
+        return $queue;
+    }
+
+    /**
+     * Manejo de fallos en cola (opcional)
+     * 
+     * Se ejecuta si supera $tries (3 intentos)
+     */
+    public function failed(\Exception $exception)
+    {
+        Log::error("Email verificación falló: " . $exception->getMessage());
     }
 }
