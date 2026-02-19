@@ -5,10 +5,15 @@ namespace App\Http\Requests\Area;
 use App\Rules\AlphaSpaces;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** área (SISTEMAS, ADMIN, MECATRÓNICA).
+ *
+ * Reglas: name único + AlphaSpaces, description opcional.
+ */
 class StoreAreaRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -16,9 +21,7 @@ class StoreAreaRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (CREATE).
      */
     public function rules(): array
     {
@@ -28,21 +31,26 @@ class StoreAreaRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
             'name.required' => 'El :attribute es obligatorio.',
-            'name.string' => 'El :attribute debe ser una cadena de texto.',
+            'name.string' => 'El :attribute debe ser texto.',
             'name.min' => 'El :attribute debe tener mínimo :min caracteres.',
             'name.max' => 'El :attribute debe tener máximo :max caracteres.',
             'name.unique' => 'El :attribute ya está en uso.',
-
-            'description.string' => 'La :attribute debe ser una cadena de texto.',
+            'description.string' => 'La :attribute debe ser texto.',
             'description.min' => 'La :attribute debe tener mínimo :min caracteres.',
             'description.max' => 'La :attribute debe tener máximo :max caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

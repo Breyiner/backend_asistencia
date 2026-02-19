@@ -5,10 +5,15 @@ namespace App\Http\Requests\RealClass;
 use App\Rules\UserHasRoleCode;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** clase real SENA.
+ *
+ * Reglas: instructor INSTRUCTOR + aula + horario + horas coherentes + fecha original para recuperación.
+ */
 class StoreRealClassRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -16,9 +21,7 @@ class StoreRealClassRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (CREATE).
      */
     public function rules(): array
     {
@@ -35,47 +38,45 @@ class StoreRealClassRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
             'instructor_id.required' => 'El :attribute es obligatorio.',
             'instructor_id.exists' => 'El :attribute no existe.',
-
             'class_type_id.required' => 'El :attribute es obligatorio.',
             'class_type_id.exists' => 'El :attribute no existe.',
-
             'classroom_id.required' => 'El :attribute es obligatorio.',
             'classroom_id.exists' => 'El :attribute no existe.',
-
             'time_slot_id.required' => 'La :attribute es obligatoria.',
             'time_slot_id.exists' => 'La :attribute no existe.',
-
             'schedule_session_id.required' => 'La :attribute es obligatoria.',
             'schedule_session_id.exists' => 'La :attribute no existe.',
-            
             'start_hour.required' => 'La :attribute es obligatoria.',
             'start_hour.date_format' => 'La :attribute debe ser HH:MM.',
-
             'end_hour.required' => 'La :attribute es obligatoria.',
             'end_hour.date_format' => 'La :attribute debe ser HH:MM.',
             'end_hour.after' => 'La :attribute debe ser después de hora inicio.',
-
             'original_date.required' => 'La :attribute es obligatoria para clases de recuperación.',
             'original_date.date' => 'La :attribute debe ser fecha válida.',
-
             'observations.string' => 'Las :attribute deben ser texto.',
             'observations.max' => 'Las :attribute no pueden exceder 500 caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [
             'instructor_id' => 'instructor',
             'class_type_id' => 'tipo de clase',
             'classroom_id' => 'aula',
-            'time_slot_id' => 'franja Horaria',
-            'schedule_session_id' => 'la formación del horario',
+            'time_slot_id' => 'franja horaria',
+            'schedule_session_id' => 'sesión del horario',
             'start_hour' => 'hora inicio',
             'end_hour' => 'hora fin',
             'original_date' => 'fecha original',

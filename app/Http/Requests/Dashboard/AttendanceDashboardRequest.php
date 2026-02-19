@@ -5,13 +5,24 @@ namespace App\Http\Requests\Dashboard;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validación **DASHBOARD ASISTENCIA** filtros + rangos.
+ *
+ * Presets: 7d/month/30d/custom + required_if custom.
+ */
 class AttendanceDashboardRequest extends FormRequest
 {
+    /**
+     * Autoriza todos los usuarios.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Reglas filtros fecha + programa/ficha.
+     */
     public function rules(): array
     {
         return [
@@ -28,6 +39,9 @@ class AttendanceDashboardRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
@@ -49,6 +63,9 @@ class AttendanceDashboardRequest extends FormRequest
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

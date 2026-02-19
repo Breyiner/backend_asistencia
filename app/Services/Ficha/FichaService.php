@@ -6,13 +6,34 @@ use App\Events\ResourceChanged;
 use App\Models\Ficha;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Servicio de lógica de negocio para la gestión de fichas.
+ *
+ * Una ficha representa un grupo de aprendices vinculado a un programa de formación,
+ * con su gestor, jornada y trimestre activo. Aplica filtros de visibilidad por rol
+ * en todos los métodos de consulta (INSTRUCTOR, GESTOR_FICHAS, COORDINADOR).
+ */
 class FichaService
 {
+    /**
+     * Retorna una lista paginada de fichas con filtros opcionales.
+     *
+     * Aplica restricciones de visibilidad según el rol activo:
+     * - INSTRUCTOR: solo fichas con término activo donde tiene sesiones asignadas.
+     * - GESTOR_FICHAS: solo fichas donde es gestor.
+     * - COORDINADOR: solo fichas de programas donde es coordinador.
+     * Sin rol restrictivo (ej: ADMIN): ve todas las fichas.
+     *
+     * @param  int  $perPage  Registros por página (default: 10).
+     * @return array
+     */
     public function getAll($perPage = 10)
     {
         $userId = Auth::id();
         $roleCode = request()->attributes->get('acting_role_code');
 
+        // Selecciona solo los campos necesarios para el listado e incluye relaciones.
+        // withCount('apprentices') agrega apprentices_count sin cargar los modelos.
         $query = Ficha::select([
             'id',
             'gestor_id',
@@ -31,7 +52,9 @@ class FichaService
             'currentFichaTerm.term:id,name',
         ])->withCount('apprentices');
 
+        // Restricciones de visibilidad según el rol activo del usuario.
         if ($roleCode === 'INSTRUCTOR') {
+            // Solo fichas con término activo (is_current=1) donde el instructor tiene sesiones.
             $query->whereHas('currentFichaTerm', fn($q) => $q->where('is_current', 1))
                 ->whereHas('currentFichaTerm.schedule.scheduleSessions', function ($q) use ($userId) {
                     $q->where('instructor_id', $userId);
@@ -44,6 +67,7 @@ class FichaService
             });
         }
 
+        // Filtros opcionales enviados en el request.
         if (request()->filled('ficha_number')) {
             $query->where('ficha_number', 'like', '%' . request('ficha_number') . '%');
         }
@@ -70,14 +94,17 @@ class FichaService
             $query->where('shift_id', request('shift_id'));
         }
 
+        // Ordena por número de ficha y pagina los resultados.
         $fichas = $query->orderBy('ficha_number', 'asc')->paginate($perPage);
 
+        // Mapea cada ficha a un array plano con los campos necesarios para la respuesta.
         $items = $fichas->getCollection()->map(function ($ficha) {
             return [
                 'id' => $ficha->id,
                 'ficha_number' => $ficha->ficha_number,
 
                 'gestor_id' => $ficha->gestor_id,
+                // Construye el nombre completo del gestor desde el perfil; fallback si no tiene.
                 'gestor_name' => $ficha->gestor?->profile
                     ? $ficha->gestor->profile->first_name . ' ' . $ficha->gestor->profile->last_name
                     : 'Sin gestor',
@@ -94,6 +121,7 @@ class FichaService
                 'current_term_id' => $ficha->currentFichaTerm?->term?->id,
                 'current_term_name' => $ficha->currentFichaTerm?->term?->name ?? 'Sin trimestre actual',
 
+                // Castea a int para evitar que llegue como string desde la BD.
                 'apprentices_count' => (int) ($ficha->apprentices_count ?? 0),
 
                 'created_at' => $ficha->created_at?->toDateString(),
@@ -101,6 +129,7 @@ class FichaService
             ];
         })->values();
 
+        // Si no hay resultados, retorna mensaje informativo con paginación vacía.
         if ($items->isEmpty()) {
             return [
                 'error' => false,
@@ -134,11 +163,20 @@ class FichaService
         ];
     }
 
+    /**
+     * Retorna fichas en formato simplificado para usar en selects/dropdowns.
+     *
+     * Aplica las mismas restricciones de rol que getAll() pero sin paginación,
+     * ya que el frontend necesita todas las opciones disponibles a la vez.
+     *
+     * @return array
+     */
     public function select()
     {
         $userId = Auth::id();
         $roleCode = request()->attributes->get('acting_role_code');
 
+        // Solo selecciona los campos necesarios para un select: id, número y nombre del programa.
         $query = Ficha::select([
             'id',
             'ficha_number',
@@ -149,7 +187,7 @@ class FichaService
             'shift:id,name',
         ]);
 
-        // Aplicar filtros por rol
+        // Aplica las mismas restricciones de visibilidad por rol que en getAll().
         if ($roleCode === 'INSTRUCTOR') {
             $query->whereHas('currentFichaTerm', fn($q) => $q->where('is_current', 1))
                 ->whereHas('currentFichaTerm.schedule.scheduleSessions', function ($q) use ($userId) {
@@ -163,6 +201,7 @@ class FichaService
             });
         }
 
+        // get() en lugar de paginate() porque el select necesita todas las opciones de una vez.
         $fichas = $query->orderBy('ficha_number', 'asc')->get();
 
         $items = $fichas->map(function ($ficha) {
@@ -182,11 +221,21 @@ class FichaService
         ];
     }
 
+    /**
+     * Retorna el detalle completo de una ficha por su ID.
+     *
+     * Incluye todos los términos de la ficha ordenados por fecha de inicio,
+     * además del término activo con su fase. Aplica las mismas restricciones por rol.
+     *
+     * @param  mixed  $id  ID de la ficha.
+     * @return array
+     */
     public function getById($id)
     {
         $userId = Auth::id();
         $roleCode = request()->attributes->get('acting_role_code');
 
+        // Carga campos completos e incluye relaciones para el detalle de la ficha.
         $query = Ficha::select([
             'id',
             'gestor_id',
@@ -209,6 +258,7 @@ class FichaService
                 'currentFichaTerm.term:id,name',
                 'currentFichaTerm.phase:id,name',
 
+                // Carga todos los términos ordenados cronológicamente para mostrar el historial.
                 'fichaTerms' => function ($q) {
                     $q->select([
                         'id',
@@ -226,6 +276,7 @@ class FichaService
             ])
             ->withCount('apprentices');
 
+        // Aplica restricciones de visibilidad según el rol activo.
         if ($roleCode === 'GESTOR_FICHAS') {
             $query->where('gestor_id', $userId);
         } elseif ($roleCode === 'INSTRUCTOR') {
@@ -239,6 +290,7 @@ class FichaService
             });
         }
 
+        // Si la ficha no existe o el rol no tiene acceso a ella, retorna 404.
         $ficha = $query->find($id);
 
         if (!$ficha) {
@@ -249,6 +301,7 @@ class FichaService
             ];
         }
 
+        // Construye el nombre del gestor fuera del map para mayor legibilidad.
         $gestorName = $ficha->gestor?->profile
             ? trim($ficha->gestor->profile->first_name . ' ' . $ficha->gestor->profile->last_name)
             : 'Sin gestor';
@@ -278,6 +331,7 @@ class FichaService
             'current_term_name' => $ficha->currentFichaTerm?->term?->name ?? 'Sin trimestre actual',
             'current_phase_name' => $ficha->currentFichaTerm?->phase?->name ?? null,
 
+            // Mapea el historial completo de términos de la ficha con sus datos.
             'ficha_terms' => $ficha->fichaTerms->map(function ($ft) {
                 return [
                     'id' => $ft->id,
@@ -287,6 +341,7 @@ class FichaService
                     'phase_name' => $ft->phase?->name ?? null,
                     'start_date' => $ft->start_date?->toDateString(),
                     'end_date' => $ft->end_date?->toDateString(),
+                    // Castea a bool para que el frontend pueda evaluar directamente.
                     'is_current' => (bool) $ft->is_current,
                 ];
             })->values(),
@@ -303,6 +358,15 @@ class FichaService
         ];
     }
 
+    /**
+     * Retorna las fichas asociadas a un programa de formación específico.
+     *
+     * No aplica restricciones por rol; filtra directamente por training_program_id.
+     * Retorna 404 si el programa no tiene fichas registradas.
+     *
+     * @param  mixed  $trainingProgramId  ID del programa de formación.
+     * @return array
+     */
     public function getByTrainingProgram($trainingProgramId)
     {
         $query = Ficha::select([
@@ -344,6 +408,8 @@ class FichaService
             ];
         });
 
+        // A diferencia de getAll(), aquí un resultado vacío sí es un 404
+        // porque se esperan fichas para un programa específico que debería existir.
         if ($items->isEmpty()) {
             return [
                 "error" => true,
@@ -368,6 +434,15 @@ class FichaService
         ];
     }
 
+    /**
+     * Retorna las fichas disponibles para crear una clase real.
+     *
+     * Solo incluye fichas con término activo (is_current=1) que pertenezcan
+     * al gestor autenticado o donde el usuario sea instructor con sesiones asignadas.
+     * No aplica filtro por rol del request; usa el ID del usuario directamente.
+     *
+     * @return array
+     */
     public function availableForRealClass()
     {
         $userId = Auth::id();
@@ -386,8 +461,12 @@ class FichaService
             'shift:id,name',
             'currentFichaTerm:id,ficha_id,term_id,is_current',
             'currentFichaTerm.term:id,name',
-        ])->whereHas('currentFichaTerm', fn($q) => $q->where('is_current', 1))
+        ])
+            // Solo fichas con término activo; sin término activo no tiene sentido crear clase real.
+            ->whereHas('currentFichaTerm', fn($q) => $q->where('is_current', 1))
             ->where(function ($q) use ($userId) {
+                // Incluye fichas donde el usuario es gestor O donde es instructor con sesiones.
+                // orWhereHas permite que cualquiera de las dos condiciones sea suficiente.
                 $q->where('gestor_id', $userId)
                     ->orWhereHas('currentFichaTerm.schedule.scheduleSessions', function ($qq) use ($userId) {
                         $qq->where('instructor_id', $userId);
@@ -417,6 +496,15 @@ class FichaService
         ];
     }
 
+    /**
+     * Crea una nueva ficha con estado inicial activo.
+     *
+     * El status_id se fija en 1 (activo) en la creación; no se permite
+     * que el request lo defina para evitar crear fichas en estado inválido.
+     *
+     * @param  array  $data  Datos validados desde el request.
+     * @return array
+     */
     public function create(array $data)
     {
         $ficha = Ficha::create([
@@ -426,9 +514,10 @@ class FichaService
             'end_date' => $data['end_date'],
             'training_program_id' => $data['training_program_id'],
             'shift_id' => $data['shift_id'],
-            'status_id' => 1,
+            'status_id' => 1, // Estado inicial fijo: activo.
         ]);
 
+        // Dispara el evento después de la creación para auditoría o notificaciones.
         event(new ResourceChanged(
             'crear',
             Ficha::class,
@@ -445,6 +534,16 @@ class FichaService
         ];
     }
 
+    /**
+     * Actualiza los datos de una ficha existente.
+     *
+     * Solo actualiza los campos presentes en $data, sin pisar campos no enviados.
+     * Retorna 400 si no se envió ningún campo válido para actualizar.
+     *
+     * @param  mixed  $id    ID de la ficha.
+     * @param  array  $data  Campos a actualizar.
+     * @return array
+     */
     public function update($id, array $data)
     {
         $ficha = Ficha::find($id);
@@ -457,6 +556,7 @@ class FichaService
             ];
         }
 
+        // Construye el array de campos a actualizar solo con los valores enviados.
         $fichaData = [];
 
         if (array_key_exists('gestor_id', $data)) $fichaData['gestor_id'] = $data['gestor_id'];
@@ -464,9 +564,10 @@ class FichaService
         if (array_key_exists('start_date', $data)) $fichaData['start_date'] = $data['start_date'];
         if (array_key_exists('end_date', $data)) $fichaData['end_date'] = $data['end_date'];
         if (array_key_exists('training_program_id', $data)) $fichaData['training_program_id'] = $data['training_program_id'];
-        if (array_key_exists('shift_id', $data)) $fichaData['shift_id'] = $data['shift_id']; // NEW
+        if (array_key_exists('shift_id', $data)) $fichaData['shift_id'] = $data['shift_id'];
         if (array_key_exists('status_id', $data)) $fichaData['status_id'] = $data['status_id'];
 
+        // Si no se envió ningún campo válido, no tiene sentido continuar.
         if (empty($fichaData)) {
             return [
                 "error" => true,
@@ -477,6 +578,7 @@ class FichaService
 
         $ficha->update($fichaData);
 
+        // Dispara el evento después de confirmar la actualización.
         event(new ResourceChanged(
             'actualizar',
             Ficha::class,
@@ -493,6 +595,15 @@ class FichaService
         ];
     }
 
+    /**
+     * Elimina una ficha por su ID.
+     *
+     * El evento se dispara con el $id original ya que el modelo
+     * fue eliminado y no puede referenciarse después del delete().
+     *
+     * @param  mixed  $id  ID de la ficha.
+     * @return array
+     */
     public function delete($id)
     {
         $ficha = Ficha::find($id);
@@ -507,6 +618,7 @@ class FichaService
 
         $ficha->delete();
 
+        // Se pasa $id y no $ficha->id porque el modelo ya no existe en BD tras el delete().
         event(new ResourceChanged(
             'eliminar',
             Ficha::class,

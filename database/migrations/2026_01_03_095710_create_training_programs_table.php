@@ -4,6 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Migración **Programas Formación** SENA.
+ * 
+ * Tabla: `training_programs` (Técnico Desarrollo Software, etc)
+ */
 return new class extends Migration
 {
     /**
@@ -12,15 +17,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('training_programs', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->string('description')->nullable();
-            $table->string("duration");
-            $table->unsignedBigInteger('qualification_level_id');
+            $table->id();                                    // ID programa
+            $table->string('name')->unique();                // "Técnico Desarrollo Software"
+            $table->string('description')->nullable();       // Descripción programa
+            $table->string("duration");                      // Meses totales (ej: "480")
+            $table->unsignedBigInteger('qualification_level_id'); // FK nivel
             $table->foreign('qualification_level_id')->references('id')->on('qualification_levels');
-            $table->unsignedBigInteger('area_id');
+            $table->unsignedBigInteger('area_id');           // FK área
             $table->foreign('area_id')->references('id')->on('areas');
-            $table->timestamps();
+            $table->timestamps();                            // created_at, updated_at
         });
     }
 

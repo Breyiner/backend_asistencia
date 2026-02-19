@@ -5,10 +5,15 @@ namespace App\Http\Requests\User;
 use App\Rules\StrongPassword;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CAMBIO DE CONTRASEÑA** usuario propio.
+ *
+ * Reglas: contraseña actual + nueva fuerte + confirmación.
+ */
 class UpdateOwnUserPasswordRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios (cambio propio).
      */
     public function authorize(): bool
     {
@@ -16,9 +21,10 @@ class UpdateOwnUserPasswordRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas de validación contraseña.
+     * 
+     * **StrongPassword:** regla personalizada (mínimo 8, mayúscula, etc.)
+     * **confirmed:** requiere `new_password_confirmation`
      */
     public function rules(): array
     {
@@ -28,29 +34,30 @@ class UpdateOwnUserPasswordRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes de error personalizados.
+     */
     public function messages(): array
     {
         return [
             'current_password.required' => 'Debes ingresar tu :attribute.',
-            'current_password.string' => 'La :attribute debe ser texto',
+            'current_password.string' => 'La :attribute debe ser texto.',
 
             'new_password.required' => 'La :attribute es obligatoria.',
-            'new_password.string' => 'La :attribute debe ser texto',
+            'new_password.string' => 'La :attribute debe ser texto.',
             'new_password.max' => 'La :attribute no debe tener más de :max caracteres.',
             'new_password.confirmed' => 'La confirmación de la :attribute no coincide.',
         ];
     }
 
     /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
+     * Atributos legibles en mensajes de error.
      */
     public function attributes(): array
     {
         return [
             'new_password' => 'nueva contraseña',
-            'current_password' => 'contrasenña actual'
+            'current_password' => 'contraseña actual'
         ];
     }
 }

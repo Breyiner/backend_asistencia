@@ -4,13 +4,24 @@ namespace App\Http\Requests\Attendance;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **ESCÁNER** asistencia (codigo de barras).
+ *
+ * Verifica: document_number existe en users.
+ */
 class ScanAttendanceRequest extends FormRequest
 {
+    /**
+     * Autoriza todos los usuarios.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Reglas validación documento único.
+     */
     public function rules(): array
     {
         return [
@@ -23,6 +34,9 @@ class ScanAttendanceRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
@@ -33,6 +47,9 @@ class ScanAttendanceRequest extends FormRequest
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

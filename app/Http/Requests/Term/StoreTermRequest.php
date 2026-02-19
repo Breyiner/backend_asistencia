@@ -4,10 +4,15 @@ namespace App\Http\Requests\Term;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** de trimestre (Term).
+ *
+ * Reglas: nombre único con formato estricto "Trimestre [1-7]".
+ */
 class StoreTermRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -15,17 +20,26 @@ class StoreTermRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas de validación básica (CREATE).
+     * 
+     * **Formato estricto:** `Trimestre 1`, `Trimestre 2`, `Trimestre 3`, `Trimestre 4` ...
      */
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:50', 'regex:/^Trimestre [1-4]$/i', 'unique:terms,name'],
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                'regex:/^Trimestre [1-7]$/i',
+                'unique:terms,name'
+            ],
         ];
     }
 
+    /**
+     * Mensajes de error personalizados (español).
+     */
     public function messages(): array
     {
         return [
@@ -37,6 +51,9 @@ class StoreTermRequest extends FormRequest
         ];
     }
 
+    /**
+     * Atributos legibles en mensajes de error.
+     */
     public function attributes(): array
     {
         return [

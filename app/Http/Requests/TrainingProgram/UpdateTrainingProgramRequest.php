@@ -5,10 +5,15 @@ namespace App\Http\Requests\TrainingProgram;
 use App\Rules\UserHasRoleCode;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **ACTUALIZACIÓN** de programa de formación.
+ *
+ * Campos opcionales (`sometimes`) para partial updates.
+ */
 class UpdateTrainingProgramRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
@@ -16,9 +21,9 @@ class UpdateTrainingProgramRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas de validación (UPDATE).
+     * 
+     * **Diferencia clave:** `sometimes|required` vs `required`
      */
     public function rules(): array
     {
@@ -32,6 +37,9 @@ class UpdateTrainingProgramRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes de error personalizados (completos).
+     */
     public function messages(): array
     {
         return [
@@ -55,12 +63,16 @@ class UpdateTrainingProgramRequest extends FormRequest
             'area_id.integer' => 'El :attribute debe ser un número entero.',
             'area_id.exists' => 'El :attribute seleccionada no existe.',
 
+            'coordinator_id.required' => 'El :attribute es obligatorio.',
             'coordinator_id.integer' => 'El :attribute debe ser un número entero.',
             'coordinator_id.exists' => 'El :attribute seleccionado no existe.',
         ];
     }
 
-    public function attributes()
+    /**
+     * Atributos legibles en mensajes de error.
+     */
+    public function attributes(): array
     {
         return [
             'name' => 'nombre del programa de formación',

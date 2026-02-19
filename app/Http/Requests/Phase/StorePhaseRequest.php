@@ -5,20 +5,23 @@ namespace App\Http\Requests\Phase;
 use App\Rules\AlphaSpaces;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** fase SENA.
+ *
+ * Reglas: nombre único AlphaSpaces + descripción opcional.
+ */
 class StorePhaseRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Autoriza todos los usuarios.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas validación completa (CREATE).
      */
     public function rules(): array
     {
@@ -28,6 +31,9 @@ class StorePhaseRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
@@ -36,13 +42,15 @@ class StorePhaseRequest extends FormRequest
             'name.min' => 'El :attribute debe tener al menos :min caracteres.',
             'name.max' => 'El :attribute no debe tener más de :max caracteres.',
             'name.unique' => 'El :attribute ya existe.',
-
             'description.string' => 'La :attribute debe ser en formato de texto.',
             'description.min' => 'La :attribute debe tener al menos :min caracteres.',
-            'description.max'    => 'La :attribute no debe tener más de :max caracteres.',
+            'description.max' => 'La :attribute no debe tener más de :max caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [

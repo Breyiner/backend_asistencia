@@ -4,13 +4,24 @@ namespace App\Http\Requests\AttendanceStatus;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validación **CREACIÓN** estado asistencia (PRESENTE, AUSENTE, TARDÍA).
+ *
+ * Reglas: code/name únicos en attendance_statuses.
+ */
 class StoreAttendanceStatusRequest extends FormRequest
 {
+    /**
+     * Autoriza todos los usuarios.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Reglas validación completa (CREATE).
+     */
     public function rules(): array
     {
         return [
@@ -20,6 +31,9 @@ class StoreAttendanceStatusRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes error personalizados (español).
+     */
     public function messages(): array
     {
         return [
@@ -27,17 +41,18 @@ class StoreAttendanceStatusRequest extends FormRequest
             'code.string' => 'El :attribute debe ser texto.',
             'code.max' => 'El :attribute no puede exceder :max caracteres.',
             'code.unique' => 'El :attribute ya existe.',
-
             'name.required' => 'El :attribute es obligatorio.',
             'name.string' => 'El :attribute debe ser texto.',
             'name.max' => 'El :attribute no puede exceder :max caracteres.',
             'name.unique' => 'El :attribute ya existe.',
-
             'description.string' => 'La :attribute debe ser texto.',
             'description.max' => 'La :attribute no puede exceder :max caracteres.',
         ];
     }
 
+    /**
+     * Atributos legibles en errores.
+     */
     public function attributes(): array
     {
         return [
