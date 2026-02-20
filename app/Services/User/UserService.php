@@ -147,18 +147,47 @@ class UserService
     }
 
     /**
-     * Retorna todos los usuarios con un rol específico como lista plana.
+     * Retorna usuarios con rol específico para selects de formularios.
      *
-     * Uso: selects de instructor, coordinador, gestor en formularios de asignación.
-     * full_name se construye aquí (a diferencia de getAll()) porque estos selects
-     * suelen mostrar el nombre completo directamente.
+     * REGLAS DE ACCESO por acting_role_code:
+     * - ADMIN: ve COORDINADOR + GESTOR_FICHAS + INSTRUCTOR (todos)
+     * - COORDINADOR + roleCode=COORDINADOR: solo se ve a sí mismo
+     * - COORDINADOR + roleCode=GESTOR_FICHAS/INSTRUCTOR: todos esos roles
+     * - GESTOR_FICHAS + roleCode=GESTOR_FICHAS: solo se ve a sí mismo  
+     * - GESTOR_FICHAS + roleCode=INSTRUCTOR: instructores de sus ÁREAS
+     * - INSTRUCTOR: solo se ve a sí mismo
+     * Nadie ve ADMIN.
      *
-     * @param  int  $roleId  ID del rol por el que filtrar.
-     * @return array
+     * @param string $roleCode 'COORDINADOR'|'GESTOR_FICHAS'|'INSTRUCTOR'
+     * @return array [error, code, message, data[]]
      */
-    public function getAllByRoleId(int $roleId)
+    public function getAllByRoleCode(string $roleCode)
     {
-        $users = User::select([
+        $userId = Auth::id();
+        $actingRoleCode = request()->attributes->get('acting_role_code');
+
+        // Bloqueo total: nadie lista administradores
+        if ($roleCode === 'ADMIN') {
+            return [
+                'error' => true,
+                'code' => 403,
+                'message' => 'No se pueden listar administradores',
+                'data' => [],
+            ];
+        }
+
+        // Validación de rol autorizado
+        if (!in_array($actingRoleCode, ['ADMIN', 'COORDINADOR', 'GESTOR_FICHAS', 'INSTRUCTOR'])) {
+            return [
+                'error' => true,
+                'code' => 403,
+                'message' => 'Rol no autorizado',
+                'data' => [],
+            ];
+        }
+
+        // Query base con rol específico
+        $query = User::select([
             'id',
             'email',
             'document_number',
@@ -170,14 +199,37 @@ class UserService
                 'status:id,name',
                 'roles:id,name,code',
             ])
-            ->whereHas('roles', function ($q) use ($roleId) {
-                $q->where('id', $roleId);
-            })
-            ->get();
+            ->whereHas('roles', function ($q) use ($roleCode) {
+                $q->where('code', $roleCode);
+            });
+
+        // Filtros por visibilidad
+        if ($actingRoleCode === $roleCode && in_array($actingRoleCode, ['COORDINADOR', 'GESTOR_FICHAS', 'INSTRUCTOR'])) {
+            // Usuario solo se ve a sí mismo cuando lista SU PROPIO rol
+            $query->where('id', $userId);
+        } elseif ($actingRoleCode === 'GESTOR_FICHAS' && $roleCode === 'INSTRUCTOR') {
+            // Gestor ve instructores de sus ÁREAS
+            $query->whereHas('areas', function ($qAreas) use ($userId) {
+                $qAreas->whereHas('users', function ($qUsers) use ($userId) {
+                    $qUsers->where('users.id', $userId);
+                });
+            });
+        } elseif (!in_array($actingRoleCode, ['ADMIN', 'COORDINADOR'])) {
+            // Otros roles bloqueados para este roleCode
+            return [
+                'error' => true,
+                'code' => 403,
+                'message' => "{$actingRoleCode} no puede ver {$roleCode}",
+                'data' => [],
+            ];
+        }
+        // ADMIN/COORDINADOR ven otros roles sin filtro
+
+        $users = $query->get();
 
         $items = $users->map(function ($user) {
             $first = $user->profile?->first_name ?? '';
-            $last  = $user->profile?->last_name  ?? '';
+            $last  = $user->profile?->last_name ?? '';
 
             return [
                 'id'              => $user->id,
@@ -199,6 +251,8 @@ class UserService
             'data'    => $items,
         ];
     }
+
+
 
     /**
      * Retorna todos los usuarios asignados a un área específica como lista plana.

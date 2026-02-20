@@ -75,71 +75,58 @@ class ScheduleSessionService
     /**
      * Retorna las sesiones del trimestre activo de una ficha para el select de RealClass.
      *
-     * Aplica lógica de visibilidad propia (independiente de acting_role_code):
-     * - ADMIN: ve todas las sesiones del horario.
-     * - GESTOR de la ficha: ve todas las sesiones del horario.
-     * - INSTRUCTOR: solo ve las sesiones donde él está asignado como instructor.
-     * - Cualquier otro: 403 si no tiene sesiones en el horario de la ficha.
+     * REGLAS por acting_role_code:
+     * - ADMIN: ve todas las sesiones del horario
+     * - COORDINADOR: ve todas las sesiones del horario  
+     * - GESTOR_FICHAS: ve todas las sesiones del horario
+     * - INSTRUCTOR: solo ve sesiones donde él es instructor
      *
-     * El resultado es una lista de labels descriptivos ('Lunes - Mañana - 07:00 - 09:00 - Juan Pérez')
-     * para poblar el select de schedule_session_id al registrar una clase real.
-     *
-     * @param  mixed  $fichaId  ID de la ficha.
+     * @param mixed $fichaId ID de la ficha
      * @return array
      */
     public function getByFichaId($fichaId)
     {
+        // Obtiene usuario autenticado y acting_role del middleware
         $userId = Auth::id();
-        $user   = Auth::user();
+        $actingRoleCode = request()->attributes->get('acting_role_code');
 
-        // hasRole() de Spatie: verifica si el usuario tiene el rol 'Administrador'.
-        $isAdmin = $user?->hasRole('Administrador') ?? false;
+        // Valida que el acting_role sea uno de los autorizados
+        if (!in_array($actingRoleCode, ['ADMIN', 'COORDINADOR', 'GESTOR_FICHAS', 'INSTRUCTOR'])) {
+            return [
+                'error' => true,
+                'code' => 403,
+                'message' => 'Rol no autorizado para esta operación',
+                'data' => [],
+            ];
+        }
 
-        // Carga solo los campos necesarios de la ficha y su término actual.
+        // Carga ficha solo con campos necesarios + término actual activo
         $ficha = Ficha::select(['id', 'gestor_id'])
             ->with(['currentFichaTerm:id,ficha_id,is_current'])
             ->find($fichaId);
 
-        // Si la ficha no existe o no tiene término activo, no hay horario que mostrar.
+        // Verifica existencia de ficha y su trimestre actual
         if (!$ficha || !$ficha->currentFichaTerm) {
             return [
-                'error'   => true,
-                'code'    => 404,
+                'error' => true,
+                'code' => 404,
                 'message' => 'La ficha no tiene trimestre actual (ficha_term actual).',
-                'data'    => [],
+                'data' => [],
             ];
         }
 
         $fichaTermId = $ficha->currentFichaTerm->id;
 
-        // El gestor de la ficha tiene visibilidad total igual que el ADMIN.
-        $isGestorOfFicha = (int) ($ficha->gestor_id ?? 0) === (int) $userId;
+        // Determina si el rol actual ve TODAS las sesiones o solo las suyas
+        $seesAllSessions = in_array($actingRoleCode, ['ADMIN', 'COORDINADOR', 'GESTOR_FICHAS']);
+        // INSTRUCTOR ($seesAllSessions = false) solo ve sus sesiones
 
-        // Si no es ADMIN ni GESTOR, verifica que el usuario tenga al menos una sesión en el horario.
-        // Evita exponer el horario de fichas a instructores que no están asignados.
-        if (!$isAdmin && !$isGestorOfFicha) {
-            $hasAnySession = ScheduleSession::whereHas('schedule', function ($q) use ($fichaTermId) {
-                $q->where('ficha_term_id', $fichaTermId);
-            })
-                ->where('instructor_id', $userId)
-                ->exists();
-
-            // exists() es eficiente: para en el primer resultado encontrado.
-            if (!$hasAnySession) {
-                return [
-                    'error'   => true,
-                    'code'    => 403,
-                    'message' => 'No tienes acceso al horario de esta ficha.',
-                    'data'    => [],
-                ];
-            }
-        }
-
+        // Carga horario del trimestre con sesiones filtradas por rol
         $schedule = Schedule::select(['id', 'ficha_term_id'])
-            ->where('ficha_term_id', $fichaTermId)
+            ->where('ficha_term_id', $fichaTermId) // Solo trimestre actual
             ->with([
-                // Closure: permite filtrar sesiones por instructor dentro del eager loading.
-                'scheduleSessions' => function ($q) use ($isAdmin, $isGestorOfFicha, $userId) {
+                // Eager loading optimizado: solo campos necesarios
+                'scheduleSessions' => function ($q) use ($seesAllSessions, $userId) {
                     $q->select([
                         'id',
                         'schedule_id',
@@ -147,16 +134,17 @@ class ScheduleSessionService
                         'time_slot_id',
                         'instructor_id',
                         'start_time',
-                        'end_time',
+                        'end_time'
                     ])
-                    // when(): aplica el filtro de instructor solo si no es ADMIN ni GESTOR.
-                    ->when(!$isAdmin && !$isGestorOfFicha, function ($qq) use ($userId) {
-                        $qq->where('instructor_id', $userId);
-                    })
-                    ->orderBy('day_id')
-                    ->orderBy('start_time');
+                        // Filtro INSTRUCTOR: solo sus sesiones asignadas
+                        ->when(!$seesAllSessions, function ($qq) use ($userId) {
+                            $qq->where('instructor_id', $userId);
+                        })
+                        // Ordenamiento consistente: día → hora inicio
+                        ->orderBy('day_id')
+                        ->orderBy('start_time');
                 },
-
+                // Relaciones para construir label descriptivo
                 'scheduleSessions.day:id,name',
                 'scheduleSessions.timeSlot:id,name,code,start_time,end_time',
                 'scheduleSessions.instructor:id',
@@ -164,46 +152,46 @@ class ScheduleSessionService
             ])
             ->first();
 
-        // El horario podría no existir aunque el FichaTerm sí: aún no fue creado.
+        // Verifica existencia del horario (puede no existir aún)
         if (!$schedule) {
             return [
-                'error'   => true,
-                'code'    => 404,
+                'error' => true,
+                'code' => 404,
                 'message' => 'No hay horario para el trimestre actual de la ficha.',
-                'data'    => [],
+                'data' => [],
             ];
         }
 
-        // Mapea cada sesión a un label descriptivo para el select del formulario de RealClass.
-        $sessions = $schedule->scheduleSessions
-            ->map(function ($s) {
-                $dayName      = $s->day?->name      ?? 'Sin día';
-                $timeSlotName = $s->timeSlot?->name ?? 'Sin franja';
+        // Transforma sesiones a formato select con label descriptivo
+        $sessions = $schedule->scheduleSessions->map(function ($s) {
+            // Datos básicos con fallback
+            $dayName = $s->day?->name ?? 'Sin día';
+            $timeSlotName = $s->timeSlot?->name ?? 'Sin franja';
 
-                // substr(..., 0, 5): recorta 'HH:MM:SS' a 'HH:MM' para display.
-                $start = $s->start_time ? substr($s->start_time, 0, 5) : '--:--';
-                $end   = $s->end_time   ? substr($s->end_time, 0, 5)   : '--:--';
+            // Formatea horas: convierte 'HH:MM:SS' → 'HH:MM'
+            $start = $s->start_time ? substr($s->start_time, 0, 5) : '--:--';
+            $end = $s->end_time ? substr($s->end_time, 0, 5) : '--:--';
 
-                $first = $s->instructor?->profile?->first_name ?? '';
-                $last  = $s->instructor?->profile?->last_name  ?? '';
-                // Fallback explícito si el nombre queda vacío tras el trim.
-                $instructorName = trim("$first $last") ?: 'Sin instructor';
+            // Construye nombre instructor con fallback
+            $first = $s->instructor?->profile?->first_name ?? '';
+            $last = $s->instructor?->profile?->last_name ?? '';
+            $instructorName = trim("$first $last") ?: 'Sin instructor';
 
-                return [
-                    'id' => $s->id,
-                    // Label completo para mostrar en el select de schedule_session_id.
-                    'name' => "{$dayName} - {$timeSlotName} - {$start} - {$end} - {$instructorName}",
-                ];
-            })
-            ->values();
+            // Label completo para el select del formulario
+            return [
+                'id' => $s->id,
+                'name' => "{$dayName} - {$timeSlotName} - {$start} - {$end} - {$instructorName}",
+            ];
+        })->values(); // Reindexa array numérico limpio
 
         return [
-            'error'   => false,
-            'code'    => 200,
+            'error' => false,
+            'code' => 200,
             'message' => 'Sesiones del horario actual obtenidas con éxito',
-            'data'    => $sessions,
+            'data' => $sessions,
         ];
     }
+
 
     /**
      * Crea una nueva sesión de horario.

@@ -221,13 +221,13 @@ Route::middleware('throttle:api')->group(function () {
          *
          * Rutas especiales:
          * - /me: perfil del usuario autenticado
-         * - /role/{role_id}: usuarios filtrados por rol
+         * - /role/{role_code}: usuarios filtrados por rol
          * - /me/password: cambio de contraseña propia
          */
         Route::prefix('users')->group(function () {
             Route::get('/', [UserController::class, 'index'])
                 ->middleware('permission:users.viewAny');
-            Route::get('/role/{role_id}', [UserController::class, 'indexByRole'])
+            Route::get('/role/{role_code}', [UserController::class, 'indexByRole'])
                 ->middleware('permission:users.viewAny');           // Filtrar por rol
             Route::get('/me', [UserController::class, 'showOwn'])
                 ->middleware('permission:users.viewOwn');           // Propio perfil
