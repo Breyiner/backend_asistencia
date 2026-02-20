@@ -33,7 +33,7 @@ class StoreTrainingProgramRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:255', 'min:10'],
             'duration' => ['required', 'integer', 'min:1'],
             'qualification_level_id' => ['required', 'integer', 'exists:qualification_levels,id'],
-            'area_id' => ['required', 'integer', 'exists:areas,id'],
+            'area_id' => ['nullable', 'integer', 'exists:areas,id'],
             'coordinator_id' => ['nullable', 'integer', 'exists:users,id', new UserHasRoleCode('COORDINADOR')],
         ];
     }

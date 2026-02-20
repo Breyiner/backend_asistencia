@@ -71,6 +71,7 @@ class RolePermissionSeeder extends Seeder
             // Trimestres Ficha (CRUD)
             'ficha_terms.viewAny',
             'ficha_terms.create',
+            'ficha_terms.setCurrent',
             'ficha_terms.update',
             'ficha_terms.delete',
 
@@ -162,6 +163,7 @@ class RolePermissionSeeder extends Seeder
             // Trimestres Ficha (CRUD)
             'ficha_terms.viewAny',
             'ficha_terms.create',
+            'ficha_terms.setCurrent',
             'ficha_terms.update',
             'ficha_terms.delete',
 

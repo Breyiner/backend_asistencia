@@ -23,52 +23,45 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // 1. **AUTORIZACIÓN** (Spatie Laravel Permission)
+            // **AUTORIZACIÓN** (Spatie Laravel Permission)
             RoleSeeder::class,                    // Roles base (INSTRUCTOR, APRENDIZ, etc.)
             PermissionSeeder::class,              // Permisos granulares
             RolePermissionSeeder::class,          // Asignación rol-permisos
 
-            // 2. **CATÁLOGOS USUARIOS**
+            // **CATÁLOGOS USUARIOS**
             UserStatusSeeder::class,              // Estados usuario (activo, inactivo)
             DocumentTypeSeeder::class,            // Tipos documento (CC, TI, etc.)
 
-            // 3. **ESTRUCTURA ORGANIZATIVA**
+            // **ESTRUCTURA ORGANIZATIVA**
             AreaSeeder::class,                    // Áreas SENA (Informática, Mecánica, etc.)
             
-            // 4. **USUARIOS PRINCIPALES**
-            UserSeeder::class,                    // Administradores, coordinadores, instructores
+            // **USUARIOS PRINCIPALES**
+            UserSeeder::class,                    // Administradores, scanner
 
-            // 5. **PROGRAMACIÓN ACADÉMICA**
+            // **PROGRAMACIÓN ACADÉMICA**
             QualificationLevelSeeder::class,      // Niveles (Técnico, Tecnólogo)
             TrainingProgramSeeder::class,         // Programas de formación (ADSO, etc.)
             ShiftSeeder::class,                   // Jornadas (diurna, nocturna)
 
-            // 6. **FICHAS Y ESTADOS**
+            // **FICHAS Y ESTADOS**
             FichaStatusSeeder::class,             // Estados ficha (activa, cerrada, etc.)
             FichaSeeder::class,                   // Fichas SENA 
 
-            // 7. **RELACIÓN FICHA-APRENDIZ**
-            ApprenticeSeeder::class,              // Matriculación aprendices en fichas
-
-            // 8. **HORARIOS ACADÉMICOS**
+            // **HORARIOS ACADÉMICOS**
             TermSeeder::class,                    // Trimestres (1,2,3,4)
             PhaseSeeder::class,                   // Fases por trimestre
-            FichaTermSeeder::class,               // Ficha + Trimestre + Fase
-            ScheduleSeeder::class,                // Horarios base por ficha-term
             DaySeeder::class,                     // Días semana (Lunes-Domingo)
             TimeSlotSeeder::class,                // Franjas horarias (08:00-10:00)
             ClassroomSeeder::class,               // Ambientes
-            ScheduleSessionSeeder::class,         // Sesiones específicas del horario
 
-            // 9. **EJECUCIÓN CLASES**
+            // **EJECUCIÓN CLASES**
             ClassTypeSeeder::class,               // Normal, adelantada, recuperación   
             NoClassReasonSeeder::class,           // Motivos no clase (festivo, etc.)
 
-            // 10. **CONTROL ASISTENCIA**
+            // **CONTROL ASISTENCIA**
             AttendanceStatusSeeder::class,        // Presente, ausente, tardanza
-            NoClassDaySeeder::class,              // Días sin clase por ficha
 
-            // 11. **SISTEMA NOTIFICACIONES**
+            // **SISTEMA NOTIFICACIONES**
             NotificationTypeSeeder::class,        // Tipos notificación (asistencia, etc.)
         ]);
     }
