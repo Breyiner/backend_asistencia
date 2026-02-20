@@ -62,16 +62,15 @@ class UserController extends Controller
 
     /**
      * Lista usuarios por rol específico.
-     * GET /api/users/role/{role_id}
+     * GET /api/users/role/{role_code}
      *
-     * Útil: admin "todos INSTRUCTORES", coordinador "mis instructores".
      *
-     * @param int $role_id
+     * @param string $reole_code
      * @return \Illuminate\Http\JsonResponse
      */
-    public function indexByRole(int $role_id)
+    public function indexByRole(string $role_code)
     {
-        $response = $this->service->getAllByRoleId($role_id);
+        $response = $this->service->getAllByRoleCode(roleCode: $role_code);
 
         if ($response['error']) {
             return ResponseFormatter::error($response['message'], $response['code']);

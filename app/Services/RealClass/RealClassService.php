@@ -708,11 +708,12 @@ class RealClassService
      *   2. Verifica que instructor_id coincida con el instructor asignado a la sesión.
      *   3. Verifica que la sesión pertenezca al término activo (is_current = 1).
      *   4. Verifica que la fecha de ejecución no esté marcada como día sin clase.
+     *   5. **NUEVA: No existe clase real previa del MISMO INSTRUCTOR en MISMA FRANJA HORARIA ese día**
      *
      * Post-creación delega la generación de registros de asistencia al AttendanceService.
      * Todo el flujo corre dentro de una transacción DB para garantizar atomicidad.
      *
-     * @param  array  $data  Datos validados desde el request.
+     * @param array $data Datos validados desde el request.
      * @return array
      */
     public function create($data)
@@ -774,6 +775,28 @@ class RealClassService
                 ];
             }
 
+            // **Validación 5: No existe clase real del MISMO INSTRUCTOR en MISMA FRANJA HORARIA hoy**
+            // Previene solapamientos: mismo instructor no puede tener 2 clases simultáneas
+            $existingOverlap = RealClass::where('instructor_id', $data['instructor_id'])
+                ->where('execution_date', $executionDate)
+                ->whereHas('scheduleSession', function ($q) use ($scheduleSession) {
+                    // Misma franja horaria: mismo day_id + time_slot_id
+                    $q->where('day_id', $scheduleSession->day_id)
+                        ->where('time_slot_id', $scheduleSession->time_slot_id);
+                })
+                ->first();
+
+            if ($existingOverlap) {
+                return [
+                    'error' => true,
+                    'code' => 409,
+                    'message' => 'El instructor ya tiene una clase real registrada en esta franja horaria hoy.',
+                    'data' => [
+                        'conflicting_class_id' => $existingOverlap->id,
+                    ],
+                ];
+            }
+
             // Todas las validaciones pasaron: crea la clase real.
             $realClass = RealClass::create($data);
 
@@ -797,6 +820,7 @@ class RealClassService
             ];
         });
     }
+
 
     /**
      * Actualiza una clase real existente.
