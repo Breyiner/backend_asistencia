@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string("duration");                      // Meses totales (ej: "480")
             $table->unsignedBigInteger('qualification_level_id'); // FK nivel
             $table->foreign('qualification_level_id')->references('id')->on('qualification_levels');
-            $table->unsignedBigInteger('area_id');           // FK área
+            $table->unsignedBigInteger('area_id')->nullable();           // FK área
             $table->foreign('area_id')->references('id')->on('areas');
             $table->timestamps();                            // created_at, updated_at
         });
