@@ -3,6 +3,7 @@
 namespace App\Http\Requests\FichaTerm;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Validación **CREACIÓN** término de ficha SENA.
@@ -29,7 +30,10 @@ class StoreFichaTermRequest extends FormRequest
             'term_id' => [
                 'required',
                 'exists:terms,id',
-                "unique:ficha_terms,ficha_id,{$this->ficha_id},term_id"
+                Rule::unique('ficha_terms')->where(function ($query) {
+                    return $query->where('ficha_id', $this->ficha_id)
+                                 ->where('term_id', $this->term_id);
+                })
             ],
             'phase_id' => [
                 'required',
