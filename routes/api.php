@@ -367,22 +367,34 @@ Route::middleware('throttle:api')->group(function () {
          * - /template/download: descarga plantilla Excel para importación
          * - /import: importa aprendices desde Excel (ApprenticesImport)
          */
+        // APRENDICES CRUD + importación masiva.
         Route::prefix('apprentices')->group(function () {
             Route::get('/', [ApprenticeController::class, 'index'])
                 ->middleware('permission:apprentices.viewAny');
-            Route::get('/template/download', [ApprenticeController::class, 'downloadTemplate'])
-                ->middleware('permission:apprentices.import');     // Descarga plantilla Excel
-            Route::get('/{apprentice_id}', [ApprenticeController::class, 'show'])
+
+            Route::get('template/download', [ApprenticeController::class, 'downloadTemplate'])
+                ->middleware('permission:apprentices.import');
+            
+            Route::get('import/errors-excel', [ApprenticeController::class, 'downloadErrorsExcel'])
+                ->middleware('permission:apprentices.import');
+
+            Route::get('{apprentice_id}', [ApprenticeController::class, 'show'])
                 ->middleware('permission:apprentices.view');
+
             Route::post('/', [ApprenticeController::class, 'store'])
                 ->middleware('permission:apprentices.create');
-            Route::patch('/{apprentice_id}', [ApprenticeController::class, 'update'])
+
+            Route::patch('{apprentice_id}', [ApprenticeController::class, 'update'])
                 ->middleware('permission:apprentices.update');
-            Route::delete('/{apprentice_id}', [ApprenticeController::class, 'destroy'])
+
+            Route::delete('{apprentice_id}', [ApprenticeController::class, 'destroy'])
                 ->middleware('permission:apprentices.delete');
-            Route::post('/import', [ApprenticeController::class, 'import'])
-                ->middleware('permission:apprentices.import');     // Importación masiva desde Excel
+
+            Route::post('import', [ApprenticeController::class, 'import'])
+                ->middleware('permission:apprentices.import');
+
         });
+
 
         /**
          * TRIMESTRES (TERMS): CRUD completo.

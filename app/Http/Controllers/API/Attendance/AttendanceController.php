@@ -13,6 +13,7 @@ use App\Services\Attendance\AttendanceService;
 use App\Services\Attendance\MonthlyAttendanceRegisterService;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Controlador REST para la gestión de asistencias de aprendices.
@@ -157,7 +158,7 @@ class AttendanceController extends Controller
 
         // Manejo de errores (ficha no encontrada, sin datos, etc.)
         if (!empty($result['error'])) {
-            return response()->json($result, $result['code'] ?? 400);
+            return ResponseFormatter::error($result['message'], $result['code']);
         }
 
         // Extrae payload con datos para el export

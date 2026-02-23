@@ -45,8 +45,9 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
  * Uso en controlador:
  * $import = new ApprenticesImport();
  * Excel::import($import, $request->file('file'));
- * if (!empty($import->errors)) {
- *     return ResponseFormatter::error('Errores en importación', 422, $import->errors);
+ * $errors = $import->getGroupedErrors();
+ * if (!empty($errors)) {
+ *     return ResponseFormatter::error('Errores en importación', 422, $errors);
  * }
  */
 class ApprenticesImport implements
@@ -58,17 +59,21 @@ class ApprenticesImport implements
     SkipsEmptyRows
 {
     /**
-     * Acumula errores de validación de filas fallidas.
+     * Acumula errores de validación agrupados por número de fila.
      *
+     * La clave del array es el número de fila del Excel.
      * Cada elemento contiene:
      * - fila: número de fila con error
-     * - atributo: campo que falló
-     * - errores: mensajes de error
-     * - valores: valores de la fila
+     * - errores: array con todos los mensajes de error de esa fila
+     * - valores: valores originales de la fila fallida
      *
-     * @var array
+     * Al agrupar por fila, una misma fila con múltiples campos
+     * inválidos acumula todos sus mensajes en un solo elemento,
+     * evitando entradas duplicadas por aprendiz.
+     *
+     * @var array<int, array{fila: int, errores: string[], valores: array}>
      */
-    public $errors = [];
+    private array $errorsByRow = [];
 
     /**
      * Cache de fichas indexadas por número de ficha.
@@ -107,20 +112,59 @@ class ApprenticesImport implements
      * Maneja las filas que fallaron la validación.
      *
      * Se ejecuta por cada fila que no pasa las reglas de WithValidation.
-     * Acumula los errores en $this->errors para retornarlos al controlador.
+     * Agrupa los errores por número de fila en $this->errorsByRow, de forma
+     * que si una misma fila tiene múltiples campos inválidos (ej: documento
+     * duplicado Y email duplicado), todos sus mensajes se consolidan en
+     * una sola entrada, evitando registros repetidos por aprendiz.
      *
      * @param Failure ...$failures Objetos con información del fallo
      */
     public function onFailure(Failure ...$failures)
     {
         foreach ($failures as $failure) {
-            $this->errors[] = [
-                'fila'      => $failure->row(),       // Número de fila en el Excel
-                'atributo'  => $failure->attribute(), // Columna que falló
-                'errores'   => $failure->errors(),    // Mensajes de error
-                'valores'   => $failure->values(),    // Valores de la fila fallida
-            ];
+            $rowNum = $failure->row();
+
+            // Si es la primera vez que se registra un error para esta fila,
+            // inicializa su entrada con los datos base de la fila
+            if (!isset($this->errorsByRow[$rowNum])) {
+                $this->errorsByRow[$rowNum] = [
+                    'fila'    => $rowNum,
+                    'errores' => [],             // Se irán acumulando los mensajes
+                    'valores' => $failure->values(), // Valores de la fila (mismo para todos los failures de esta fila)
+                ];
+            }
+
+            // Agrega cada mensaje de error de este failure al array de errores de la fila.
+            // failure->errors() retorna un array de strings con los mensajes de validación.
+            foreach ($failure->errors() as $errorMsg) {
+                $this->errorsByRow[$rowNum]['errores'][] = $errorMsg;
+            }
         }
+    }
+
+    /**
+     * Retorna los errores agrupados por fila como array indexado.
+     *
+     * Convierte el array asociativo interno (indexado por número de fila)
+     * a un array secuencial listo para serializar como JSON y retornar
+     * al controlador o al cliente.
+     *
+     * Ejemplo de retorno:
+     * [
+     *   [
+     *     'fila'    => 2,
+     *     'errores' => ['Este documento ya está registrado', 'Este correo ya está registrado'],
+     *     'valores' => ['nombres' => 'JERSON SAMIR', 'email' => '...', ...]
+     *   ],
+     *   ...
+     * ]
+     *
+     * @return array Array de errores agrupados por fila, indexado secuencialmente
+     */
+    public function getGroupedErrors(): array
+    {
+        // array_values() reindexea el array desde 0 eliminando las claves de número de fila
+        return array_values($this->errorsByRow);
     }
 
     /**
@@ -195,20 +239,41 @@ class ApprenticesImport implements
      *
      * @return array Mensajes personalizados por regla y campo
      */
-    public function customValidationMessages()
+    public function customValidationMessages(): array
     {
         return [
-            'nombres.required'         => 'El :attribute es obligatorio.',
-            'nombres.string'           => 'El :attribute debe ser texto.',
-            'apellidos.required'       => 'El :attribute es obligatorio.',
-            'telefono.numeric'         => 'El :attribute debe ser numérico.',
-            'telefono.digits'          => 'El :attribute debe tener 10 dígitos.',
-            'document_type.exists'     => 'Tipo de documento no existe',
-            'numero_documento.unique'  => 'Este documento ya está registrado',
-            'email.unique'             => 'Este correo ya está registrado',
-            'numero_ficha.exists'      => 'La ficha no existe',
+            'nombres.required'          => 'El :attribute es obligatorio.',
+            'nombres.string'            => 'El :attribute debe ser texto.',
+            'apellidos.required'        => 'Los :attribute son obligatorios.',
+            'telefono.numeric'          => 'El :attribute debe ser numérico.',
+            'telefono.digits'           => 'El :attribute debe tener 10 dígitos.',
+            'tipo_documento.required'   => 'El :attribute es obligatorio.',
+            'tipo_documento.exists'     => 'El :attribute no existe.',
+            'numero_documento.required' => 'El :attribute es obligatorio.',
+            'numero_documento.numeric'  => 'El :attribute debe ser numérico.',
+            'numero_documento.unique'   => 'Este documento ya está registrado.',
+            'email.required'            => 'El :attribute es obligatorio.',
+            'email.email'               => 'El :attribute no tiene un formato válido.',
+            'email.unique'              => 'Este :attribute ya está registrado.',
+            'numero_ficha.required'     => 'El :attribute es obligatorio.',
+            'numero_ficha.exists'       => 'La ficha no existe en el sistema.',
         ];
     }
+
+    public function customValidationAttributes(): array
+    {
+        return [
+            'nombres'          => 'nombres',
+            'apellidos'        => 'apellidos',
+            'telefono'         => 'teléfono',
+            'tipo_documento'   => 'tipo de documento',
+            'numero_documento' => 'número de documento',
+            'email'            => 'correo',
+            'fecha_nacimiento' => 'fecha de nacimiento',
+            'numero_ficha'     => 'número de ficha',
+        ];
+    }
+
 
     /**
      * Procesa la colección de filas válidas.
