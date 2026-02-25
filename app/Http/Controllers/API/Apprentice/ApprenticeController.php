@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Apprentice;
 
+use App\Exports\ImportErrorsExport;
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Apprentice\StoreApprenticeRequest;
@@ -10,6 +11,7 @@ use App\Http\Requests\ImportApprentice\ImportApprenticeRequest;
 use App\Services\Apprentice\ApprenticeService;
 use App\Services\ImportExcel\ImportExcelService;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Controlador REST para la gestión de aprendices.
@@ -272,9 +274,42 @@ class ApprenticeController extends Controller
 
         // Si hay errores críticos, retorna con detalles de errores por fila
         if ($response['error'])
-            return ResponseFormatter::error($response['message'], $response['code'], $response['errors']);
+            return ResponseFormatter::error($response['message'], $response['code'], $response['errors'], $response['errorKey']);
 
         // Respuesta exitosa con resumen de la importación
         return ResponseFormatter::success($response['message'], $response['code'], $response['data'] ?? []);
+    }
+
+    /**
+     * Descarga Excel con errores de la última importación fallida.
+     *
+     * GET /api/apprentices/import/errors-excel
+     *
+     * Lee errores del caché del usuario (10 min TTL) y genera Excel:
+     * - Mismo formato/estilos que plantilla_aprendices.xlsx
+     * - Columna extra "errores" con fondo rojo y mensajes concatenados
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\JsonResponse
+     */
+    public function downloadErrorsExcel()
+    {
+        // Lee errores del caché del usuario actual
+        $errors = $this->importService->getImportErrors();
+
+        // 404 si no hay errores (expiró caché o import exitosa)
+        if (empty($errors)) {
+            return ResponseFormatter::error(
+                'No hay errores de importación recientes',
+                404,
+                [],
+                'import_errors_not_found'
+            );
+        }
+
+        // Genera Excel con tu ImportErrorsExport
+        return Excel::download(
+            new ImportErrorsExport($errors),
+            'aprendices_errores_' . now()->format('Y-m-d_H-i') . '.xlsx'
+        );
     }
 }
