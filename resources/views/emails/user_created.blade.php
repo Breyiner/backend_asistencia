@@ -59,14 +59,14 @@
             <div style="text-align: center; margin: 40px 0;">
                 <div style="margin-bottom: 16px;">
                     <a
-                        href="http://localhost:5173/reenviar-verificacion?email={{ urlencode($email) }}"
+                        href="https://breyiner.github.io/frontend_asistencia/reenviar-verificacion?email={{ urlencode($email) }}"
                         style="display: inline-block; background-color: #f59e0b; color: white; padding: 14px 36px; font-size: 16px; font-weight: 500; text-decoration: none; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0, 0,0, 0.1); margin-right: 12px;">
                         Reenviar verificación
                     </a>
                 </div>
 
                 <a
-                    href="http://localhost:5173/login"
+                    href="https://breyiner.github.io/frontend_asistencia/login"
                     style="display: inline-block; background-color: #10b981; color: white; padding: 14px 36px; font-size: 16px; font-weight: 500; text-decoration: none; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0, 0,0, 0.1);">
                     Iniciar sesión
                 </a>
