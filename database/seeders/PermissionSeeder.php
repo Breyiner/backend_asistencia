@@ -181,6 +181,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'attendances.create', 'guard_name' => 'web', 'display_name' => 'Tomar asistencia', 'group' => 'Asistencias'],
             ['name' => 'attendances.export', 'guard_name' => 'web', 'display_name' => 'Exportar asistencias', 'group' => 'Asistencias'],
             ['name' => 'attendances.update', 'guard_name' => 'web', 'display_name' => 'Editar asistencia', 'group' => 'Asistencias'],
+            ['name'=> 'attendances.scan', 'guard_name' => 'web', 'display_name' => 'Escanear asistencia', 'group' => 'Asistencias'],
             ['name' => 'attendances.delete', 'guard_name' => 'web', 'display_name' => 'Eliminar asistencia', 'group' => 'Asistencias'],
 
             // Notificaciones

@@ -17,6 +17,7 @@ class RolePermissionSeeder extends Seeder
         $coordinatorRole = Role::findByName('Coordinador');
         $gestorRole = Role::findByName('Gestor de Fichas');
         $instructorRole = Role::findByName('Instructor');
+        $scannerRole = Role::findByName('Escáner');
 
         $allPermissions = Permission::all();
 
@@ -244,5 +245,10 @@ class RolePermissionSeeder extends Seeder
             'no_class_days.check',
         ];
         $instructorRole->syncPermissions($instructorPermissions);
+
+        $scannerPermissions = [
+            'attendances.scan',
+        ];
+        $scannerRole->syncPermissions($scannerPermissions);
     }
 }
