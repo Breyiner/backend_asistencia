@@ -606,8 +606,10 @@ class FichaService
      */
     public function delete($id)
     {
+        // 1) Buscar la ficha por ID.
         $ficha = Ficha::find($id);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$ficha) {
             return [
                 "error" => true,
@@ -616,9 +618,45 @@ class FichaService
             ];
         }
 
+        // 3) Validar integridad referencial (reglas de negocio):
+        //    Si la ficha tiene aprendices asociados, no se debe permitir eliminarla.
+        //    exists() es eficiente: no carga modelos ni cuenta todos los registros,
+        //    solo verifica si existe al menos 1 registro relacionado.
+        if ($ficha->apprentices()->exists()) {
+            return [
+                "error" => true,
+                "code" => 409,
+                "message" => "No se puede eliminar esta ficha porque tiene aprendices asociados",
+            ];
+        }
+
+        // 4) Validar integridad referencial:
+        //    Si la ficha ya tiene términos/historial (ficha_terms), no se debe eliminar.
+        //    Esto evita perder trazabilidad y/o romper relaciones con horarios.
+        if ($ficha->fichaTerms()->exists()) {
+            return [
+                "error" => true,
+                "code" => 409,
+                "message" => "No se puede eliminar esta ficha porque tiene trimestres asociados",
+            ];
+        }
+
+        // 5) Validar integridad referencial adicional (opcional pero recomendado):
+        //    Si existe término actual (hasOne filtrado por is_current), también bloquea.
+        //    Nota: si fichaTerms() ya existe, esta condición sería redundante;
+        //    se deja para claridad de negocio si luego cambias fichaTerms().
+        if ($ficha->currentFichaTerm()->exists()) {
+            return [
+                "error" => true,
+                "code" => 409,
+                "message" => "No se puede eliminar esta ficha porque tiene un trimestre actual asociado",
+            ];
+        }
+
+        // 6) Eliminar solo si no hay dependencias.
         $ficha->delete();
 
-        // Se pasa $id y no $ficha->id porque el modelo ya no existe en BD tras el delete().
+        // 7) Auditoría / notificación: se envía $id porque el modelo ya fue eliminado.
         event(new ResourceChanged(
             'eliminar',
             Ficha::class,
@@ -627,6 +665,7 @@ class FichaService
             'Ficha'
         ));
 
+        // 8) Respuesta exitosa.
         return [
             "error" => false,
             "code" => 200,

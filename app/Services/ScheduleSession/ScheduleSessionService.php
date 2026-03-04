@@ -294,8 +294,10 @@ class ScheduleSessionService
      */
     public function delete(int $id): array
     {
+        // 1) Buscar la sesión por ID.
         $session = ScheduleSession::find($id);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$session) {
             return [
                 'error'   => true,
@@ -305,17 +307,35 @@ class ScheduleSessionService
             ];
         }
 
+        // 3) Validar integridad referencial (regla de negocio):
+        //    Si la sesión ya tiene clases reales asociadas, no se debe eliminar
+        //    porque rompería el vínculo histórico (y puede afectar reportes/auditoría).
+        //    exists() es más eficiente que count(): no cuenta todo, solo verifica 1 coincidencia.
+        if ($session->realClasses()->exists()) {
+            return [
+                'error'   => true,
+                'code'    => 409, // Conflicto: no se puede eliminar por dependencias existentes.
+                'message' => 'No se puede eliminar esta sesión porque tiene clases reales asociadas',
+                'data'    => [],
+            ];
+        }
+
+        // 4) Guardar el ID antes de eliminar para auditoría/evento.
+        $deletedId = $session->id;
+
+        // 5) Eliminar solo si no hay dependencias.
         $session->delete();
 
-        // Nota: se usa $session->id (no $id) para consistencia con el patrón del sistema.
+        // 6) Auditoría / notificación.
         event(new ResourceChanged(
             'eliminar',
             ScheduleSession::class,
-            $session->id,
+            $deletedId,
             Auth::id(),
             'Sesión de horario'
         ));
 
+        // 7) Respuesta exitosa.
         return [
             'error'   => false,
             'code'    => 200,

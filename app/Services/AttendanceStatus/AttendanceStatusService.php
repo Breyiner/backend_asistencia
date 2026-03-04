@@ -155,8 +155,10 @@ class AttendanceStatusService
      */
     public function delete($id)
     {
+        // 1) Buscar el estado por ID (si no existe, no hay nada que eliminar).
         $status = AttendanceStatus::find($id);
 
+        // 2) Validar existencia para devolver un 404 controlado y no intentar operar sobre null.
         if (!$status) {
             return [
                 'error' => true,
@@ -165,9 +167,21 @@ class AttendanceStatusService
             ];
         }
 
+        // 3) Validar integridad referencial a nivel de negocio:
+        //    Si el estado ya está siendo usado en asistencias, NO se debe permitir eliminarlo.
+        //    Usamos exists() porque es más eficiente que count(): se detiene al encontrar 1 registro.
+        if ($status->attendances()->exists()) {
+            return [
+                'error' => true,
+                'code' => 409, // Conflicto: el recurso no se puede eliminar por dependencias actuales.
+                'message' => 'No se puede eliminar este estado de asistencia porque tiene asistencias asociadas',
+            ];
+        }
+
+        // 4) Ejecutar la eliminación solo cuando no hay relaciones que lo bloqueen.
         $status->delete();
 
-        // Se pasa $id y no $status->id porque el modelo ya no existe en BD tras el delete.
+        // 5) Auditoría / notificación: el modelo ya fue eliminado, por eso se envía el $id original.
         event(new ResourceChanged(
             'eliminar',
             AttendanceStatus::class,
@@ -176,6 +190,7 @@ class AttendanceStatusService
             'Estado de asistencia'
         ));
 
+        // 6) Respuesta exitosa.
         return [
             'error' => false,
             'code' => 200,

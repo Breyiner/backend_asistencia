@@ -160,8 +160,10 @@ class ShiftService
      */
     public function delete(int $id): array
     {
+        // 1) Buscar la jornada por ID.
         $shift = Shift::find($id);
 
+        // 2) Validar existencia.
         if (!$shift) {
             return [
                 'error'   => true,
@@ -171,12 +173,28 @@ class ShiftService
             ];
         }
 
+        // 3) Integridad referencial: no eliminar si hay fichas asociadas.
+        //    exists() es más eficiente que count(): solo verifica si existe 1 registro.
+        if ($shift->fichas()->exists()) {
+            return [
+                'error'   => true,
+                'code'    => 409,
+                'message' => 'No se puede eliminar esta jornada porque tiene fichas asociadas',
+                'data'    => [],
+            ];
+        }
+
+        // 4) Guardar ID antes de borrar para auditoría.
+        $deletedId = $shift->id;
+
+        // 5) Eliminar.
         $shift->delete();
 
+        // 6) Evento.
         event(new ResourceChanged(
             'eliminar',
             Shift::class,
-            $shift->id,
+            $deletedId,
             Auth::id(),
             'Jornada'
         ));

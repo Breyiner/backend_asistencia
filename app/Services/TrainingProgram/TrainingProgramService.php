@@ -376,22 +376,24 @@ class TrainingProgramService
             ];
         }
 
-        // exists() no hidrata modelos Ficha: solo lanza SELECT EXISTS() en BD.
+        // exists() es ideal para verificar dependencias sin contar ni cargar modelos [web:54].
         if ($program->fichas()->exists()) {
             return [
                 'error'   => true,
-                'code'    => 422,
+                'code'    => 409,
                 'message' => 'No se puede eliminar el programa de formación porque tiene fichas asociadas',
                 'data'    => [],
             ];
         }
+
+        $deletedId = $program->id;
 
         $program->delete();
 
         event(new ResourceChanged(
             'eliminar',
             TrainingProgram::class,
-            $program->id,
+            $deletedId,
             Auth::id(),
             'Programa de formación'
         ));

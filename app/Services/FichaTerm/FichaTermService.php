@@ -139,7 +139,6 @@ class FichaTermService
                 'message' => 'Trimestre de Ficha asignado con éxito',
                 'data' => $fichaTerm
             ];
-
         } catch (Exception $e) {
             DB::rollBack();
             return [
@@ -263,7 +262,6 @@ class FichaTermService
                 'message' => 'Trimestre actual establecido correctamente',
                 'data' => $fichaTerm
             ];
-
         } catch (Exception $e) {
             return [
                 'error' => true,
@@ -284,8 +282,10 @@ class FichaTermService
      */
     public function delete($id)
     {
+        // 1) Buscar el trimestre por ID.
         $fichaTerm = FichaTerm::find($id);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$fichaTerm) {
             return [
                 'error' => true,
@@ -294,21 +294,64 @@ class FichaTermService
             ];
         }
 
-        $fichaTerm->delete();
+        try {
+            // 3) Usar transacción para que el borrado sea atómico:
+            //    o se borra todo lo permitido (schedule + fichaTerm) o no se borra nada.
+            DB::transaction(function () use ($fichaTerm, $id, &$deletedScheduleId) {
+                // 3.1) Traer el schedule asociado (relación 1:1).
+                $schedule = $fichaTerm->schedule()->first();
 
-        // Se pasa $id y no $fichaTerm->id porque el modelo ya no existe en BD tras el delete().
-        event(new ResourceChanged(
-            'eliminar',
-            FichaTerm::class,
-            $id,
-            Auth::id(),
-            'Trimestre de ficha'
-        ));
+                // 3.2) Si existe schedule, validar si tiene sesiones.
+                //      Si tiene sesiones, NO se permite eliminar ni el schedule ni el fichaTerm.
+                if ($schedule && $schedule->scheduleSessions()->exists()) {
+                    throw new Exception(
+                        'No se puede eliminar este trimestre porque su horario tiene sesiones asociadas'
+                    );
+                }
 
-        return [
-            "error" => false,
-            "code" => 200,
-            "message" => "Trimestre de la ficha eliminado con éxito",
-        ];
+                // 3.3) Si hay schedule y no tiene sesiones, se puede eliminar primero el schedule.
+                if ($schedule) {
+                    $deletedScheduleId = $schedule->id;
+                    $schedule->delete();
+                }
+
+                // 3.4) Finalmente eliminar el FichaTerm.
+                $fichaTerm->delete();
+            });
+
+            // 4) Auditoría / notificación: disparar eventos ya con BD consistente.
+            //    Si se eliminó schedule, registrarlo también.
+            if (!empty($deletedScheduleId)) {
+                event(new ResourceChanged(
+                    'eliminar',
+                    Schedule::class,
+                    $deletedScheduleId,
+                    Auth::id(),
+                    'Horario de trimestre de ficha'
+                ));
+            }
+
+            event(new ResourceChanged(
+                'eliminar',
+                FichaTerm::class,
+                $id,
+                Auth::id(),
+                'Trimestre de ficha'
+            ));
+
+            // 5) Respuesta exitosa.
+            return [
+                "error" => false,
+                "code" => 200,
+                "message" => "Trimestre de la ficha eliminado con éxito",
+            ];
+        } catch (Exception $e) {
+            // 6) Si el bloqueo fue por sesiones asociadas (o cualquier error), responder controlado.
+            return [
+                "error" => true,
+                "code" => 409,
+                "message" => $e->getMessage(),
+            ];
+        }
     }
 }

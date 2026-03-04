@@ -270,7 +270,7 @@ class AreaService
      */
     public function delete($id)
     {
-        // Verifica que el área exista antes de intentar eliminarla.
+        // 1) Verifica existencia
         $area = Area::find($id);
 
         if (!$area) {
@@ -281,20 +281,29 @@ class AreaService
             ];
         }
 
-        // exists() es más eficiente que count() porque detiene la consulta al encontrar
-        // el primer registro relacionado, sin traer ni contar todos los resultados.
+        // 2) Valida relación hasMany: trainingPrograms
+        // exists() es eficiente para validar integridad sin contar todo.
         if ($area->trainingPrograms()->exists()) {
             return [
                 "error" => true,
-                "code" => 400,
+                "code" => 409,
                 "message" => "No se puede eliminar esta área porque tiene programas de formación asociados",
             ];
         }
 
-        // Solo elimina si no hay programas relacionados.
+        // 3) Valida relación belongsToMany: users (pivot area_user)
+        // belongsToMany está documentado como relación many-to-many.
+        if ($area->users()->exists()) {
+            return [
+                "error" => true,
+                "code" => 409,
+                "message" => "No se puede eliminar esta área porque tiene usuarios asignados",
+            ];
+        }
+
+        // 4) Elimina
         $area->delete();
 
-        // Dispara el evento con el ID original ya que el modelo fue eliminado.
         event(new ResourceChanged(
             'eliminar',
             Area::class,
