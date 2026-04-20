@@ -25,7 +25,7 @@ class ForgotPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'document_number' => 'required|string|max:20',
+            'document_number' => 'required|max:20',
         ];
     }
 
@@ -36,7 +36,6 @@ class ForgotPasswordRequest extends FormRequest
     {
         return [
             'document_number.required' => 'El :attribute es requerido.',
-            'document_number.string' => 'El :attribute debe ser texto.',
             'document_number.max' => 'El :attribute no puede exceder :max caracteres.',
         ];
     }
