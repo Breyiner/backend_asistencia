@@ -317,8 +317,13 @@ class RoleService
      */
     public function delete($id)
     {
+        // 1) Roles internos del sistema: no deben eliminarse desde la UI ni por ID directo.
+        $excludedCodes = ['PENDIENTE', 'APRENDIZ', 'SCANNER'];
+
+        // 2) Buscar el rol por ID.
         $role = Role::find($id);
 
+        // 3) Validar existencia.
         if (!$role) {
             return [
                 'error'   => true,
@@ -328,28 +333,44 @@ class RoleService
             ];
         }
 
-        // exists() no hidrata los modelos User: solo lanza un SELECT EXISTS() en BD.
-        // Es la verificación de integridad referencial más eficiente disponible.
+        // 4) Bloquear eliminación de roles internos, incluso si se encuentran por ID.
+        if (in_array($role->code, $excludedCodes, true)) {
+            return [
+                'error'   => true,
+                'code'    => 409,
+                'message' => 'No se puede eliminar un rol interno del sistema',
+                'data'    => [],
+            ];
+        }
+
+        // 5) Validar integridad referencial (regla de negocio):
+        //    Si el rol está asignado a usuarios, no se debe permitir eliminarlo.
+        //    exists() es más eficiente que count(): no cuenta todo, solo verifica 1 coincidencia.
         if ($role->users()->exists()) {
             return [
                 'error'   => true,
-                'code'    => 422,
+                'code'    => 409, // Conflicto: no se puede eliminar por dependencias existentes.
                 'message' => 'No se puede eliminar un rol asignado a usuarios',
                 'data'    => [],
             ];
         }
 
+        // 6) Guardar el ID antes de eliminar para auditoría/evento.
+        $deletedId = $role->id;
+
+        // 7) Eliminar el rol (sin usuarios asignados).
         $role->delete();
 
-        // Nota: se usa $role->id (no $id) para consistencia con el patrón del sistema.
+        // 8) Auditoría / notificación.
         event(new ResourceChanged(
             'eliminar',
             Role::class,
-            $role->id,
+            $deletedId,
             Auth::id(),
             'Rol'
         ));
 
+        // 9) Respuesta exitosa.
         return [
             'error'   => false,
             'code'    => 200,

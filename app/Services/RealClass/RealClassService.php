@@ -938,8 +938,10 @@ class RealClassService
      */
     public function delete($id)
     {
+        // 1) Buscar la clase real por ID.
         $realClass = RealClass::find($id);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$realClass) {
             return [
                 'error' => true,
@@ -949,8 +951,38 @@ class RealClassService
             ];
         }
 
+        // 3) Validar integridad referencial (regla de negocio):
+        //    Si la clase real ya tiene asistencias tomadas, NO se debe permitir eliminarla.
+        //    Usamos exists() porque es más eficiente que count(): no cuenta todo,
+        //    solo verifica si existe al menos 1 asistencia relacionada.
+        if ($realClass->attendances()->exists()) {
+            return [
+                'error' => true,
+                'code' => 409, // Conflicto: no se puede eliminar por dependencias existentes.
+                'message' => 'No se puede eliminar esta clase real porque tiene asistencias asociadas',
+                'data' => [],
+            ];
+        }
+
+        // 4) Guardar el ID antes de eliminar para auditoría/logs si lo requieres.
+        $deletedId = $realClass->id;
+
+        // 5) Eliminar solo si no hay dependencias.
         $realClass->delete();
 
+        // 6) Si en tu servicio habías decidido NO disparar ResourceChanged al eliminar,
+        //    respeta esa regla. Si sí quieres auditar, descomenta esto:
+        /*
+    event(new ResourceChanged(
+        'eliminar',
+        RealClass::class,
+        $deletedId,
+        Auth::id(),
+        'Clase real'
+    ));
+    */
+
+        // 7) Respuesta exitosa.
         return [
             'error' => false,
             'code' => 200,

@@ -192,9 +192,9 @@ class ScheduleService
                         'start_time',
                         'end_time',
                     ])
-                    // Ordenado por día y luego por franja: garantiza orden cronológico en la tabla de horario.
-                    ->orderBy('day_id', 'asc')
-                    ->orderBy('time_slot_id', 'asc');
+                        // Ordenado por día y luego por franja: garantiza orden cronológico en la tabla de horario.
+                        ->orderBy('day_id', 'asc')
+                        ->orderBy('time_slot_id', 'asc');
                 },
 
                 'scheduleSessions.day:id,name',
@@ -394,8 +394,10 @@ class ScheduleService
      */
     public function delete(int $id): array
     {
+        // 1) Buscar el horario por ID.
         $schedule = Schedule::find($id);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$schedule) {
             return [
                 'error'   => true,
@@ -405,17 +407,35 @@ class ScheduleService
             ];
         }
 
+        // 3) Validar integridad referencial (regla de negocio):
+        //    Si el horario tiene sesiones asociadas, no se debe permitir eliminarlo,
+        //    porque se perdería la configuración del horario (y si hay CASCADE, se borrarían).
+        //    exists() es más eficiente que count(): no cuenta todo, solo verifica 1 registro.
+        if ($schedule->scheduleSessions()->exists()) {
+            return [
+                'error'   => true,
+                'code'    => 409, // Conflicto: no se puede eliminar por dependencias existentes.
+                'message' => 'No se puede eliminar este horario porque tiene sesiones asociadas',
+                'data'    => [],
+            ];
+        }
+
+        // 4) Guardar el ID antes de eliminar para auditoría/evento.
+        $deletedId = $schedule->id;
+
+        // 5) Eliminar solo si no hay dependencias.
         $schedule->delete();
 
-        // Nota: se usa $schedule->id (no $id) para consistencia con el patrón del sistema.
+        // 6) Auditoría / notificación.
         event(new ResourceChanged(
             'eliminar',
             Schedule::class,
-            $schedule->id,
+            $deletedId,
             Auth::id(),
             'Horario'
         ));
 
+        // 7) Respuesta exitosa.
         return [
             'error'   => false,
             'code'    => 200,

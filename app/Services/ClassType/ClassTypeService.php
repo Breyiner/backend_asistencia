@@ -155,8 +155,10 @@ class ClassTypeService
      */
     public function delete($id)
     {
+        // 1) Buscar el tipo de clase por ID.
         $classType = ClassType::find($id);
 
+        // 2) Validar existencia para devolver 404 y evitar operar sobre null.
         if (!$classType) {
             return [
                 'error' => true,
@@ -165,9 +167,22 @@ class ClassTypeService
             ];
         }
 
+        // 3) Validar integridad referencial (regla de negocio):
+        //    Si este tipo de clase ya está asociado a clases reales, no se debe permitir eliminarlo.
+        //    Usamos exists() porque es más eficiente que count(): no carga modelos ni cuenta todo,
+        //    solo verifica si existe al menos 1 registro relacionado.
+        if ($classType->realClasses()->exists()) {
+            return [
+                'error' => true,
+                'code' => 409, // Conflicto: no se puede eliminar por dependencias existentes.
+                'message' => 'No se puede eliminar este tipo de clase porque tiene clases reales asociadas',
+            ];
+        }
+
+        // 4) Eliminar solo si no hay dependencias.
         $classType->delete();
 
-        // Se pasa $id y no $classType->id porque el modelo ya no existe en BD tras el delete().
+        // 5) Auditoría / notificación: se envía $id porque el modelo ya fue eliminado.
         event(new ResourceChanged(
             'eliminar',
             ClassType::class,
@@ -176,6 +191,7 @@ class ClassTypeService
             'Tipo de clase'
         ));
 
+        // 6) Respuesta exitosa.
         return [
             'error' => false,
             'code' => 200,

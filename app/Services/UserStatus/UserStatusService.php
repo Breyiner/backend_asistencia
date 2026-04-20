@@ -205,8 +205,10 @@ class UserStatusService
      */
     public function deleteStatus($id)
     {
+        // 1) Buscar el estado por ID.
         $status = UserStatus::find($id);
 
+        // 2) Validar existencia.
         if (!$status) {
             return [
                 'error'   => true,
@@ -216,22 +218,28 @@ class UserStatusService
             ];
         }
 
-        // exists() no hidrata modelos User: solo lanza SELECT EXISTS() en BD.
+        // 3) Integridad referencial: no eliminar si hay usuarios relacionados.
+        //    exists() es más eficiente que count(): solo verifica si existe 1 registro [web:54].
         if ($status->users()->exists()) {
             return [
                 'error'   => true,
-                'code'    => 422,
+                'code'    => 409, // Conflicto: el estado está en uso por usuarios.
                 'message' => 'No se puede eliminar el estado porque tiene usuarios relacionados',
                 'data'    => [],
             ];
         }
 
+        // 4) Guardar ID antes de eliminar para auditoría/evento.
+        $deletedId = $status->id;
+
+        // 5) Eliminar.
         $status->delete();
 
+        // 6) Evento.
         event(new ResourceChanged(
             'eliminar',
             UserStatus::class,
-            $status->id,
+            $deletedId,
             Auth::id(),
             'Estado de usuario',
         ));

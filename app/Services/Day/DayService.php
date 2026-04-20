@@ -160,8 +160,10 @@ class DayService
      */
     public function delete(int $id): array
     {
+        // 1) Buscar el día por ID.
         $day = Day::find($id);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$day) {
             return [
                 'error' => true,
@@ -170,9 +172,22 @@ class DayService
             ];
         }
 
+        // 3) Validar integridad referencial (regla de negocio):
+        //    Si el día ya está asociado a sesiones de horario, no se debe permitir eliminarlo.
+        //    Usamos exists() porque es más eficiente que count(): no carga modelos ni cuenta todo,
+        //    solo verifica si existe al menos 1 registro relacionado.
+        if ($day->scheduleSessions()->exists()) {
+            return [
+                'error' => true,
+                'code' => 409, // Conflicto: no se puede eliminar por dependencias existentes.
+                'message' => 'No se puede eliminar este día porque tiene sesiones de horario asociadas',
+            ];
+        }
+
+        // 4) Eliminar solo si no hay dependencias.
         $day->delete();
 
-        // Se pasa $id y no $day->id porque el modelo ya no existe en BD tras el delete().
+        // 5) Auditoría / notificación: se envía $id porque el modelo ya fue eliminado.
         event(new ResourceChanged(
             'eliminar',
             Day::class,
@@ -181,6 +196,7 @@ class DayService
             'Día'
         ));
 
+        // 6) Respuesta exitosa.
         return [
             'error' => false,
             'code' => 200,

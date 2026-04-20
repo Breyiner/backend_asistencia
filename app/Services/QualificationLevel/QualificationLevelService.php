@@ -174,8 +174,10 @@ class QualificationLevelService
      */
     public function delete($id)
     {
+        // 1) Buscar el nivel de formación por ID.
         $item = QualificationLevel::find($id);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$item) {
             return [
                 'error' => true,
@@ -185,29 +187,35 @@ class QualificationLevelService
             ];
         }
 
-        // Verificación de integridad referencial: count() sobre la relación antes del delete.
-        // Evita que la BD lance un FK constraint error si training_programs.qualification_level_id
-        // tiene RESTRICT o NO ACTION en la migración.
-        if ($item->trainingPrograms()->count() > 0) {
+        // 3) Validar integridad referencial (regla de negocio):
+        //    Si este nivel ya está asociado a programas de formación, NO se debe eliminar.
+        //    Usamos exists() porque es más eficiente que count(): no cuenta todo,
+        //    solo verifica si existe al menos 1 registro relacionado.
+        if ($item->trainingPrograms()->exists()) {
             return [
                 'error' => true,
-                'code' => 422,
+                'code' => 409, // Conflicto: no se puede eliminar por dependencias existentes.
                 'message' => 'No se puede eliminar este nivel de formación porque tiene programas de formación asociados',
                 'data' => [],
             ];
         }
 
+        // 4) Guardar el ID antes de eliminar para auditoría/evento.
+        $deletedId = $item->id;
+
+        // 5) Eliminar solo si no hay dependencias.
         $item->delete();
 
-        // Nota: se usa $item->id (no $id) para consistencia con el patrón del sistema.
+        // 6) Disparar evento con el ID eliminado.
         event(new ResourceChanged(
             'eliminar',
             QualificationLevel::class,
-            $item->id,
+            $deletedId,
             Auth::id(),
             'Nivel de formación'
         ));
 
+        // 7) Respuesta exitosa.
         return [
             'error' => false,
             'code' => 200,

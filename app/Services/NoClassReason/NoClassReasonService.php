@@ -57,8 +57,8 @@ class NoClassReasonService
         return [
             'error' => false,
             'code' => 200,
-            'message' => $items->isEmpty() 
-                ? 'No hay motivos de días sin clase registrados' 
+            'message' => $items->isEmpty()
+                ? 'No hay motivos de días sin clase registrados'
                 : 'Motivos de días sin clase obtenidos correctamente',
             'data' => $items,
             'paginate' => [
@@ -198,8 +198,10 @@ class NoClassReasonService
      */
     public function destroy($reasonId)
     {
+        // 1) Buscar el motivo por ID.
         $reason = NoClassReason::find($reasonId);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$reason) {
             return [
                 'error' => true,
@@ -209,26 +211,34 @@ class NoClassReasonService
             ];
         }
 
-        // TODO: Verificar si tiene no_class_days asociados antes de eliminar.
-        if ($reason->noClassDays()->count() > 0) {
-             return [
+        // 3) Validar integridad referencial (regla de negocio):
+        //    Si el motivo ya está asignado a uno o más días sin clase, no se debe permitir eliminarlo.
+        //    exists() es más eficiente que count(): no cuenta todo, solo verifica si existe 1 registro.
+        if ($reason->noClassDays()->exists()) {
+            return [
                 'error' => true,
-                'code' => 422,
+                'code' => 409, // Conflicto: el recurso no se puede eliminar por dependencias.
                 'message' => 'Este motivo tiene días sin clase asociados. No se puede eliminar.',
                 'data' => [],
             ];
         }
 
+        // 4) Guardar el ID antes de eliminar para auditoría/evento.
+        $deletedId = $reason->id;
+
+        // 5) Eliminar el motivo (ya validado que no tiene dependencias).
         $reason->delete();
 
+        // 6) Disparar evento con el ID eliminado.
         event(new ResourceChanged(
             'eliminar',
             NoClassReason::class,
-            $reason->id,
+            $deletedId,
             Auth::id(),
             'Motivo de día sin clase',
         ));
 
+        // 7) Respuesta exitosa.
         return [
             'error' => false,
             'code' => 200,

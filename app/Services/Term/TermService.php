@@ -166,8 +166,10 @@ class TermService
      */
     public function delete($id)
     {
+        // 1) Buscar el trimestre por ID.
         $term = Term::find($id);
 
+        // 2) Validar existencia.
         if (!$term) {
             return [
                 'error'   => true,
@@ -177,12 +179,28 @@ class TermService
             ];
         }
 
+        // 3) Integridad referencial: no eliminar si hay ficha_term asociados.
+        //    exists() es más eficiente que count().
+        if ($term->fichaTerm()->exists()) {
+            return [
+                'error'   => true,
+                'code'    => 409,
+                'message' => 'No se puede eliminar este trimestre porque tiene trimestres de ficha (ficha_term) asociados',
+                'data'    => [],
+            ];
+        }
+
+        // 4) Guardar ID antes de borrar para auditoría.
+        $deletedId = $term->id;
+
+        // 5) Eliminar.
         $term->delete();
 
+        // 6) Evento.
         event(new ResourceChanged(
             'eliminar',
             Term::class,
-            $term->id,
+            $deletedId,
             Auth::id(),
             'Trimestre',
         ));
