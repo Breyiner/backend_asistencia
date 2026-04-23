@@ -159,8 +159,10 @@ class NotificationTypeService
      */
     public function destroy($notificationTypeId)
     {
+        // 1) Buscar el tipo de notificación por ID.
         $notificationType = NotificationType::find($notificationTypeId);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$notificationType) {
             return [
                 'error' => true,
@@ -170,18 +172,34 @@ class NotificationTypeService
             ];
         }
 
+        // 3) Validar integridad referencial (regla de negocio):
+        //    Si el tipo ya está siendo usado por notificaciones existentes, NO se debe eliminar.
+        //    exists() es más eficiente que count(): no cuenta todo, solo verifica si existe 1 registro.
+        if ($notificationType->notifications()->exists()) {
+            return [
+                'error' => true,
+                'code' => 409, // Conflicto: no se puede eliminar por dependencias existentes.
+                'message' => 'No se puede eliminar este tipo de notificación porque tiene notificaciones asociadas',
+                'data' => [],
+            ];
+        }
+
+        // 4) Guardar el ID antes de eliminar para auditoría/evento.
+        $deletedId = $notificationType->id;
+
+        // 5) Eliminar solo si no hay dependencias.
         $notificationType->delete();
 
-        // Nota: se usa $notificationType->id (no $notificationTypeId) para consistencia
-        // con el resto de servicios, aunque ambos son equivalentes aquí.
+        // 6) Disparar evento con el ID eliminado.
         event(new ResourceChanged(
             'eliminar',
             NotificationType::class,
-            $notificationType->id,
+            $deletedId,
             Auth::id(),
             'Tipo de Notificación',
         ));
 
+        // 7) Respuesta exitosa.
         return [
             'error' => false,
             'code' => 200,

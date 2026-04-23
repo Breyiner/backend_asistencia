@@ -648,7 +648,8 @@ Route::middleware('throttle:api')->group(function () {
                 ->middleware('permission:attendances.create');
             Route::patch('/{attendance_id}', [AttendanceController::class, 'update'])
                 ->middleware('permission:attendances.update');
-            Route::post('/scan', [AttendanceController::class, 'scan']);  // QR scan (sin permiso extra)
+            Route::post('/scan', [AttendanceController::class, 'scan'])
+                ->middleware('permission:attendances.scan');  // QR scan
             Route::delete('/{attendance_id}', [AttendanceController::class, 'destroy'])
                 ->middleware('permission:attendances.delete');
             Route::get('/class/{real_class_id}', [AttendanceController::class, 'byClassRealId'])

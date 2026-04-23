@@ -242,8 +242,10 @@ class ClassroomService
      */
     public function delete($id)
     {
+        // 1) Buscar el ambiente por ID (si no existe, no hay nada que eliminar).
         $classroom = Classroom::find($id);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$classroom) {
             return [
                 'error' => true,
@@ -252,11 +254,31 @@ class ClassroomService
             ];
         }
 
-        // Si en un futuro el ambiente tiene relaciones críticas (ej. clases),
-        // aquí podrías validar integridad referencial antes de eliminar.
+        // 3) Validar integridad referencial (reglas de negocio):
+        //    - Si el ambiente está usado en sesiones de horario, no se debe eliminar.
+        //    exists() es eficiente: no cuenta todo, solo verifica si hay al menos 1 registro.
+        if ($classroom->scheduleSessions()->exists()) {
+            return [
+                'error' => true,
+                'code' => 409,
+                'message' => 'No se puede eliminar este ambiente porque tiene sesiones de horario asociadas',
+            ];
+        }
 
+        // 4) Validar integridad referencial:
+        //    - Si el ambiente está usado en clases reales ejecutadas, tampoco se debe eliminar.
+        if ($classroom->realClasses()->exists()) {
+            return [
+                'error' => true,
+                'code' => 409,
+                'message' => 'No se puede eliminar este ambiente porque tiene clases reales asociadas',
+            ];
+        }
+
+        // 5) Eliminar solo si no hay dependencias.
         $classroom->delete();
 
+        // 6) Auditoría / notificación: se envía $id porque el modelo ya fue eliminado.
         event(new ResourceChanged(
             'eliminar',
             Classroom::class,
@@ -265,6 +287,7 @@ class ClassroomService
             'Ambiente'
         ));
 
+        // 7) Respuesta exitosa.
         return [
             'error' => false,
             'code' => 200,

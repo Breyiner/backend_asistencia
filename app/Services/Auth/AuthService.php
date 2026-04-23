@@ -175,10 +175,10 @@ class AuthService
             60 * 24 * 365 * 100,
             '/',
             null,
-            false, // secure: false en desarrollo; debería ser true en producción con HTTPS.
-            false, // httpOnly: false para permitir acceso desde JS si es necesario.
+            true,
+            true,
             false,
-            'lax'  // sameSite: protege contra CSRF en requests cross-site.
+            'none'
         );
 
         $cookieRefreshToken = cookie(
@@ -187,10 +187,10 @@ class AuthService
             60 * 24 * 365 * 100,
             '/',
             null,
+            true,
+            true,
             false,
-            false,
-            false,
-            'lax'
+            'none'
         );
 
         return [
@@ -271,10 +271,10 @@ class AuthService
             60 * 24 * 365 * 100,
             '/',
             null,
+            true,
+            true,
             false,
-            false,
-            false,
-            'lax'
+            'none'
         );
 
         $cookieRefreshToken = cookie(
@@ -283,10 +283,10 @@ class AuthService
             60 * 24 * 365 * 100,
             '/',
             null,
+            true,
+            true,
             false,
-            false,
-            false,
-            'lax'
+            'none'
         );
 
         return [
@@ -353,10 +353,10 @@ class AuthService
             -1,
             '/',
             null,
+            true,
+            true,
             false,
-            false,
-            false,
-            'lax'
+            'none'
         );
 
         $expiredRefreshToken = cookie(
@@ -365,10 +365,10 @@ class AuthService
             -1,
             '/',
             null,
+            true,
+            true,
             false,
-            false,
-            false,
-            'lax'
+            'none'
         );
 
         return [

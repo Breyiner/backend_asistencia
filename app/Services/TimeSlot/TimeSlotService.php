@@ -197,8 +197,10 @@ class TimeSlotService
      */
     public function delete($id)
     {
+        // 1) Buscar la franja horaria por ID.
         $item = TimeSlot::find($id);
 
+        // 2) Validar existencia.
         if (!$item) {
             return [
                 'error'   => true,
@@ -208,13 +210,39 @@ class TimeSlotService
             ];
         }
 
+        // 3) Integridad referencial: no eliminar si está en uso.
+        //    exists() es más eficiente que count() y no hidrata modelos relacionados [web:54].
+        if ($item->realClasses()->exists()) {
+            return [
+                'error'   => true,
+                'code'    => 409,
+                'message' => 'No se puede eliminar esta franja horaria porque tiene clases reales asociadas',
+                'data'    => [],
+            ];
+        }
+
+        // Opcional (recomendado): si TimeSlot también se usa en ScheduleSession, bloquearlo.
+        // Requiere que exista la relación scheduleSessions() en TimeSlot.
+        if (method_exists($item, 'scheduleSessions') && $item->scheduleSessions()->exists()) {
+            return [
+                'error'   => true,
+                'code'    => 409,
+                'message' => 'No se puede eliminar esta franja horaria porque tiene sesiones de horario asociadas',
+                'data'    => [],
+            ];
+        }
+
+        // 4) Guardar ID antes de eliminar para auditoría.
+        $deletedId = $item->id;
+
+        // 5) Eliminar.
         $item->delete();
 
-        // Nota: se usa $item->id (no $id) para consistencia con el patrón del sistema.
+        // 6) Evento.
         event(new ResourceChanged(
             'eliminar',
             TimeSlot::class,
-            $item->id,
+            $deletedId,
             Auth::id(),
             'Franja horaria'
         ));

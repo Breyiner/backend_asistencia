@@ -173,8 +173,10 @@ class PhaseService
      */
     public function delete($id)
     {
+        // 1) Buscar la fase por ID.
         $phase = Phase::find($id);
 
+        // 2) Validar existencia para responder 404 controlado.
         if (!$phase) {
             return [
                 'error' => true,
@@ -184,18 +186,35 @@ class PhaseService
             ];
         }
 
+        // 3) Validar integridad referencial (regla de negocio):
+        //    Si la fase ya está asociada a uno o más trimestres de ficha (FichaTerm),
+        //    no se debe permitir eliminarla.
+        //    exists() es más eficiente que count(): no cuenta todo, solo verifica si existe 1 registro.
+        if ($phase->fichaTerm()->exists()) {
+            return [
+                'error' => true,
+                'code' => 409, // Conflicto: no se puede eliminar por dependencias existentes.
+                'message' => 'No se puede eliminar esta fase porque tiene trimestres de ficha asociados',
+                'data' => [],
+            ];
+        }
+
+        // 4) Guardar el ID antes de eliminar para auditoría/evento.
+        $deletedId = $phase->id;
+
+        // 5) Eliminar solo si no hay dependencias.
         $phase->delete();
 
-        // Nota: se usa $phase->id (no $id) para consistencia con el resto de servicios,
-        // aunque ambos son equivalentes aquí ya que el modelo fue cargado antes del delete.
+        // 6) Disparar evento con el ID eliminado.
         event(new ResourceChanged(
             'eliminar',
             Phase::class,
-            $phase->id,
+            $deletedId,
             Auth::id(),
             'Fase'
         ));
 
+        // 7) Respuesta exitosa.
         return [
             'error' => false,
             'code' => 200,
